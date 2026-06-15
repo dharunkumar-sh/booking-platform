@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Search } from "lucide-react";
 
 const HIGH_RES_IMAGES = {
@@ -48,98 +48,113 @@ const HIGH_RES_IMAGES = {
   ],
 };
 
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1200&q=80";
+
 const MOODS = [
-  {
-    name: "Relaxed 😌",
-    key: "relaxed",
-  },
-  {
-    name: "Adventurous 🏔️",
-    key: "adventure",
-  },
-  {
-    name: "Romantic ❤️",
-    key: "romantic",
-  },
-  {
-    name: "Productive 💻",
-    key: "productive",
-  },
-  {
-    name: "Luxury 👑",
-    key: "luxury",
-  },
+  { name: "Relaxed 😌", key: "relaxed" },
+  { name: "Adventurous 🏔️", key: "adventure" },
+  { name: "Romantic ❤️", key: "romantic" },
+  { name: "Productive 💻", key: "productive" },
+  { name: "Luxury 👑", key: "luxury" },
 ];
 
 const Hero = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedMood, setSelectedMood] = useState("");
   const [images, setImages] = useState(HIGH_RES_IMAGES.default);
+  const [loadedImages, setLoadedImages] = useState({});
+  const [errorImages, setErrorImages] = useState({});
+  const intervalRef = useRef(null);
 
+  // Preload images whenever the image set changes
   useEffect(() => {
-    if (images.length === 0) return;
-    const interval = setInterval(() => {
+    setLoadedImages({});
+    setErrorImages({});
+
+    images.forEach((src, idx) => {
+      const img = new Image();
+      img.src = src;
+      img.onload = () => setLoadedImages((prev) => ({ ...prev, [idx]: true }));
+      img.onerror = () => setErrorImages((prev) => ({ ...prev, [idx]: true }));
+    });
+  }, [images]);
+
+  // Carousel auto-advance with a clean interval
+  useEffect(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+
+    intervalRef.current = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % images.length);
     }, 2000);
-    return () => clearInterval(interval);
+
+    return () => clearInterval(intervalRef.current);
   }, [images]);
 
   const handleMoodSelect = (mood) => {
     setSelectedMood(mood.name);
-    setImages(HIGH_RES_IMAGES[mood.key] || HIGH_RES_IMAGES.default);
     setCurrentIndex(0);
+    setImages(HIGH_RES_IMAGES[mood.key] || HIGH_RES_IMAGES.default);
   };
+
+  const getImageSrc = (index) =>
+    errorImages[index] ? FALLBACK_IMAGE : images[index];
 
   return (
     <section
       className="relative w-full overflow-hidden"
       style={{ height: "620px" }}
     >
-      <div className="absolute inset-0 w-full h-full overflow-hidden">
-        {images.length > 0 ? (
-          <div className="absolute inset-0 w-full h-full overflow-hidden">
-            {images.map((image, index) => (
-              <img
-                key={index}
-                src={image}
-                alt={`Event ${index + 1}`}
-                className="absolute inset-0 w-full h-full object-cover"
-                style={{
-                  transform: `translateX(${(index - currentIndex) * 100}%)`,
-                  transition: "transform 1s ease-in-out",
-                }}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="absolute inset-0 bg-gray-900" />
-        )}
+      {/* Carousel Background */}
+      <div className="absolute inset-0 w-full h-full">
+        {images.map((_, index) => (
+          <img
+            key={`${images[index]}-${index}`}
+            src={getImageSrc(index)}
+            alt={`Slide ${index + 1}`}
+            onError={() =>
+              setErrorImages((prev) => ({ ...prev, [index]: true }))
+            }
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{
+              opacity: index === currentIndex ? 1 : 0,
+              transition: "opacity 0.8s ease-in-out",
+              zIndex: index === currentIndex ? 1 : 0,
+              // Hide images that haven't loaded yet to avoid broken-image icons
+              visibility:
+                loadedImages[index] || errorImages[index]
+                  ? "visible"
+                  : "hidden",
+            }}
+          />
+        ))}
 
+        {/* Gradient overlay */}
         <div
           className="absolute inset-0"
           style={{
             background:
               "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.88) 100%)",
+            zIndex: 2,
           }}
         />
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-8">
+      {/* Content */}
+      <div
+        className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-8"
+        style={{ zIndex: 3 }}
+      >
         <h1
           className="text-white font-bold mb-1"
-          style={{
-            fontSize: "clamp(22px, 3vw, 36px)",
-          }}
+          style={{ fontSize: "clamp(22px, 3vw, 36px)" }}
         >
           Discover Your Next
         </h1>
 
         <h2
           className="font-extrabold mb-2"
-          style={{
-            fontSize: "clamp(28px, 4vw, 48px)",
-            color: "#f97316",
-          }}
+          style={{ fontSize: "clamp(28px, 4vw, 48px)", color: "#f97316" }}
         >
           Unforgettable Experience
         </h2>
@@ -149,55 +164,82 @@ const Hero = () => {
           exclusive experiences happening around you.
         </p>
 
-        <form
-          className="max-w-xl mb-5"
+        {/* Search bar — avoid <form> wrapping if in React artifact context */}
+        <div
+          className="max-w-xl mb-5 flex items-center gap-2 px-4 py-3"
           style={{
             background: "rgba(255,255,255,0.97)",
             borderRadius: "8px",
-            overflow: "hidden",
           }}
-          onSubmit={(e) => e.preventDefault()}
         >
-          <div className="flex items-center gap-2 px-4 py-3">
-            <Search className="text-gray-400" size={18} />
+          <Search className="text-gray-400 shrink-0" size={18} />
+          <input
+            type="text"
+            placeholder="Search events, artists, venues or ask AI: beach getaway, luxury trip..."
+            className="flex-1 text-gray-700 bg-transparent outline-none text-sm"
+          />
+          <button
+            type="button"
+            className="px-5 py-2 text-white font-semibold rounded-md shrink-0"
+            style={{
+              background: "linear-gradient(to right, #FF9650, #ff5862)",
+            }}
+          >
+            Search
+          </button>
+        </div>
 
-            <input
-              type="text"
-              placeholder="Search events, artists, venues or ask AI: beach getaway, luxury trip..."
-              className="flex-1 text-gray-700 bg-transparent outline-none"
-            />
-
-            <button
-              type="submit"
-              className="px-5 py-2 text-white font-semibold bg-linear-to-r from-[#FF9650] to-[#ff5862] rounded-md"
-            >
-              Search
-            </button>
-          </div>
-        </form>
-
+        {/* Mood selector */}
         <div className="mb-5">
           <h3 className="text-white font-semibold mb-3">
             ✨ How do you want to feel?
           </h3>
-
           <div className="flex flex-wrap gap-2">
             {MOODS.map((mood) => (
               <button
-                key={mood.name}
+                key={mood.key}
                 type="button"
                 onClick={() => handleMoodSelect(mood)}
-                className={
-                  "px-4 py-2 rounded-full text-sm transition-all duration-200 " +
-                  (selectedMood === mood.name
-                    ? "bg-orange-500 text-white"
-                    : "bg-white/20 text-white border border-white/30")
+                className="px-4 py-2 rounded-full text-sm transition-all duration-200"
+                style={
+                  selectedMood === mood.name
+                    ? {
+                        background: "#f97316",
+                        color: "#fff",
+                        border: "1px solid #f97316",
+                      }
+                    : {
+                        background: "rgba(255,255,255,0.2)",
+                        color: "#fff",
+                        border: "1px solid rgba(255,255,255,0.3)",
+                      }
                 }
               >
                 {mood.name}
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Dot indicators */}
+        <div className="flex gap-2">
+          {images.map((_, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => setCurrentIndex(index)}
+              className="rounded-full transition-all duration-300"
+              style={{
+                width: index === currentIndex ? "20px" : "8px",
+                height: "8px",
+                background:
+                  index === currentIndex ? "#f97316" : "rgba(255,255,255,0.5)",
+                border: "none",
+                padding: 0,
+              }}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
         </div>
       </div>
     </section>
