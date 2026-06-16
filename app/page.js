@@ -1,9 +1,11 @@
-import Hero from "../components/Hero";
+import Hero from "@/components/Hero";
+import FeaturedEvents from "@/components/FeaturedEvents";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-neutral-950 text-white selection:bg-orange-500/30 selection:text-orange-200">
+    <div>
       <Hero />
+      <FeaturedEvents />
     </div>
   );
 }
