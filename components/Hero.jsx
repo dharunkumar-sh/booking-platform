@@ -59,7 +59,7 @@ const MOODS = [
   { name: "Luxury 👑", key: "luxury" },
 ];
 
-// Upcoming events with target dates
+// ── Upcoming events with target dates ──
 const UPCOMING_EVENTS = [
   {
     id: 1,
@@ -112,7 +112,6 @@ const Hero = () => {
   useEffect(() => {
     setLoadedImages({});
     setErrorImages({});
-
     images.forEach((src, idx) => {
       const img = new Image();
       img.src = src;
@@ -121,18 +120,16 @@ const Hero = () => {
     });
   }, [images]);
 
-  // Carousel auto-advance with a clean interval
+  // Carousel auto-advance
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
-
     intervalRef.current = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % images.length);
     }, 2000);
-
     return () => clearInterval(intervalRef.current);
   }, [images]);
 
-  // Countdown timer — updates every second
+  // Countdown timer — ticks every second
   useEffect(() => {
     const tick = setInterval(() => {
       setTimers(UPCOMING_EVENTS.map((e) => getTimeLeft(e.date)));
@@ -154,7 +151,7 @@ const Hero = () => {
       className="relative w-full overflow-hidden"
       style={{ height: "620px" }}
     >
-      {/* Carousel Background */}
+      {/* ── Carousel Background ── */}
       <div className="absolute inset-0 w-full h-full">
         {images.map((_, index) => (
           <img
@@ -170,9 +167,7 @@ const Hero = () => {
               transition: "opacity 0.8s ease-in-out",
               zIndex: index === currentIndex ? 1 : 0,
               visibility:
-                loadedImages[index] || errorImages[index]
-                  ? "visible"
-                  : "hidden",
+                loadedImages[index] || errorImages[index] ? "visible" : "hidden",
             }}
           />
         ))}
@@ -188,12 +183,12 @@ const Hero = () => {
         />
       </div>
 
-      {/* Content */}
+      {/* ── Content ── */}
       <div
         className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-8"
         style={{ zIndex: 3 }}
       >
-        {/* ── New Heading ── */}
+        {/* Heading */}
         <h1
           className="text-white font-bold mb-1"
           style={{ fontSize: "clamp(22px, 3vw, 36px)", letterSpacing: "-0.5px" }}
@@ -219,32 +214,194 @@ const Hero = () => {
           exclusive experiences happening around you.
         </p>
 
-        {/* Search bar — avoid <form> wrapping if in React artifact context */}
-        <div
-          className="max-w-xl mb-5 flex items-center gap-2 px-4 py-3"
-          style={{
-            background: "rgba(255,255,255,0.97)",
-            borderRadius: "8px",
-          }}
-        >
-          <Search className="text-gray-400 shrink-0" size={18} />
-          <input
-            type="text"
-            placeholder="Search events, artists, venues or ask AI: beach getaway, luxury trip..."
-            className="flex-1 text-gray-700 bg-transparent outline-none text-sm"
-          />
-          <button
-            type="button"
-            className="px-5 py-2 text-white font-semibold rounded-md shrink-0"
-            style={{
-              background: "linear-gradient(to right, #FF9650, #ff5862)",
-            }}
-          >
-            Search
-          </button>
+        {/* ── Upcoming Events Countdown Strip ── */}
+        <div className="flex gap-2 mb-4" style={{ flexWrap: "wrap" }}>
+          {UPCOMING_EVENTS.map((event, i) => {
+            const t = timers[i];
+            return (
+              <div
+                key={event.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  background: "rgba(0,0,0,0.45)",
+                  border: `1px solid ${event.color}55`,
+                  borderRadius: "8px",
+                  padding: "5px 10px",
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                {/* Pulsing dot */}
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: "6px",
+                    height: "6px",
+                    borderRadius: "50%",
+                    background: event.color,
+                    flexShrink: 0,
+                    animation: "pulse-dot 1.2s ease-in-out infinite",
+                  }}
+                />
+
+                {/* Event name */}
+                <span
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 600,
+                    color: "#fff",
+                    whiteSpace: "nowrap",
+                    letterSpacing: "0.3px",
+                  }}
+                >
+                  {event.emoji} {event.name}
+                </span>
+
+                {/* Divider */}
+                <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "10px" }}>|</span>
+
+                {/* Countdown blocks */}
+                {[
+                  { label: "d", val: t.d },
+                  { label: "h", val: t.h },
+                  { label: "m", val: t.m },
+                  { label: "s", val: t.s },
+                ].map(({ label, val }) => (
+                  <div
+                    key={label}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      lineHeight: 1,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        color: event.color,
+                        fontVariantNumeric: "tabular-nums",
+                        fontFamily: "monospace",
+                      }}
+                    >
+                      {pad(val)}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "8px",
+                        color: "rgba(255,255,255,0.5)",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                      }}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
         </div>
 
-        {/* Mood selector */}
+        {/* ── Search Bar — Unique Glassmorphism Style ── */}
+        <div
+          className="max-w-xl mb-5"
+          style={{
+            position: "relative",
+            borderRadius: "14px",
+            padding: "2px",
+            background: "linear-gradient(135deg, #f97316, #a855f7, #06b6d4)",
+            boxShadow:
+              "0 8px 32px rgba(249,115,22,0.25), 0 2px 8px rgba(168,85,247,0.15)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              background: "rgba(10, 8, 20, 0.82)",
+              borderRadius: "12px",
+              padding: "10px 14px",
+              backdropFilter: "blur(16px)",
+            }}
+          >
+            {/* Icon pill */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "32px",
+                height: "32px",
+                borderRadius: "8px",
+                background: "linear-gradient(135deg, #f97316, #ff5862)",
+                flexShrink: 0,
+              }}
+            >
+              <Search size={15} color="#fff" />
+            </div>
+
+            {/* Input */}
+            <input
+              type="text"
+              placeholder="Search events, artists, venues or ask AI…"
+              style={{
+                flex: 1,
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                color: "#f1f5f9",
+                fontSize: "13px",
+                letterSpacing: "0.2px",
+              }}
+              onFocus={(e) => {
+                e.target.parentElement.parentElement.style.boxShadow =
+                  "0 0 0 3px rgba(249,115,22,0.4), 0 8px 32px rgba(249,115,22,0.3)";
+              }}
+              onBlur={(e) => {
+                e.target.parentElement.parentElement.style.boxShadow =
+                  "0 8px 32px rgba(249,115,22,0.25), 0 2px 8px rgba(168,85,247,0.15)";
+              }}
+            />
+
+            {/* Search button */}
+            <button
+              type="button"
+              style={{
+                flexShrink: 0,
+                padding: "7px 18px",
+                borderRadius: "9px",
+                border: "none",
+                cursor: "pointer",
+                fontWeight: 700,
+                fontSize: "13px",
+                letterSpacing: "0.4px",
+                color: "#fff",
+                background:
+                  "linear-gradient(135deg, #f97316 0%, #a855f7 60%, #06b6d4 100%)",
+                boxShadow: "0 2px 12px rgba(249,115,22,0.4)",
+                transition: "transform 0.15s ease, box-shadow 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "scale(1.05)";
+                e.currentTarget.style.boxShadow =
+                  "0 4px 20px rgba(249,115,22,0.6)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.boxShadow =
+                  "0 2px 12px rgba(249,115,22,0.4)";
+              }}
+            >
+              Search ✦
+            </button>
+          </div>
+        </div>
+
+        {/* ── Mood selector ── */}
         <div className="mb-5">
           <h3 className="text-white font-semibold mb-3">
             ✨ How do you want to feel?
@@ -255,7 +412,7 @@ const Hero = () => {
                 key={mood.key}
                 type="button"
                 onClick={() => handleMoodSelect(mood)}
-                className="px-4 py-2 rounded-full text-sm transition-all duration-200 cursor-pointer"
+                className="px-4 py-2 rounded-full text-sm transition-all duration-200"
                 style={
                   selectedMood === mood.name
                     ? {
@@ -276,14 +433,14 @@ const Hero = () => {
           </div>
         </div>
 
-        {/* Dot indicators */}
+        {/* ── Dot indicators ── */}
         <div className="flex gap-2">
           {images.map((_, index) => (
             <button
               key={index}
               type="button"
               onClick={() => setCurrentIndex(index)}
-              className="rounded-full transition-all duration-300 cursor-pointer"
+              className="rounded-full transition-all duration-300"
               style={{
                 width: index === currentIndex ? "20px" : "8px",
                 height: "8px",
@@ -298,7 +455,7 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* Pulse animation keyframe injected inline */}
+      {/* ── Keyframes ── */}
       <style>{`
         @keyframes pulse-dot {
           0%, 100% { opacity: 1; transform: scale(1); }
