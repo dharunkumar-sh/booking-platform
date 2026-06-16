@@ -1,20 +1,35 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { 
-  Search, 
+import {
+  Search,
   Mic,
-  Bell, 
-  Heart, 
-  MapPin, 
-  ChevronDown, 
-  Check, 
-  X, 
-  Tv
+  Bell,
+  Heart,
+  MapPin,
+  ChevronDown,
+  Check,
+  X,
+  Tv,
 } from "lucide-react";
 
-const CITIES = ["Mumbai", "Delhi", "Bengaluru", "Chennai", "Hyderabad", "Pune", "Goa"];
-const OTT_PLATFORMS = ["Netflix", "Prime Video", "Disney+ Hotstar", "SonyLIV", "Zee5", "Others"];
+const CITIES = [
+  "Mumbai",
+  "Delhi",
+  "Bengaluru",
+  "Chennai",
+  "Hyderabad",
+  "Pune",
+  "Goa",
+];
+const OTT_PLATFORMS = [
+  "Netflix",
+  "Prime Video",
+  "Disney+ Hotstar",
+  "SonyLIV",
+  "Zee5",
+  "Others",
+];
 
 const Header = () => {
   // Input and selectors
@@ -22,7 +37,7 @@ const Header = () => {
   const [selectedCity, setSelectedCity] = useState("Mumbai");
   const [selectedOtt, setSelectedOtt] = useState("All");
   const [crossOttSearch, setCrossOttSearch] = useState(true);
-  
+
   // Interactive states
 
   const [isCityOpen, setIsCityOpen] = useState(false);
@@ -30,8 +45,13 @@ const Header = () => {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
-  const placeholders = ["Search Movies...", "Search Events...", "Search Shows...", "Search Concerts..."];
-  
+  const placeholders = [
+    "Search Movies...",
+    "Search Events...",
+    "Search Shows...",
+    "Search Concerts...",
+  ];
+
   // Refs
   const cityRef = useRef(null);
   const ottRef = useRef(null);
@@ -47,8 +67,10 @@ const Header = () => {
   // Close dropdowns on clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (cityRef.current && !cityRef.current.contains(e.target)) setIsCityOpen(false);
-      if (ottRef.current && !ottRef.current.contains(e.target)) setIsOttOpen(false);
+      if (cityRef.current && !cityRef.current.contains(e.target))
+        setIsCityOpen(false);
+      if (ottRef.current && !ottRef.current.contains(e.target))
+        setIsOttOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -67,7 +89,7 @@ const Header = () => {
       (position) => {
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
-        
+
         // Match user coordinates to the closest supported Indian city
         let detected = "Chennai";
         if (lat < 14) {
@@ -79,7 +101,7 @@ const Header = () => {
         } else if (lon > 80) {
           detected = "Hyderabad";
         }
-        
+
         setSelectedCity(detected);
         setIsCityOpen(false);
       },
@@ -87,21 +109,18 @@ const Header = () => {
         console.warn("Location detection failed, fallback to default:", error);
         setSelectedCity(originalCity);
         alert("Unable to fetch location. Fallback to default.");
-      }
+      },
     );
   };
-
-
 
   return (
     <>
       <header className="sticky top-0 w-full z-50 bg-neutral-950/90 backdrop-blur-md border-b border-neutral-800 text-white transition-all duration-300">
         <div className="max-w-screen mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
-          
           {/* 1. Website Logo & Brand */}
           <div className="flex items-center gap-6 shrink-0">
-            <a 
-              href="/" 
+            <a
+              href="/"
               onClick={(e) => {
                 e.preventDefault();
                 setSearchQuery("");
@@ -126,7 +145,10 @@ const Header = () => {
               >
                 <MapPin className="text-orange-500" size={15} />
                 <span>{selectedCity}</span>
-                <ChevronDown size={14} className={`text-neutral-500 transition-transform duration-200 ${isCityOpen ? "rotate-180" : ""}`} />
+                <ChevronDown
+                  size={14}
+                  className={`text-neutral-500 transition-transform duration-200 ${isCityOpen ? "rotate-180" : ""}`}
+                />
               </button>
 
               {isCityOpen && (
@@ -150,10 +172,18 @@ const Header = () => {
                       }}
                       className="w-full text-left flex items-center justify-between px-3 py-2 text-sm rounded-lg hover:bg-neutral-800 transition-colors"
                     >
-                      <span className={selectedCity === city ? "text-orange-400 font-medium" : "text-neutral-300"}>
+                      <span
+                        className={
+                          selectedCity === city
+                            ? "text-orange-400 font-medium"
+                            : "text-neutral-300"
+                        }
+                      >
                         {city}
                       </span>
-                      {selectedCity === city && <Check size={14} className="text-orange-500" />}
+                      {selectedCity === city && (
+                        <Check size={14} className="text-orange-500" />
+                      )}
                     </button>
                   ))}
                 </div>
@@ -165,7 +195,7 @@ const Header = () => {
           <div className="hidden lg:flex flex-1 max-w-xl relative">
             <div className="w-full flex items-center bg-neutral-900 border border-neutral-800 focus-within:border-orange-500/50 rounded-xl px-3 py-1.5 transition-all shadow-inner">
               <Search className="text-neutral-500 shrink-0 mr-2" size={18} />
-              
+
               <input
                 type="text"
                 value={searchQuery}
@@ -175,7 +205,7 @@ const Header = () => {
               />
 
               {searchQuery && (
-                <button 
+                <button
                   onClick={() => setSearchQuery("")}
                   className="p-1 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white mr-1 transition-colors"
                 >
@@ -200,7 +230,9 @@ const Header = () => {
                   className="flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-neutral-800 text-xs font-semibold text-orange-400 transition-colors"
                 >
                   <Tv size={13} className="text-orange-500" />
-                  <span>{selectedOtt === "All" ? "All OTTs" : selectedOtt}</span>
+                  <span>
+                    {selectedOtt === "All" ? "All OTTs" : selectedOtt}
+                  </span>
                   <ChevronDown size={12} />
                 </button>
 
@@ -216,8 +248,18 @@ const Header = () => {
                       }}
                       className="w-full text-left flex items-center justify-between px-3 py-1.5 text-xs rounded-lg hover:bg-neutral-800 transition-colors"
                     >
-                      <span className={selectedOtt === "All" ? "text-orange-400 font-medium" : "text-neutral-300"}>All Platforms</span>
-                      {selectedOtt === "All" && <Check size={12} className="text-orange-500" />}
+                      <span
+                        className={
+                          selectedOtt === "All"
+                            ? "text-orange-400 font-medium"
+                            : "text-neutral-300"
+                        }
+                      >
+                        All Platforms
+                      </span>
+                      {selectedOtt === "All" && (
+                        <Check size={12} className="text-orange-500" />
+                      )}
                     </button>
                     {OTT_PLATFORMS.map((ott) => (
                       <button
@@ -228,8 +270,18 @@ const Header = () => {
                         }}
                         className="w-full text-left flex items-center justify-between px-3 py-1.5 text-xs rounded-lg hover:bg-neutral-800 transition-colors"
                       >
-                        <span className={selectedOtt === ott ? "text-orange-400 font-medium" : "text-neutral-300"}>{ott}</span>
-                        {selectedOtt === ott && <Check size={12} className="text-orange-500" />}
+                        <span
+                          className={
+                            selectedOtt === ott
+                              ? "text-orange-400 font-medium"
+                              : "text-neutral-300"
+                          }
+                        >
+                          {ott}
+                        </span>
+                        {selectedOtt === ott && (
+                          <Check size={12} className="text-orange-500" />
+                        )}
                       </button>
                     ))}
 
@@ -238,14 +290,20 @@ const Header = () => {
                     {/* 5. Search Other OTT Platforms Toggle Inside Filter Dropdown */}
                     <div className="px-2.5 py-1.5 flex items-center justify-between">
                       <div className="flex flex-col">
-                        <span className="text-xs font-medium text-neutral-300">Auto-Search Cross-OTT</span>
-                        <span className="text-[10px] text-neutral-500">Find on other OTTs if missing</span>
+                        <span className="text-xs font-medium text-neutral-300">
+                          Auto-Search Cross-OTT
+                        </span>
+                        <span className="text-[10px] text-neutral-500">
+                          Find on other OTTs if missing
+                        </span>
                       </div>
                       <button
                         onClick={() => setCrossOttSearch(!crossOttSearch)}
                         className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none shrink-0 ${crossOttSearch ? "bg-orange-500" : "bg-neutral-800"}`}
                       >
-                        <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${crossOttSearch ? "translate-x-4" : "translate-x-0"}`} />
+                        <div
+                          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${crossOttSearch ? "translate-x-4" : "translate-x-0"}`}
+                        />
                       </button>
                     </div>
                   </div>
@@ -256,7 +314,6 @@ const Header = () => {
 
           {/* Right Section: Sign In Button, Favourites & Notifications Icons (No dropdown menus on click) */}
           <div className="flex items-center gap-3.5 shrink-0">
-            
             {/* Mobile search toggle */}
             <button
               onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
@@ -290,36 +347,36 @@ const Header = () => {
             </div>
 
             {/* 10. User Sign In Button */}
-            <button
-              className="px-5 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:opacity-90 active:scale-95 text-white shadow-lg shadow-orange-500/10 transition-all duration-200 shrink-0"
-            >
+            <button className="px-5 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:opacity-90 active:scale-95 text-white shadow-lg shadow-orange-500/10 transition-all duration-200 shrink-0">
               Sign In
             </button>
-
           </div>
         </div>
 
         {/* Mobile Search Overlay Drawer */}
         {mobileSearchOpen && (
           <div className="lg:hidden border-t border-neutral-800 bg-neutral-900 px-4 py-3 animate-in slide-in-from-top duration-200">
-            
             {/* Location Selector (Mobile Row) */}
             <div className="flex items-center justify-between mb-3 border-b border-neutral-800 pb-2">
-              <span className="text-xs font-semibold text-neutral-400">Current Location:</span>
+              <span className="text-xs font-semibold text-neutral-400">
+                Current Location:
+              </span>
               <select
                 value={selectedCity}
                 onChange={(e) => setSelectedCity(e.target.value)}
                 className="bg-neutral-800 border border-neutral-700 text-xs text-orange-400 font-semibold rounded-lg px-2.5 py-1 focus:outline-none"
               >
-                {CITIES.map(c => (
-                  <option key={c} value={c}>{c}</option>
+                {CITIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div className="flex items-center gap-2 bg-neutral-950 border border-neutral-800 rounded-lg px-2.5 py-1.5 focus-within:border-orange-500/50">
               <Search className="text-neutral-500 shrink-0" size={16} />
-              
+
               <input
                 type="text"
                 value={searchQuery}
@@ -329,14 +386,15 @@ const Header = () => {
               />
 
               {searchQuery && (
-                <button onClick={() => setSearchQuery("")} className="p-0.5 rounded-full hover:bg-neutral-800 text-neutral-400">
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="p-0.5 rounded-full hover:bg-neutral-800 text-neutral-400"
+                >
                   <X size={12} />
                 </button>
               )}
 
-              <button 
-                className="p-1 rounded text-neutral-400 cursor-default"
-              >
+              <button className="p-1 rounded text-neutral-400 cursor-default">
                 <Mic size={14} />
               </button>
             </div>
@@ -351,8 +409,10 @@ const Header = () => {
                   className="bg-neutral-800 border border-neutral-700 text-xs text-neutral-300 rounded px-2 py-0.5"
                 >
                   <option value="All">All OTTs</option>
-                  {OTT_PLATFORMS.map(o => (
-                    <option key={o} value={o}>{o}</option>
+                  {OTT_PLATFORMS.map((o) => (
+                    <option key={o} value={o}>
+                      {o}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -362,9 +422,19 @@ const Header = () => {
                 onClick={() => setCrossOttSearch(!crossOttSearch)}
                 className="flex items-center gap-1.5 bg-neutral-850 px-2 py-0.5 rounded text-[10px] text-neutral-400 hover:text-white"
               >
-                <span className={crossOttSearch ? "text-orange-400 font-semibold" : ""}>Cross-OTT Auto-Search</span>
-                <span className={`w-6 h-3.5 rounded-full p-0.5 transition-colors relative shrink-0 ${crossOttSearch ? "bg-orange-500" : "bg-neutral-700"}`}>
-                  <span className={`absolute bg-white w-2.5 h-2.5 rounded-full top-0.5 transition-all ${crossOttSearch ? "left-3" : "left-0.5"}`} />
+                <span
+                  className={
+                    crossOttSearch ? "text-orange-400 font-semibold" : ""
+                  }
+                >
+                  Cross-OTT Auto-Search
+                </span>
+                <span
+                  className={`w-6 h-3.5 rounded-full p-0.5 transition-colors relative shrink-0 ${crossOttSearch ? "bg-orange-500" : "bg-neutral-700"}`}
+                >
+                  <span
+                    className={`absolute bg-white w-2.5 h-2.5 rounded-full top-0.5 transition-all ${crossOttSearch ? "left-3" : "left-0.5"}`}
+                  />
                 </span>
               </button>
             </div>
