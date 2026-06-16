@@ -166,25 +166,22 @@ const Hero = () => {
 
         {/* Search bar — avoid <form> wrapping if in React artifact context */}
         <div
-          className="max-w-xl mb-5 flex items-center gap-2 px-4 py-3"
+          className="max-w-xl mb-5 flex items-center gap-2 px-4 py-2 bg-neutral-950/70 border border-neutral-800 focus-within:border-orange-500/50 backdrop-blur-md transition-all duration-200"
           style={{
-            background: "rgba(255,255,255,0.97)",
-            borderRadius: "8px",
+            borderRadius: "12px",
           }}
         >
-          <Search className="text-gray-400 shrink-0" size={18} />
+          <Search className="text-orange-500 shrink-0" size={18} />
           <input
             type="text"
             placeholder="Search events, artists, venues or ask AI: beach getaway, luxury trip..."
-            className="flex-1 text-gray-700 bg-transparent outline-none text-sm"
+            className="flex-1 text-white bg-transparent outline-none text-sm placeholder-neutral-500 h-10"
           />
           <button
             type="button"
-            className="px-5 py-2 text-white font-semibold rounded-md shrink-0"
-            style={{
-              background: "linear-gradient(to right, #FF9650, #ff5862)",
-            }}
+            className="px-2 py-1.5 text-white font-semibold rounded-lg shrink-0 bg-linear-to-r from-orange-500 to-rose-500 hover:opacity-90 active:scale-95 transition-all duration-150 flex gap-2 items-center cursor-pointer"
           >
+            <Search className="text-white shrink-0" size={19} />
             Search
           </button>
         </div>
@@ -200,7 +197,7 @@ const Hero = () => {
                 key={mood.key}
                 type="button"
                 onClick={() => handleMoodSelect(mood)}
-                className="px-4 py-2 rounded-full text-sm transition-all duration-200"
+                className="px-4 py-2 rounded-full text-sm transition-all duration-200 cursor-pointer"
                 style={
                   selectedMood === mood.name
                     ? {
@@ -228,7 +225,7 @@ const Hero = () => {
               key={index}
               type="button"
               onClick={() => setCurrentIndex(index)}
-              className="rounded-full transition-all duration-300"
+              className="rounded-full transition-all duration-300 cursor-pointer"
               style={{
                 width: index === currentIndex ? "20px" : "8px",
                 height: "8px",

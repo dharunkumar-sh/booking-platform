@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
+import Header from "../components/Header";
 import Footer from "../components/Footer";
 
 const inter = Inter({
@@ -14,11 +15,13 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.className} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
-        <main>{children}</main>
+      <body className="min-h-full flex flex-col bg-neutral-950 text-white">
+        <Header />
+        <main className="flex-1">{children}</main>
 
         <Footer />
       </body>
     </html>
   );
 }
+
