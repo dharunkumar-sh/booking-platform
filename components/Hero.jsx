@@ -219,191 +219,29 @@ const Hero = () => {
           exclusive experiences happening around you.
         </p>
 
-        {/* ── Upcoming Events Countdown Strip ── */}
+        {/* Search bar — avoid <form> wrapping if in React artifact context */}
         <div
-          className="flex gap-2 mb-4"
-          style={{ flexWrap: "wrap" }}
-        >
-          {UPCOMING_EVENTS.map((event, i) => {
-            const t = timers[i];
-            return (
-              <div
-                key={event.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  background: "rgba(0,0,0,0.45)",
-                  border: `1px solid ${event.color}55`,
-                  borderRadius: "8px",
-                  padding: "5px 10px",
-                  backdropFilter: "blur(8px)",
-                  minWidth: "0",
-                }}
-              >
-                {/* Pulsing dot */}
-                <span
-                  style={{
-                    display: "inline-block",
-                    width: "6px",
-                    height: "6px",
-                    borderRadius: "50%",
-                    background: event.color,
-                    flexShrink: 0,
-                    animation: "pulse-dot 1.2s ease-in-out infinite",
-                  }}
-                />
-
-                {/* Event name */}
-                <span
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: 600,
-                    color: "#fff",
-                    whiteSpace: "nowrap",
-                    letterSpacing: "0.3px",
-                  }}
-                >
-                  {event.emoji} {event.name}
-                </span>
-
-                {/* Divider */}
-                <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "10px" }}>|</span>
-
-                {/* Countdown blocks */}
-                {[
-                  { label: "d", val: t.d },
-                  { label: "h", val: t.h },
-                  { label: "m", val: t.m },
-                  { label: "s", val: t.s },
-                ].map(({ label, val }) => (
-                  <div
-                    key={label}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      lineHeight: 1,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        color: event.color,
-                        fontVariantNumeric: "tabular-nums",
-                        fontFamily: "monospace",
-                      }}
-                    >
-                      {pad(val)}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: "8px",
-                        color: "rgba(255,255,255,0.5)",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px",
-                      }}
-                    >
-                      {label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Search bar — unique style */}
-        <div
-          className="max-w-xl mb-5"
+          className="max-w-xl mb-5 flex items-center gap-2 px-4 py-3"
           style={{
-            position: "relative",
-            borderRadius: "14px",
-            padding: "2px",
-            background: "linear-gradient(135deg, #f97316, #a855f7, #06b6d4)",
-            boxShadow: "0 8px 32px rgba(249,115,22,0.25), 0 2px 8px rgba(168,85,247,0.15)",
+            background: "rgba(255,255,255,0.97)",
+            borderRadius: "8px",
           }}
         >
-          <div
+          <Search className="text-gray-400 shrink-0" size={18} />
+          <input
+            type="text"
+            placeholder="Search events, artists, venues or ask AI: beach getaway, luxury trip..."
+            className="flex-1 text-gray-700 bg-transparent outline-none text-sm"
+          />
+          <button
+            type="button"
+            className="px-5 py-2 text-white font-semibold rounded-md shrink-0"
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              background: "rgba(10, 8, 20, 0.82)",
-              borderRadius: "12px",
-              padding: "10px 14px",
-              backdropFilter: "blur(16px)",
+              background: "linear-gradient(to right, #FF9650, #ff5862)",
             }}
           >
-            {/* Icon pill */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "32px",
-                height: "32px",
-                borderRadius: "8px",
-                background: "linear-gradient(135deg, #f97316, #ff5862)",
-                flexShrink: 0,
-              }}
-            >
-              <Search size={15} color="#fff" />
-            </div>
-
-            {/* Input */}
-            <input
-              type="text"
-              placeholder="Search events, artists, venues or ask AI…"
-              style={{
-                flex: 1,
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                color: "#f1f5f9",
-                fontSize: "13px",
-                letterSpacing: "0.2px",
-              }}
-              onFocus={(e) => {
-                e.target.parentElement.parentElement.style.boxShadow =
-                  "0 0 0 3px rgba(249,115,22,0.4), 0 8px 32px rgba(249,115,22,0.3)";
-              }}
-              onBlur={(e) => {
-                e.target.parentElement.parentElement.style.boxShadow =
-                  "0 8px 32px rgba(249,115,22,0.25), 0 2px 8px rgba(168,85,247,0.15)";
-              }}
-            />
-
-            {/* Search button */}
-            <button
-              type="button"
-              style={{
-                flexShrink: 0,
-                padding: "7px 18px",
-                borderRadius: "9px",
-                border: "none",
-                cursor: "pointer",
-                fontWeight: 700,
-                fontSize: "13px",
-                letterSpacing: "0.4px",
-                color: "#fff",
-                background: "linear-gradient(135deg, #f97316 0%, #a855f7 60%, #06b6d4 100%)",
-                boxShadow: "0 2px 12px rgba(249,115,22,0.4)",
-                transition: "transform 0.15s ease, box-shadow 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.05)";
-                e.currentTarget.style.boxShadow = "0 4px 20px rgba(249,115,22,0.6)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow = "0 2px 12px rgba(249,115,22,0.4)";
-              }}
-            >
-              Search ✦
-            </button>
-          </div>
+            Search
+          </button>
         </div>
 
         {/* Mood selector */}
@@ -417,7 +255,7 @@ const Hero = () => {
                 key={mood.key}
                 type="button"
                 onClick={() => handleMoodSelect(mood)}
-                className="px-4 py-2 rounded-full text-sm transition-all duration-200"
+                className="px-4 py-2 rounded-full text-sm transition-all duration-200 cursor-pointer"
                 style={
                   selectedMood === mood.name
                     ? {
@@ -445,7 +283,7 @@ const Hero = () => {
               key={index}
               type="button"
               onClick={() => setCurrentIndex(index)}
-              className="rounded-full transition-all duration-300"
+              className="rounded-full transition-all duration-300 cursor-pointer"
               style={{
                 width: index === currentIndex ? "20px" : "8px",
                 height: "8px",
