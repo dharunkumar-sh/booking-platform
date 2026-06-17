@@ -412,7 +412,7 @@ const Hero = () => {
                 key={mood.key}
                 type="button"
                 onClick={() => handleMoodSelect(mood)}
-                className="px-4 py-2 rounded-full text-sm transition-all duration-200"
+                className="px-4 py-2 rounded-full text-sm transition-all duration-200 cursor-pointer"
                 style={
                   selectedMood === mood.name
                     ? {
@@ -440,7 +440,7 @@ const Hero = () => {
               key={index}
               type="button"
               onClick={() => setCurrentIndex(index)}
-              className="rounded-full transition-all duration-300"
+              className="rounded-full transition-all duration-300 cursor-pointer"
               style={{
                 width: index === currentIndex ? "20px" : "8px",
                 height: "8px",

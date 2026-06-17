@@ -141,7 +141,7 @@ const Header = () => {
             <div className="relative hidden md:block" ref={cityRef}>
               <button
                 onClick={() => setIsCityOpen(!isCityOpen)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 hover:border-orange-500/40 text-sm font-medium text-neutral-300 hover:text-white transition-all duration-200"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 hover:border-orange-500/40 text-sm font-medium text-neutral-300 hover:text-white transition-all duration-200 cursor-pointer"
               >
                 <MapPin className="text-orange-500" size={15} />
                 <span>{selectedCity}</span>
@@ -155,7 +155,7 @@ const Header = () => {
                 <div className="absolute left-0 mt-2 w-48 rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl p-1.5 animate-in fade-in slide-in-from-top-2 duration-150 z-50">
                   <button
                     onClick={handleDetectLocation}
-                    className="w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-semibold text-orange-400 hover:bg-neutral-800 rounded-lg border-b border-neutral-800/60 transition-colors mb-1.5"
+                    className="w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-semibold text-orange-400 hover:bg-neutral-800 rounded-lg border-b border-neutral-800/60 transition-colors mb-1.5 cursor-pointer"
                   >
                     <MapPin size={12} className="animate-pulse" />
                     <span>Detect My Location</span>
@@ -170,7 +170,7 @@ const Header = () => {
                         setSelectedCity(city);
                         setIsCityOpen(false);
                       }}
-                      className="w-full text-left flex items-center justify-between px-3 py-2 text-sm rounded-lg hover:bg-neutral-800 transition-colors"
+                      className="w-full text-left flex items-center justify-between px-3 py-2 text-sm rounded-lg hover:bg-neutral-800 transition-colors cursor-pointer"
                     >
                       <span
                         className={
@@ -207,7 +207,7 @@ const Header = () => {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="p-1 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white mr-1 transition-colors"
+                  className="p-1 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white mr-1 transition-colors cursor-pointer"
                 >
                   <X size={14} />
                 </button>
@@ -227,7 +227,7 @@ const Header = () => {
               <div className="relative shrink-0" ref={ottRef}>
                 <button
                   onClick={() => setIsOttOpen(!isOttOpen)}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-neutral-800 text-xs font-semibold text-orange-400 transition-colors"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-neutral-800 text-xs font-semibold text-orange-400 transition-colors cursor-pointer"
                 >
                   <Tv size={13} className="text-orange-500" />
                   <span>
@@ -246,7 +246,7 @@ const Header = () => {
                         setSelectedOtt("All");
                         setIsOttOpen(false);
                       }}
-                      className="w-full text-left flex items-center justify-between px-3 py-1.5 text-xs rounded-lg hover:bg-neutral-800 transition-colors"
+                      className="w-full text-left flex items-center justify-between px-3 py-1.5 text-xs rounded-lg hover:bg-neutral-800 transition-colors cursor-pointer"
                     >
                       <span
                         className={
@@ -268,7 +268,7 @@ const Header = () => {
                           setSelectedOtt(ott);
                           setIsOttOpen(false);
                         }}
-                        className="w-full text-left flex items-center justify-between px-3 py-1.5 text-xs rounded-lg hover:bg-neutral-800 transition-colors"
+                        className="w-full text-left flex items-center justify-between px-3 py-1.5 text-xs rounded-lg hover:bg-neutral-800 transition-colors cursor-pointer"
                       >
                         <span
                           className={
@@ -299,7 +299,7 @@ const Header = () => {
                       </div>
                       <button
                         onClick={() => setCrossOttSearch(!crossOttSearch)}
-                        className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none shrink-0 ${crossOttSearch ? "bg-orange-500" : "bg-neutral-800"}`}
+                        className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none shrink-0 cursor-pointer ${crossOttSearch ? "bg-orange-500" : "bg-neutral-800"}`}
                       >
                         <div
                           className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${crossOttSearch ? "translate-x-4" : "translate-x-0"}`}
@@ -317,7 +317,7 @@ const Header = () => {
             {/* Mobile search toggle */}
             <button
               onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-              className="lg:hidden p-2 rounded-lg hover:bg-neutral-900 text-neutral-300 hover:text-white"
+              className="lg:hidden p-2 rounded-lg hover:bg-neutral-900 text-neutral-300 hover:text-white cursor-pointer"
             >
               <Search size={20} />
             </button>
@@ -347,7 +347,7 @@ const Header = () => {
             </div>
 
             {/* 10. User Sign In Button */}
-            <button className="px-5 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:opacity-90 active:scale-95 text-white shadow-lg shadow-orange-500/10 transition-all duration-200 shrink-0">
+            <button className="px-5 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:opacity-90 active:scale-95 text-white shadow-lg shadow-orange-500/10 transition-all duration-200 shrink-0 cursor-pointer">
               Sign In
             </button>
           </div>
@@ -364,7 +364,7 @@ const Header = () => {
               <select
                 value={selectedCity}
                 onChange={(e) => setSelectedCity(e.target.value)}
-                className="bg-neutral-800 border border-neutral-700 text-xs text-orange-400 font-semibold rounded-lg px-2.5 py-1 focus:outline-none"
+                className="bg-neutral-800 border border-neutral-700 text-xs text-orange-400 font-semibold rounded-lg px-2.5 py-1 focus:outline-none cursor-pointer"
               >
                 {CITIES.map((c) => (
                   <option key={c} value={c}>
@@ -388,7 +388,7 @@ const Header = () => {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="p-0.5 rounded-full hover:bg-neutral-800 text-neutral-400"
+                  className="p-0.5 rounded-full hover:bg-neutral-800 text-neutral-400 cursor-pointer"
                 >
                   <X size={12} />
                 </button>
@@ -406,7 +406,7 @@ const Header = () => {
                 <select
                   value={selectedOtt}
                   onChange={(e) => setSelectedOtt(e.target.value)}
-                  className="bg-neutral-800 border border-neutral-700 text-xs text-neutral-300 rounded px-2 py-0.5"
+                  className="bg-neutral-800 border border-neutral-700 text-xs text-neutral-300 rounded px-2 py-0.5 cursor-pointer"
                 >
                   <option value="All">All OTTs</option>
                   {OTT_PLATFORMS.map((o) => (
@@ -420,7 +420,7 @@ const Header = () => {
               {/* Cross OTT Search Switch */}
               <button
                 onClick={() => setCrossOttSearch(!crossOttSearch)}
-                className="flex items-center gap-1.5 bg-neutral-850 px-2 py-0.5 rounded text-[10px] text-neutral-400 hover:text-white"
+                className="flex items-center gap-1.5 bg-neutral-850 px-2 py-0.5 rounded text-[10px] text-neutral-400 hover:text-white cursor-pointer"
               >
                 <span
                   className={

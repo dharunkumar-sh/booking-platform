@@ -89,9 +89,19 @@ export default function FeaturedEvents() {
   };
 
   return (
-    <div className="px-6 py-10 bg-[#0b1a2d] min-h-screen text-white">
+    <div className="px-6 py-10 bg-neutral-950 min-h-screen text-white">
       
-      <h2 className="text-2xl font-bold mb-8">🎟 Featured Events</h2>
+      <h2
+        className="text-2xl font-extrabold mb-8"
+        style={{
+          background: "linear-gradient(90deg, #f97316, #ff5862)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+        }}
+      >
+        🎟 Featured Events
+      </h2>
 
       {/* GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
@@ -99,7 +109,7 @@ export default function FeaturedEvents() {
           <div
             key={i}
             onClick={() => setSelectedCategory(event.category)}
-            className="group relative rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-pink-500/40 transition duration-300"
+            className="group relative rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-orange-500/40 transition duration-300"
           >
             {/* IMAGE */}
             <div className="relative h-72 w-full">
@@ -112,14 +122,14 @@ export default function FeaturedEvents() {
             </div>
 
             {/* GRADIENT */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent" />
 
             {/* CONTENT */}
             <div className="absolute bottom-0 p-4 w-full">
               
               {/* Rating */}
               <div className="flex justify-between items-center mb-1">
-                <span className="bg-pink-600 text-xs px-2 py-1 rounded">
+                <span className="bg-gradient-to-r from-orange-500 to-rose-500 text-xs px-2 py-1 rounded">
                   ⭐ {event.rating}
                 </span>
                 <span className="text-xs bg-white/20 px-2 py-1 rounded backdrop-blur">
@@ -139,7 +149,7 @@ export default function FeaturedEvents() {
 
               {/* BOOK BUTTON */}
               <button
-                className="mt-3 w-full bg-pink-600 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition"
+                className="mt-3 w-full bg-gradient-to-r from-orange-500 to-rose-500 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition cursor-pointer"
               >
                 🎟 Book Now
               </button>
@@ -159,7 +169,7 @@ export default function FeaturedEvents() {
             {categoryData[selectedCategory].map((show, i) => (
               <div
                 key={i}
-                className="p-6 rounded-xl bg-[#1f2c3d] hover:bg-gradient-to-r from-pink-600 to-purple-600 transition transform hover:-translate-y-1"
+                className="p-6 rounded-xl bg-neutral-900 border border-neutral-800 hover:bg-gradient-to-r from-orange-500 to-rose-500 transition transform hover:-translate-y-1"
               >
                 🎭 {show}
               </div>
@@ -168,7 +178,7 @@ export default function FeaturedEvents() {
 
           <button
             onClick={() => setSelectedCategory(null)}
-            className="mt-6 px-5 py-2 bg-pink-600 rounded-lg hover:bg-pink-700"
+            className="mt-6 px-5 py-2 bg-gradient-to-r from-orange-500 to-rose-500 rounded-lg hover:opacity-90 cursor-pointer"
           >
             ← Back
           </button>
