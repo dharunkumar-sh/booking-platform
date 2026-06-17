@@ -99,7 +99,7 @@ export default function TrendingEvents() {
     >
       <h1
         style={{
-          color: "white",
+          color: "#f97316",
           fontSize: "36px",
           fontWeight: "bold",
           marginBottom: "30px",
