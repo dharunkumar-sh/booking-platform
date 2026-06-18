@@ -91,21 +91,24 @@ export default function TrendingEvents() {
 
   return (
     <section
+      className="bg-neutral-950"
       style={{
-        background: "#0F172A",
         padding: "60px 40px",
         position: "relative",
       }}
     >
       <h1
         style={{
-          color: "white",
           fontSize: "36px",
           fontWeight: "bold",
           marginBottom: "30px",
+          background: "linear-gradient(90deg, #f97316, #ff5862)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
         }}
       >
-        Trending Events
+        🔥 Trending Events
       </h1>
 
       {/* Left Arrow */}
@@ -195,7 +198,7 @@ export default function TrendingEvents() {
                   position: "absolute",
                   top: "15px",
                   left: "15px",
-                  background: "#EF4444",
+                  background: "linear-gradient(90deg, #f97316, #ff5862)",
                   color: "white",
                   padding: "6px 12px",
                   borderRadius: "20px",
@@ -275,7 +278,7 @@ export default function TrendingEvents() {
     padding: "12px",
     border: "none",
     borderRadius: "10px",
-    background: "linear-gradient(90deg,#EF4444,#DC2626)",
+    background: "linear-gradient(90deg, #f97316, #ff5862)",
     color: "white",
     fontWeight: "bold",
     cursor: "pointer",
@@ -384,7 +387,7 @@ export default function TrendingEvents() {
               padding: "14px",
               border: "none",
               borderRadius: "10px",
-              background: "#EF4444",
+              background: "linear-gradient(90deg, #f97316, #ff5862)",
               color: "white",
               fontWeight: "bold",
               cursor: "pointer",

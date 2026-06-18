@@ -104,7 +104,7 @@ const Hero = () => {
   const [loadedImages, setLoadedImages] = useState({});
   const [errorImages, setErrorImages] = useState({});
   const [timers, setTimers] = useState(() =>
-    UPCOMING_EVENTS.map((e) => getTimeLeft(e.date))
+    UPCOMING_EVENTS.map(() => ({ d: 0, h: 0, m: 0, s: 0 }))
   );
   const intervalRef = useRef(null);
 

@@ -49,7 +49,7 @@ export default function FeaturedEvents() {
       date: "Oct 12, 2026",
       time: "6:00 PM",
       rating: "4.6",
-      image: "https://images.unsplash.com/photo-1515169067865-5387ec356754",
+      image: "https://images.unsplash.com/photo-1547153760-18fc86324498?auto=format&fit=crop&w=800&q=80",
     },
     {
       title: "Gaming Championship",
