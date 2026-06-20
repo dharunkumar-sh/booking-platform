@@ -117,6 +117,7 @@ export default function FeaturedEvents() {
                 src={event.image}
                 alt={event.title}
                 fill
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 className="object-cover group-hover:scale-110 transition duration-500"
               />
             </div>
