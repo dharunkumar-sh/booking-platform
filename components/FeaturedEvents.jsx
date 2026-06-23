@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Image from "next/image";
 
-export default function FeaturedEvents() {
+export default function FeaturedEvents({ onBookEvent = () => {} }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const events = [
@@ -150,6 +150,14 @@ export default function FeaturedEvents() {
 
               {/* BOOK BUTTON */}
               <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onBookEvent({
+                    title: event.title,
+                    venue: event.venue,
+                    priceVal: 499,
+                  });
+                }}
                 className="mt-3 w-full bg-gradient-to-r from-orange-500 to-rose-500 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition cursor-pointer"
               >
                 🎟 Book Now
