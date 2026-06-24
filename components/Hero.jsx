@@ -59,7 +59,7 @@ const MOODS = [
   { name: "Luxury 👑", key: "luxury" },
 ];
 
-// ── Upcoming events with target dates ──
+ 
 const UPCOMING_EVENTS = [
   {
     id: 1,
@@ -84,7 +84,7 @@ const UPCOMING_EVENTS = [
   },
 ];
 
-// Helper: compute time remaining for a given target date
+ 
 const getTimeLeft = (targetDate) => {
   const diff = targetDate - Date.now();
   if (diff <= 0) return { d: 0, h: 0, m: 0, s: 0 };
@@ -108,7 +108,7 @@ const Hero = () => {
   );
   const intervalRef = useRef(null);
 
-  // Preload images whenever the image set changes
+ 
   useEffect(() => {
     setLoadedImages({});
     setErrorImages({});
@@ -120,7 +120,7 @@ const Hero = () => {
     });
   }, [images]);
 
-  // Carousel auto-advance
+ 
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
@@ -129,7 +129,7 @@ const Hero = () => {
     return () => clearInterval(intervalRef.current);
   }, [images]);
 
-  // Countdown timer — ticks every second
+ 
   useEffect(() => {
     const tick = setInterval(() => {
       setTimers(UPCOMING_EVENTS.map((e) => getTimeLeft(e.date)));
@@ -151,7 +151,7 @@ const Hero = () => {
       className="relative w-full overflow-hidden"
       style={{ height: "620px" }}
     >
-      {/* ── Carousel Background ── */}
+       
       <div className="absolute inset-0 w-full h-full">
         {images.map((_, index) => (
           <img
@@ -172,7 +172,7 @@ const Hero = () => {
           />
         ))}
 
-        {/* Gradient overlay */}
+        
         <div
           className="absolute inset-0"
           style={{
@@ -183,12 +183,12 @@ const Hero = () => {
         />
       </div>
 
-      {/* ── Content ── */}
+      
       <div
         className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-8"
         style={{ zIndex: 3 }}
       >
-        {/* Heading */}
+        
         <h1
           className="text-white font-bold mb-1"
           style={{ fontSize: "clamp(22px, 3vw, 36px)", letterSpacing: "-0.5px" }}
@@ -214,7 +214,7 @@ const Hero = () => {
           exclusive experiences happening around you.
         </p>
 
-        {/* ── Upcoming Events Countdown Strip ── */}
+         
         <div className="flex gap-2 mb-4" style={{ flexWrap: "wrap" }}>
           {UPCOMING_EVENTS.map((event, i) => {
             const t = timers[i];
@@ -232,7 +232,7 @@ const Hero = () => {
                   backdropFilter: "blur(8px)",
                 }}
               >
-                {/* Pulsing dot */}
+                
                 <span
                   style={{
                     display: "inline-block",
@@ -245,7 +245,7 @@ const Hero = () => {
                   }}
                 />
 
-                {/* Event name */}
+                
                 <span
                   style={{
                     fontSize: "10px",
@@ -258,10 +258,10 @@ const Hero = () => {
                   {event.emoji} {event.name}
                 </span>
 
-                {/* Divider */}
+                 
                 <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "10px" }}>|</span>
 
-                {/* Countdown blocks */}
+                 
                 {[
                   { label: "d", val: t.d },
                   { label: "h", val: t.h },
@@ -305,7 +305,7 @@ const Hero = () => {
           })}
         </div>
 
-        {/* ── Search Bar — Unique Glassmorphism Style ── */}
+         
         <div
           className="max-w-xl mb-5"
           style={{
@@ -328,7 +328,7 @@ const Hero = () => {
               backdropFilter: "blur(16px)",
             }}
           >
-            {/* Icon pill */}
+            
             <div
               style={{
                 display: "flex",
@@ -344,7 +344,7 @@ const Hero = () => {
               <Search size={15} color="#fff" />
             </div>
 
-            {/* Input */}
+           
             <input
               type="text"
               placeholder="Search events, artists, venues or ask AI…"
@@ -367,7 +367,7 @@ const Hero = () => {
               }}
             />
 
-            {/* Search button */}
+           
             <button
               type="button"
               style={{
@@ -401,7 +401,7 @@ const Hero = () => {
           </div>
         </div>
 
-        {/* ── Mood selector ── */}
+         
         <div className="mb-5">
           <h3 className="text-white font-semibold mb-3">
             ✨ How do you want to feel?
@@ -433,7 +433,7 @@ const Hero = () => {
           </div>
         </div>
 
-        {/* ── Dot indicators ── */}
+       
         <div className="flex gap-2">
           {images.map((_, index) => (
             <button
@@ -455,7 +455,7 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* ── Keyframes ── */}
+      
       <style>{`
         @keyframes pulse-dot {
           0%, 100% { opacity: 1; transform: scale(1); }
