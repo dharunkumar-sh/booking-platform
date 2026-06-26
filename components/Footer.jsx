@@ -2,16 +2,9 @@
 
 import React, { useState } from "react";
 import {
-  CalendarDays,
-  Ticket,
-  Play,
   MapPin,
   Gift,
   Users,
-  HelpCircle,
-  CreditCard,
-  ShieldCheck,
-  Headphones,
   Mail,
   Phone,
   Smartphone,
@@ -190,7 +183,9 @@ const Footer = () => {
                 <Sparkles size={20} />
               </div>
               <div>
-                <h2 className="text-lg font-bold">Plan smarter with VibePass</h2>
+                <h2 className="text-lg font-bold">
+                  Plan smarter with VibePass
+                </h2>
                 <p className="mt-1 text-sm text-neutral-400">
                   Get early access to offers, new releases, and city-specific
                   experiences.
@@ -199,7 +194,10 @@ const Footer = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-3 sm:flex-row"
+          >
             <label className="sr-only" htmlFor="newsletter-email">
               Email address
             </label>
@@ -246,15 +244,24 @@ const Footer = () => {
           </p>
 
           <div className="flex flex-wrap justify-end gap-x-4 gap-y-2">
-            <a href="/download" className="inline-flex items-center gap-2 transition hover:text-white">
+            <a
+              href="/download"
+              className="inline-flex items-center gap-2 transition hover:text-white"
+            >
               <Smartphone size={16} />
               App
             </a>
-            <a href="/gift-cards" className="inline-flex items-center gap-2 transition hover:text-white">
+            <a
+              href="/gift-cards"
+              className="inline-flex items-center gap-2 transition hover:text-white"
+            >
               <Gift size={16} />
               Gift Cards
             </a>
-            <a href="/loyalty" className="inline-flex items-center gap-2 transition hover:text-white">
+            <a
+              href="/loyalty"
+              className="inline-flex items-center gap-2 transition hover:text-white"
+            >
               <Users size={16} />
               Loyalty
             </a>

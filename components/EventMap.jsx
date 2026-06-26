@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
-export default function EventMap() {
+export default function EventMap({ onBookEvent = () => {} }) {
   const [userLocation, setUserLocation] = useState(null);
 
   const events = [
@@ -179,6 +179,11 @@ export default function EventMap() {
               )}
 
               <button
+                onClick={() => onBookEvent({
+                  title: event.title,
+                  venue: event.venue,
+                  priceVal: parseInt(event.price.replace("₹", ""))
+                })}
                 style={{
                   width: "100%",
                   padding: "10px",
@@ -315,6 +320,11 @@ export default function EventMap() {
                     )}
 
                     <button
+                      onClick={() => onBookEvent({
+                        title: event.title,
+                        venue: event.venue,
+                        priceVal: parseInt(event.price.replace("₹", ""))
+                      })}
                       style={{
                         width: "100%",
                         padding: "10px",

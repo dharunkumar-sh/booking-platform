@@ -59,7 +59,95 @@ const MOODS = [
   { name: "Luxury 👑", key: "luxury" },
 ];
 
-// ── Upcoming events with target dates ──
+const MOOD_PLACES = {
+  relaxed: [
+    {
+      name: "Maldives",
+      description: "Crystal clear waters & overwater villas",
+      image: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=150&q=80",
+    },
+    {
+      name: "Kyoto, Japan",
+      description: "Peaceful bamboo forests & temples",
+      image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=150&q=80",
+    },
+    {
+      name: "Santorini, Greece",
+      description: "Breathtaking caldera views & sunsets",
+      image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=150&q=80",
+    },
+  ],
+  adventure: [
+    {
+      name: "Queenstown, NZ",
+      description: "Bungee jumping & skiing capital",
+      image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=150&q=80",
+    },
+    {
+      name: "Swiss Alps",
+      description: "Majestic peaks & thrilling trails",
+      image: "https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=150&q=80",
+    },
+    {
+      name: "Patagonia, Chile",
+      description: "Glaciers & dramatic mountain treks",
+      image: "https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?auto=format&fit=crop&w=150&q=80",
+    },
+  ],
+  romantic: [
+    {
+      name: "Paris, France",
+      description: "The city of love and lights",
+      image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=150&q=80",
+    },
+    {
+      name: "Venice, Italy",
+      description: "Gondola rides through historic canals",
+      image: "https://images.unsplash.com/photo-1527631746610-bca00a040d60?auto=format&fit=crop&w=150&q=80",
+    },
+    {
+      name: "Maui, Hawaii",
+      description: "Sunset beaches & tropical breeze",
+      image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=150&q=80",
+    },
+  ],
+  productive: [
+    {
+      name: "Silicon Valley",
+      description: "Innovation, tech hubs & coding cafes",
+      image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=150&q=80",
+    },
+    {
+      name: "Singapore",
+      description: "Futuristic workspace & green oasis",
+      image: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=150&q=80",
+    },
+    {
+      name: "Tokyo, Japan",
+      description: "Ultra-fast internet & 24/7 cafes",
+      image: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=150&q=80",
+    },
+  ],
+  luxury: [
+    {
+      name: "Dubai, UAE",
+      description: "Opulent hotels & luxury shopping",
+      image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=150&q=80",
+    },
+    {
+      name: "Monaco",
+      description: "Yachts, casinos & glamorous life",
+      image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=150&q=80",
+    },
+    {
+      name: "Beverly Hills",
+      description: "High-end fashion & elite villas",
+      image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=150&q=80",
+    },
+  ],
+};
+
+ 
 const UPCOMING_EVENTS = [
   {
     id: 1,
@@ -84,7 +172,7 @@ const UPCOMING_EVENTS = [
   },
 ];
 
-// Helper: compute time remaining for a given target date
+ 
 const getTimeLeft = (targetDate) => {
   const diff = targetDate - Date.now();
   if (diff <= 0) return { d: 0, h: 0, m: 0, s: 0 };
@@ -100,6 +188,8 @@ const pad = (n) => String(n).padStart(2, "0");
 const Hero = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedMood, setSelectedMood] = useState("");
+  const [selectedMoodKey, setSelectedMoodKey] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [images, setImages] = useState(HIGH_RES_IMAGES.default);
   const [loadedImages, setLoadedImages] = useState({});
   const [errorImages, setErrorImages] = useState({});
@@ -108,7 +198,7 @@ const Hero = () => {
   );
   const intervalRef = useRef(null);
 
-  // Preload images whenever the image set changes
+ 
   useEffect(() => {
     setLoadedImages({});
     setErrorImages({});
@@ -120,7 +210,7 @@ const Hero = () => {
     });
   }, [images]);
 
-  // Carousel auto-advance
+ 
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
@@ -129,7 +219,7 @@ const Hero = () => {
     return () => clearInterval(intervalRef.current);
   }, [images]);
 
-  // Countdown timer — ticks every second
+ 
   useEffect(() => {
     const tick = setInterval(() => {
       setTimers(UPCOMING_EVENTS.map((e) => getTimeLeft(e.date)));
@@ -138,9 +228,17 @@ const Hero = () => {
   }, []);
 
   const handleMoodSelect = (mood) => {
-    setSelectedMood(mood.name);
-    setCurrentIndex(0);
-    setImages(HIGH_RES_IMAGES[mood.key] || HIGH_RES_IMAGES.default);
+    if (selectedMoodKey === mood.key) {
+      setSelectedMood("");
+      setSelectedMoodKey("");
+      setCurrentIndex(0);
+      setImages(HIGH_RES_IMAGES.default);
+    } else {
+      setSelectedMood(mood.name);
+      setSelectedMoodKey(mood.key);
+      setCurrentIndex(0);
+      setImages(HIGH_RES_IMAGES[mood.key] || HIGH_RES_IMAGES.default);
+    }
   };
 
   const getImageSrc = (index) =>
@@ -148,10 +246,10 @@ const Hero = () => {
 
   return (
     <section
-      className="relative w-full overflow-hidden"
-      style={{ height: "620px" }}
+      className="relative w-full overflow-hidden transition-all duration-500 ease-in-out"
+      style={{ height: selectedMoodKey ? "700px" : "620px" }}
     >
-      {/* ── Carousel Background ── */}
+       
       <div className="absolute inset-0 w-full h-full">
         {images.map((_, index) => (
           <img
@@ -172,7 +270,7 @@ const Hero = () => {
           />
         ))}
 
-        {/* Gradient overlay */}
+        
         <div
           className="absolute inset-0"
           style={{
@@ -183,12 +281,12 @@ const Hero = () => {
         />
       </div>
 
-      {/* ── Content ── */}
+      
       <div
         className="absolute bottom-0 left-0 right-0 px-6 md:px-10 pb-8"
         style={{ zIndex: 3 }}
       >
-        {/* Heading */}
+        
         <h1
           className="text-white font-bold mb-1"
           style={{ fontSize: "clamp(22px, 3vw, 36px)", letterSpacing: "-0.5px" }}
@@ -214,7 +312,7 @@ const Hero = () => {
           exclusive experiences happening around you.
         </p>
 
-        {/* ── Upcoming Events Countdown Strip ── */}
+         
         <div className="flex gap-2 mb-4" style={{ flexWrap: "wrap" }}>
           {UPCOMING_EVENTS.map((event, i) => {
             const t = timers[i];
@@ -232,7 +330,7 @@ const Hero = () => {
                   backdropFilter: "blur(8px)",
                 }}
               >
-                {/* Pulsing dot */}
+                
                 <span
                   style={{
                     display: "inline-block",
@@ -245,7 +343,7 @@ const Hero = () => {
                   }}
                 />
 
-                {/* Event name */}
+                
                 <span
                   style={{
                     fontSize: "10px",
@@ -258,10 +356,10 @@ const Hero = () => {
                   {event.emoji} {event.name}
                 </span>
 
-                {/* Divider */}
+                 
                 <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "10px" }}>|</span>
 
-                {/* Countdown blocks */}
+                 
                 {[
                   { label: "d", val: t.d },
                   { label: "h", val: t.h },
@@ -305,7 +403,7 @@ const Hero = () => {
           })}
         </div>
 
-        {/* ── Search Bar — Unique Glassmorphism Style ── */}
+         
         <div
           className="max-w-xl mb-5"
           style={{
@@ -328,7 +426,7 @@ const Hero = () => {
               backdropFilter: "blur(16px)",
             }}
           >
-            {/* Icon pill */}
+            
             <div
               style={{
                 display: "flex",
@@ -344,9 +442,11 @@ const Hero = () => {
               <Search size={15} color="#fff" />
             </div>
 
-            {/* Input */}
+           
             <input
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search events, artists, venues or ask AI…"
               style={{
                 flex: 1,
@@ -367,7 +467,7 @@ const Hero = () => {
               }}
             />
 
-            {/* Search button */}
+           
             <button
               type="button"
               style={{
@@ -401,7 +501,7 @@ const Hero = () => {
           </div>
         </div>
 
-        {/* ── Mood selector ── */}
+         
         <div className="mb-5">
           <h3 className="text-white font-semibold mb-3">
             ✨ How do you want to feel?
@@ -433,7 +533,55 @@ const Hero = () => {
           </div>
         </div>
 
-        {/* ── Dot indicators ── */}
+        {selectedMoodKey && MOOD_PLACES[selectedMoodKey] && (
+          <div
+            className="mb-5"
+            style={{
+              animation: "slideUp 0.4s ease-out forwards",
+            }}
+          >
+            <h4 className="text-white text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+              <span>📍</span> Suggested Destinations for {selectedMood}
+            </h4>
+            <div 
+              className="flex gap-3 overflow-x-auto pb-2 scrollbar-none"
+              style={{
+                msOverflowStyle: "none",
+                scrollbarWidth: "none",
+              }}
+            >
+              {MOOD_PLACES[selectedMoodKey].map((place) => (
+                <div
+                  key={place.name}
+                  onClick={() => setSearchQuery(place.name)}
+                  className="flex items-center gap-3 p-2 rounded-xl backdrop-blur-md transition-all duration-300 hover:scale-105 cursor-pointer"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.08)",
+                    border: "1px solid rgba(255, 255, 255, 0.12)",
+                    minWidth: "240px",
+                    flex: "0 0 auto",
+                  }}
+                >
+                  <img
+                    src={place.image}
+                    alt={place.name}
+                    className="w-10 h-10 rounded-lg object-cover"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h5 className="text-white text-xs font-bold truncate" style={{ margin: 0 }}>
+                      {place.name}
+                    </h5>
+                    <p className="text-gray-300 text-[10px] truncate" style={{ margin: 0 }}>
+                      {place.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+       
         <div className="flex gap-2">
           {images.map((_, index) => (
             <button
@@ -455,11 +603,24 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* ── Keyframes ── */}
+      
       <style>{`
         @keyframes pulse-dot {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.4; transform: scale(0.7); }
+        }
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .scrollbar-none::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </section>

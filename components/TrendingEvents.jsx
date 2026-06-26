@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 
-export default function TrendingEvents() {
+export default function TrendingEvents({ onBookEvent = () => {} }) {
   const sliderRef = useRef(null);
   const [likedEvents, setLikedEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -265,27 +265,27 @@ export default function TrendingEvents() {
               <p>⭐ {event.rating}/5</p>
 
               <button
-  onClick={() => {
-    localStorage.setItem(
-      "selectedEvent",
-      JSON.stringify(event)
-    );
-    router.push("/event-details");
-  }}
-  style={{
-    width: "100%",
-    marginTop: "15px",
-    padding: "12px",
-    border: "none",
-    borderRadius: "10px",
-    background: "linear-gradient(90deg, #f97316, #ff5862)",
-    color: "white",
-    fontWeight: "bold",
-    cursor: "pointer",
-  }}
->
-  Book Now
-</button>
+                onClick={() => {
+                  onBookEvent({
+                    title: event.title,
+                    venue: event.location,
+                    priceVal: 499,
+                  });
+                }}
+                style={{
+                  width: "100%",
+                  marginTop: "15px",
+                  padding: "12px",
+                  border: "none",
+                  borderRadius: "10px",
+                  background: "linear-gradient(90deg, #f97316, #ff5862)",
+                  color: "white",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                }}
+              >
+                Book Now
+              </button>
             </div>
           </div>
         ))}
