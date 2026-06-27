@@ -47,8 +47,8 @@ export default function TrendingEvents() {
       organizer: "Sun Pictures",
       features: ["Dolby Atmos", "Recliner Seats", "Free Popcorn Combo"],
       crew: [
-        { name: "Lokesh Kanagaraj", role: "Director", img: "/crew/lokesh.jpg" },
-        { name: "Rajinikanth", role: "Lead Actor", img: "/crew/rajini.jpg" }
+        { name: "Lokesh Kanagaraj", role: "Director", img: "https://ui-avatars.com/api/?name=Lokesh+Kanagaraj&background=random&size=200" },
+        { name: "Rajinikanth", role: "Lead Actor", img: "https://ui-avatars.com/api/?name=Rajinikanth&background=random&size=200" }
       ],
       reviews: [
         { name: "Ashwin", rating: 5, comment: "Pure mass! The BGM is lit." }
@@ -68,7 +68,7 @@ export default function TrendingEvents() {
       organizer: "Fatima Vijay Antony",
       features: ["VIP Seating", "Food Stalls", "Merchandise"],
       crew: [
-        { name: "Vijay Antony", role: "Artist", img: "/crew/vijay_antony.jpg" }
+        { name: "Vijay Antony", role: "Artist", img: "https://ui-avatars.com/api/?name=Vijay+Antony&background=random&size=200" }
       ],
       reviews: [
         { name: "Ram", rating: 5, comment: "Amazing vibes. Loved the classical fusion." }
@@ -88,8 +88,8 @@ export default function TrendingEvents() {
       organizer: "KM Music",
       features: ["Premium Acoustics", "Meet & Greet (VIP)", "Signed Merch"],
       crew: [
-        { name: "A.R. Rahman", role: "Composer", img: "/crew/rahman.jpg" },
-        { name: "Shreya Ghoshal", role: "Singer", img: "/crew/shreya.jpg" }
+        { name: "A.R. Rahman", role: "Composer", img: "https://ui-avatars.com/api/?name=A+R+Rahman&background=random&size=200" },
+        { name: "Shreya Ghoshal", role: "Singer", img: "https://ui-avatars.com/api/?name=Shreya+Ghoshal&background=random&size=200" }
       ],
       reviews: [
         { name: "Nisha", rating: 5, comment: "It felt heavenly! Literal goosebumps." }
@@ -109,8 +109,8 @@ export default function TrendingEvents() {
       organizer: "Chennai Super Kings",
       features: ["Player Autographs", "Fan Zone Access", "Jersey Giveaway"],
       crew: [
-        { name: "MS Dhoni", role: "Captain", img: "/crew/dhoni.jpg" },
-        { name: "Ruturaj Gaikwad", role: "Player", img: "/crew/ruturaj.jpg" }
+        { name: "MS Dhoni", role: "Captain", img: "https://ui-avatars.com/api/?name=MS+Dhoni&background=random&size=200" },
+        { name: "Ruturaj Gaikwad", role: "Player", img: "https://ui-avatars.com/api/?name=Ruturaj+Gaikwad&background=random&size=200" }
       ],
       reviews: [
         { name: "Kiran", rating: 5, comment: "Whistle Podu! Best day ever." }
@@ -130,7 +130,7 @@ export default function TrendingEvents() {
       organizer: "Madras Comedy Club",
       features: ["Free Drink", "VIP Sofa Seating", "After-party"],
       crew: [
-        { name: "Aravind SA", role: "Comedian", img: "/crew/aravind.jpg" }
+        { name: "Aravind SA", role: "Comedian", img: "https://ui-avatars.com/api/?name=Aravind+SA&background=random&size=200" }
       ],
       reviews: [
         { name: "Sneha", rating: 4, comment: "Really funny, great crowd work!" }
@@ -150,7 +150,7 @@ export default function TrendingEvents() {
       organizer: "Foodie Nation",
       features: ["Tasting Sessions", "Live Cooking Demos", "Chef Meet & Greet"],
       crew: [
-        { name: "Chef Damu", role: "Head Chef", img: "/crew/damu.jpg" }
+        { name: "Chef Damu", role: "Head Chef", img: "https://ui-avatars.com/api/?name=Chef+Damu&background=random&size=200" }
       ],
       reviews: [
         { name: "Ravi", rating: 5, comment: "The biryani stall was amazing." }

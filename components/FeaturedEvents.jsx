@@ -21,8 +21,8 @@ export default function FeaturedEvents() {
       organizer: "Wunderbar Films",
       features: ["VIP Backstage Pass", "Exclusive Merchandise", "Premium Seating", "Meet & Greet"],
       crew: [
-        { name: "Anirudh", role: "Lead Artist", img: "/crew/anirudh.jpg" },
-        { name: "Jonita Gandhi", role: "Guest Singer", img: "/crew/jonita.jpg" }
+        { name: "Anirudh", role: "Lead Artist", img: "https://ui-avatars.com/api/?name=Anirudh&background=random&size=200" },
+        { name: "Jonita Gandhi", role: "Guest Singer", img: "https://ui-avatars.com/api/?name=Jonita+Gandhi&background=random&size=200" }
       ],
       reviews: [
         { name: "Vikram S.", rating: 5, comment: "Mind-blowing energy! Best concert I've ever attended." },
@@ -42,7 +42,7 @@ export default function FeaturedEvents() {
       organizer: "Fatima Vijay Antony",
       features: ["Early Entry", "Dedicated F&B zones", "Live Q&A"],
       crew: [
-        { name: "Vijay Antony", role: "Lead Artist", img: "/crew/vijay_antony.jpg" }
+        { name: "Vijay Antony", role: "Lead Artist", img: "https://ui-avatars.com/api/?name=Vijay+Antony&background=random&size=200" }
       ],
       reviews: [
         { name: "Karthik", rating: 4, comment: "Great voice and wonderful atmosphere." }
@@ -61,7 +61,7 @@ export default function FeaturedEvents() {
       organizer: "Comedy Central India",
       features: ["Front Row Seating", "Free Drink Included", "After-party access"],
       crew: [
-        { name: "Zakir Khan", role: "Comedian", img: "/crew/zakir.jpg" }
+        { name: "Zakir Khan", role: "Comedian", img: "https://ui-avatars.com/api/?name=Zakir+Khan&background=random&size=200" }
       ],
       reviews: [
         { name: "Neha R.", rating: 5, comment: "My stomach hurts from laughing too much!" }
@@ -80,7 +80,7 @@ export default function FeaturedEvents() {
       organizer: "Prithvi Theatre",
       features: ["Balcony Seats", "Complimentary Brochure", "Pre-show Talk"],
       crew: [
-        { name: "Naseeruddin Shah", role: "Director", img: "/crew/naseeruddin.jpg" }
+        { name: "Naseeruddin Shah", role: "Director", img: "https://ui-avatars.com/api/?name=Naseeruddin+Shah&background=random&size=200" }
       ],
       reviews: [
         { name: "Amitabh", rating: 4, comment: "A very moving performance with stellar acting." }
@@ -99,7 +99,7 @@ export default function FeaturedEvents() {
       organizer: "Dance India Network",
       features: ["Dance Workshop Access", "Exclusive Cypher Zones", "Merch Discounts"],
       crew: [
-        { name: "Prabhu Deva", role: "Judge & Performer", img: "/crew/prabhu.jpg" }
+        { name: "Prabhu Deva", role: "Judge & Performer", img: "https://ui-avatars.com/api/?name=Prabhu+Deva&background=random&size=200" }
       ],
       reviews: [
         { name: "Riya", rating: 5, comment: "The energy was simply off the charts." }
@@ -118,7 +118,7 @@ export default function FeaturedEvents() {
       organizer: "Esports Federation",
       features: ["VIP Lounge", "Gamer Meetup", "Giveaways"],
       crew: [
-        { name: "Mortal", role: "Pro Player", img: "/crew/mortal.jpg" }
+        { name: "Mortal", role: "Pro Player", img: "https://ui-avatars.com/api/?name=Mortal&background=random&size=200" }
       ],
       reviews: [
         { name: "Sam", rating: 5, comment: "Insane clutches! The crowd was hyped." }
@@ -137,7 +137,7 @@ export default function FeaturedEvents() {
       organizer: "Gully Gang",
       features: ["Stage Access", "Free Drink", "After-party"],
       crew: [
-        { name: "Divine", role: "Rapper", img: "/crew/divine.jpg" }
+        { name: "Divine", role: "Rapper", img: "https://ui-avatars.com/api/?name=Divine&background=random&size=200" }
       ],
       reviews: [
         { name: "Rahul", rating: 4, comment: "True hip hop vibe. Absolutely loved it." }
@@ -156,7 +156,7 @@ export default function FeaturedEvents() {
       organizer: "Sunburn",
       features: ["VIP Cabanas", "Unlimited F&B", "Exclusive Entry"],
       crew: [
-        { name: "Martin Garrix", role: "DJ", img: "/crew/martin.jpg" }
+        { name: "Martin Garrix", role: "DJ", img: "https://ui-avatars.com/api/?name=Martin+Garrix&background=random&size=200" }
       ],
       reviews: [
         { name: "Anita", rating: 5, comment: "Best night of my life. Period." }

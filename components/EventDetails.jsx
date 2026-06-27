@@ -12,9 +12,9 @@ export default function EventDetails({ event, description, organizer, price, fea
   ];
 
   const defaultCrew = [
-    { name: "Anirudh", role: "Lead Artist", img: "/crew/anirudh.jpg" },
-    { name: "Jonita Gandhi", role: "Guest Singer", img: "/crew/jonita.jpg" },
-    { name: "MS Dhoni", role: "Captain", img: "/crew/dhoni.jpg" }
+    { name: "Anirudh", role: "Lead Artist", img: "https://ui-avatars.com/api/?name=Anirudh&background=random&size=200" },
+    { name: "Jonita Gandhi", role: "Guest Singer", img: "https://ui-avatars.com/api/?name=Jonita+Gandhi&background=random&size=200" },
+    { name: "MS Dhoni", role: "Captain", img: "https://ui-avatars.com/api/?name=MS+Dhoni&background=random&size=200" }
   ];
 
   const defaultReviews = [
