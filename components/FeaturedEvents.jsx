@@ -236,11 +236,15 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
               </p>
 
               {/* BOOK BUTTON */}
-              <div
-                className="mt-3 w-full bg-gradient-to-r from-orange-500 to-rose-500 py-2 rounded-lg text-center font-semibold text-white pointer-events-none"
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onBookEvent(event);
+                }}
+                className="mt-3 w-full bg-gradient-to-r from-orange-500 to-rose-500 py-2 rounded-lg text-center font-semibold text-white cursor-pointer relative z-10"
               >
                 🎟 Book Now
-              </div>
+              </button>
             </div>
           </div>
         ))}

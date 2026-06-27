@@ -31,10 +31,11 @@ export default function Home() {
   const router = useRouter();
 
   const handleBookEvent = (event) => {
+    const numericPrice = event.price ? parseInt(event.price.replace(/[^\d]/g, "")) : (event.priceVal || 499);
     const query = new URLSearchParams({
       title: event.title,
       venue: event.venue || event.location || "",
-      price: event.priceVal || 499,
+      price: numericPrice,
     }).toString();
     router.push(`/seat-selection?${query}`);
   };
@@ -43,9 +44,9 @@ export default function Home() {
     <div>
       <Hero />
       
-      <FeaturedEvents />
-      <TrendingEvents />
-      <EventMapWrapper /> 
+      <FeaturedEvents onBookEvent={handleBookEvent} />
+      <TrendingEvents onBookEvent={handleBookEvent} />
+      <EventMapWrapper onBookEvent={handleBookEvent} /> 
     </div>
   );
 }

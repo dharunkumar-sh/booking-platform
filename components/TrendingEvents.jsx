@@ -342,6 +342,10 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
               <p>⭐ {event.rating}/5</p>
 
               <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onBookEvent(event);
+                }}
                 style={{
                   width: "100%",
                   marginTop: "15px",
@@ -352,7 +356,6 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
                   color: "white",
                   fontWeight: "bold",
                   cursor: "pointer",
-                  pointerEvents: "none",
                 }}
               >
                 Book Now
