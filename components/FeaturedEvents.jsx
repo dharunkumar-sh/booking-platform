@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { Ticket } from "lucide-react";
 
 export default function FeaturedEvents({ onBookEvent = () => {} }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -51,7 +52,7 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
     {
       title: "Stand-up Comedy Show",
       category: "comedy",
-      venue: "Hyderabad Club",
+      venue: "Hyderabad Comedy Hall",
       date: "Sep 15, 2026",
       time: "8:00 PM",
       rating: "4.7",
@@ -127,7 +128,7 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
     {
       title: "Hip Hop Night",
       category: "dance",
-      venue: "Chandigarh Club",
+      venue: "Chandigarh Arena",
       date: "Nov 02, 2026",
       time: "7:30 PM",
       rating: "4.4",
@@ -194,7 +195,7 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
             key={i}
             onClick={() => {
               localStorage.setItem("selectedEvent", JSON.stringify(event));
-              router.push("/event-details");
+              router.push(`/event-details/${encodeURIComponent(event.title)}`);
             }}
             className="group relative rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-orange-500/40 transition duration-300"
           >
@@ -241,9 +242,9 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
                   e.stopPropagation();
                   onBookEvent(event);
                 }}
-                className="mt-3 w-full bg-gradient-to-r from-orange-500 to-rose-500 py-2 rounded-lg text-center font-semibold text-white cursor-pointer relative z-10"
+                className="mt-3 w-full bg-gradient-to-r from-orange-500 to-rose-500 py-2 rounded-lg flex items-center justify-center gap-2 font-semibold text-white cursor-pointer relative z-10"
               >
-                🎟 Book Now
+                <Ticket size={16} /> Book Now
               </button>
             </div>
           </div>

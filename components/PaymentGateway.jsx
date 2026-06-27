@@ -9,8 +9,48 @@ import {
   ShieldCheck, 
   Loader2, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle,
+  QrCode,
+  Wallet
 } from "lucide-react";
+
+// Custom SVG Icons for UPI Apps
+const GPayIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="12" fill="#FFFFFF"/>
+    <path d="M17.5 12.25c0-.43-.035-.85-.1-1.25H12v2.375h3.09c-.13.7-.53 1.295-1.125 1.69v1.4h1.82c1.065-.98 1.68-2.42 1.68-4.215z" fill="#4285F4"/>
+    <path d="M12 17.825c1.575 0 2.9-.52 3.865-1.4l-1.82-1.4c-.505.34-1.15.545-2.045.545-1.575 0-2.91-1.065-3.385-2.5H6.715v1.45A5.82 5.82 0 0012 17.825z" fill="#34A853"/>
+    <path d="M8.615 13.07a3.493 3.493 0 010-2.22v-1.45H6.715a5.821 5.821 0 000 5.12l1.9-1.45z" fill="#FBBC05"/>
+    <path d="M12 8.63c.855 0 1.625.295 2.23.87l1.675-1.675C14.895 6.88 13.57 6.175 12 6.175A5.82 5.82 0 006.715 9.4l1.9 1.45c.475-1.435 1.81-2.5 3.385-2.5z" fill="#EA4335"/>
+  </svg>
+);
+
+const PhonePeIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="24" height="24" rx="6" fill="#5F259F"/>
+    <path d="M7.5 7.5h9v3h-9v-3z" fill="#FFFFFF"/>
+    <path d="M10.5 10.5h6v6a3 3 0 01-6 0v-6z" fill="#FFFFFF"/>
+    <circle cx="13.5" cy="13.5" r="1.5" fill="#5F259F"/>
+  </svg>
+);
+
+const PaytmIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="24" height="24" rx="6" fill="#002E6E"/>
+    <circle cx="9" cy="12" r="3" fill="#00B9F5"/>
+    <circle cx="15" cy="12" r="3" fill="#00B9F5"/>
+    <path d="M7.5 10h9v4h-9v-4z" fill="#00B9F5"/>
+    <path d="M9.5 12h5v1h-5v-1z" fill="#FFFFFF"/>
+  </svg>
+);
+
+const BhimIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="24" height="24" rx="6" fill="#F97316"/>
+    <path d="M6 18l6-12 6 12h-3.5l-2.5-5-2.5 5H6z" fill="#FFFFFF"/>
+    <path d="M10.5 13l1.5-3 1.5 3h-3z" fill="#138808"/>
+  </svg>
+);
 
 export default function PaymentGateway({ amount = 499, booking, onBack, onSuccess }) {
   const [activeTab, setActiveTab] = useState("upi"); // "upi" | "debit" | "credit" | "netbanking"
@@ -98,10 +138,10 @@ export default function PaymentGateway({ amount = 499, booking, onBack, onSucces
   };
 
   const upiApps = [
-    { id: "gpay", name: "Google Pay", color: "from-blue-500 to-green-500" },
-    { id: "phonepe", name: "PhonePe", color: "from-purple-600 to-indigo-600" },
-    { id: "paytm", name: "Paytm", color: "from-cyan-500 to-blue-600" },
-    { id: "bhim", name: "BHIM UPI", color: "from-orange-500 to-green-600" },
+    { id: "gpay", name: "Google Pay", icon: <GPayIcon /> },
+    { id: "phonepe", name: "PhonePe", icon: <PhonePeIcon /> },
+    { id: "paytm", name: "Paytm", icon: <PaytmIcon /> },
+    { id: "bhim", name: "BHIM UPI", icon: <BhimIcon /> },
   ];
 
   const banks = [
@@ -175,7 +215,7 @@ export default function PaymentGateway({ amount = 499, booking, onBack, onSucces
                   : "bg-neutral-900/40 text-neutral-400 hover:bg-neutral-900 hover:text-white border border-transparent"
               }`}
             >
-              <Smartphone size={18} />
+              <QrCode size={18} />
               <span>UPI / QR</span>
             </button>
 
@@ -201,7 +241,7 @@ export default function PaymentGateway({ amount = 499, booking, onBack, onSucces
                   : "bg-neutral-900/40 text-neutral-400 hover:bg-neutral-900 hover:text-white border border-transparent"
               }`}
             >
-              <CreditCard size={18} />
+              <Wallet size={18} />
               <span>Credit Card</span>
             </button>
 
@@ -247,8 +287,8 @@ export default function PaymentGateway({ amount = 499, booking, onBack, onSucces
                               : "bg-neutral-950/50 border-neutral-800 hover:border-neutral-700 opacity-70 hover:opacity-100"
                           }`}
                         >
-                          <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${app.color} flex items-center justify-center text-white font-bold text-xs shadow-inner`}>
-                            {app.name.charAt(0)}
+                          <div className="w-10 h-10 flex items-center justify-center filter drop-shadow-sm hover:scale-105 transition-transform duration-200">
+                            {app.icon}
                           </div>
                           <span className="text-xs font-medium text-neutral-300">{app.name}</span>
                         </button>

@@ -75,7 +75,7 @@ export default function UserForm() {
       {/* Event Mini Summary if available */}
       {bookingDetails && (
         <div className="w-full max-w-md bg-neutral-900/40 backdrop-blur-md border border-neutral-800 rounded-3xl p-5 mb-6 text-sm flex flex-col gap-2">
-          <h3 className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-rose-500 text-base">
+          <h3 className="font-bold text-transparent bg-clip-text bg-linear-to-r from-orange-500 to-rose-500 text-base">
             You're booking for:
           </h3>
           <div className="flex justify-between items-center">
@@ -94,7 +94,7 @@ export default function UserForm() {
 
       {/* Main Checkout Form Card */}
       <div className="w-full max-w-md bg-neutral-900/60 backdrop-blur-lg border border-neutral-800/80 rounded-3xl p-8 shadow-2xl hover:shadow-orange-500/5 transition-shadow duration-500">
-        <h2 className="text-2xl font-bold text-center mb-2 bg-gradient-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent">
+        <h2 className="text-2xl font-bold text-center mb-2 bg-linear-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent">
           Contact Details
         </h2>
         <p className="text-neutral-400 text-center text-sm mb-8">
@@ -168,7 +168,7 @@ export default function UserForm() {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full mt-8 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-bold hover:opacity-95 transition-opacity flex items-center justify-center gap-2 group shadow-lg hover:shadow-orange-500/20 cursor-pointer"
+            className="w-full mt-8 py-4 bg-linear-to-r from-orange-500 to-rose-500 text-white rounded-xl font-bold hover:opacity-95 transition-opacity flex items-center justify-center gap-2 group shadow-lg hover:shadow-orange-500/20 cursor-pointer"
           >
             Continue to Confirmation
             <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />

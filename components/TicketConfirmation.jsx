@@ -135,7 +135,7 @@ export default function TicketConfirmation() {
               </div>
 
               <div>
-                <h3 className="text-2xl lg:text-3xl font-extrabold bg-gradient-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent mb-2">
+                <h3 className="text-2xl lg:text-3xl font-extrabold bg-linear-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent mb-2">
                   {event.title}
                 </h3>
                 <div className="flex flex-wrap gap-4 text-xs text-neutral-400 mt-2">

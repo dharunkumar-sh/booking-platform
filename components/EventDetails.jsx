@@ -1,5 +1,5 @@
 "use client";
-import { Info, User, Ticket, CheckCircle2, Users, Star, MessageSquare } from "lucide-react";
+import { Info, User, Ticket, CheckCircle2, Users, Star, MessageSquare, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function EventDetails({ event, description, organizer, price, features, crew, reviews }) {
@@ -9,11 +9,11 @@ export default function EventDetails({ event, description, organizer, price, fea
   const handleCheckout = () => {
     const numericPrice = event.price ? parseInt(event.price.toString().replace(/[^\d]/g, "")) : (event.priceVal || 499);
     const query = new URLSearchParams({
-      title: event.title || "",
       venue: event.venue || event.location || "",
       price: numericPrice.toString(),
+      category: event.category || "",
     }).toString();
-    router.push(`/seat-selection?${query}`);
+    router.push(`/seat-selection/${encodeURIComponent(event.title)}?${query}`);
   };
 
   const defaultDescription = "Join us for an unforgettable experience! This event brings together the best in the industry for a night of entertainment, learning, and connection. Don't miss out on what promises to be the highlight of the year.";
@@ -55,7 +55,7 @@ export default function EventDetails({ event, description, organizer, price, fea
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {(features || defaultFeatures).map((feature, idx) => (
               <li key={idx} className="flex items-start gap-3 text-neutral-300">
-                <div className="mt-1 bg-gradient-to-br from-orange-500 to-rose-500 rounded-full p-1">
+                <div className="mt-1 bg-linear-to-br from-orange-500 to-rose-500 rounded-full p-1">
                   <CheckCircle2 size={12} className="text-white" />
                 </div>
                 <span>{feature}</span>
@@ -91,7 +91,7 @@ export default function EventDetails({ event, description, organizer, price, fea
             {(reviews || defaultReviews).map((review, idx) => (
               <div key={idx} className="bg-neutral-950/50 rounded-2xl p-6 border border-neutral-800 hover:border-neutral-700 transition-colors">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-rose-500 flex items-center justify-center text-sm font-bold text-white shadow-lg">
+                  <div className="w-8 h-8 rounded-full bg-linear-to-r from-orange-500 to-rose-500 flex items-center justify-center text-sm font-bold text-white shadow-lg">
                     {review.name.charAt(0)}
                   </div>
                   <div>
@@ -130,9 +130,10 @@ export default function EventDetails({ event, description, organizer, price, fea
 
           <button 
             onClick={handleCheckout}
-            className="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-orange-500/50 cursor-pointer"
+            className="w-full py-4 rounded-xl font-bold text-white bg-linear-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-orange-500/50 cursor-pointer flex items-center justify-center gap-2"
           >
-            Proceed to Checkout
+            <span>Proceed to Checkout</span>
+            <ArrowRight size={18} />
           </button>
           
           <p className="text-xs text-center text-neutral-500 mt-4">

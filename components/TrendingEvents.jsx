@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import { Ticket } from "lucide-react";
 
 export default function TrendingEvents({ onBookEvent = () => {} }) {
   const sliderRef = useRef(null);
@@ -40,7 +41,7 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
       image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800",
       date: "Now Showing",
       time: "Various Timings",
-      location: "PVR Palazzo Chennai",
+      location: "PVR Palazzo Theatre Chennai",
       rating: "4.9",
       description: "An action-packed blockbuster featuring stunning visuals, intense drama, and a gripping storyline that will keep you on the edge of your seat.",
       price: "₹350.00",
@@ -61,7 +62,7 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
       image: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800",
       date: "20 Jun 2026",
       time: "6:30 PM",
-      location: "YMCA Grounds Chennai",
+      location: "YMCA Stadium Chennai",
       rating: "4.8",
       description: "Experience the musical genius of Vijay Antony in a spectacular live show featuring all his greatest hits.",
       price: "₹1499.00",
@@ -81,7 +82,7 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
       image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800",
       date: "22 Jun 2026",
       time: "7:00 PM",
-      location: "Nehru Indoor Stadium",
+      location: "Nehru Indoor Arena Chennai",
       rating: "4.9",
       description: "The Mozart of Madras returns with a magical symphony of his most iconic soundtracks, accompanied by a 50-piece orchestra.",
       price: "₹3499.00",
@@ -102,7 +103,7 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
       image: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800",
       date: "25 Jun 2026",
       time: "4:00 PM",
-      location: "Chepauk Stadium",
+      location: "Chepauk Stadium Chennai",
       rating: "4.8",
       description: "Join the yellow army for an exclusive fan festival! Meet the players, enjoy live music, and get access to exclusive merchandise.",
       price: "₹999.00",
@@ -123,7 +124,7 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
       image: "https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800",
       date: "28 Jun 2026",
       time: "8:00 PM",
-      location: "Kodambakkam",
+      location: "Kodambakkam Hall Chennai",
       rating: "4.7",
       description: "An evening of endless laughter featuring the city's best local comics and a surprise guest performer.",
       price: "₹599.00",
@@ -143,7 +144,7 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
       image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800",
       date: "30 Jun 2026",
       time: "11:00 AM",
-      location: "Island Grounds",
+      location: "Island Grounds Arena Chennai",
       rating: "4.8",
       description: "A culinary journey exploring street food and gourmet cuisines from all over the world. Taste the best dishes from top chefs.",
       price: "₹299.00",
@@ -356,9 +357,13 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
                   color: "white",
                   fontWeight: "bold",
                   cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
                 }}
               >
-                Book Now
+                <Ticket size={16} /> Book Now
               </button>
             </div>
           </div>

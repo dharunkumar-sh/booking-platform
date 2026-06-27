@@ -49,17 +49,6 @@ const footerLinks = [
       { label: "Safety Guidelines", href: "/support/safety" },
     ],
   },
-  {
-    title: "Partners",
-    links: [
-      { label: "List an Event", href: "/partners/list-event" },
-      { label: "Cinema Partners", href: "/partners/cinemas" },
-      { label: "Travel Operators", href: "/partners/travel" },
-      { label: "Advertise", href: "/partners/advertise" },
-      { label: "Affiliate Program", href: "/partners/affiliate" },
-      { label: "Contact Sales", href: "/partners/contact-sales" },
-    ],
-  },
 ];
 
 const socialLinks = [

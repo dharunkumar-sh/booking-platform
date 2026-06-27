@@ -1,25 +1,38 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, useParams } from "next/navigation";
 import SeatSelection from "@/components/SeatSelection";
 import TicketSelection from "@/app/tickets/TicketSelection";
 
 function SeatSelectionPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const params = useParams();
 
-  const title = searchParams.get("title") || "Special Event Concert";
+  const title = params.id ? decodeURIComponent(params.id) : (searchParams.get("title") || "Special Event Concert");
   const venue = searchParams.get("venue") || "Main Arena";
   const priceVal = parseInt(searchParams.get("price") || "499", 10);
+  const category = searchParams.get("category") || "";
 
   const eventDetails = {
     title,
     venue,
     priceVal,
+    category,
   };
 
-  const [step, setStep] = useState("seats"); // "seats" | "tickets"
+  const venueLower = venue.toLowerCase();
+  const isConcert = category.toLowerCase() === "music" || 
+                    category.toLowerCase() === "concert" || 
+                    title.toLowerCase().includes("concert") || 
+                    title.toLowerCase().includes("live");
+
+  const isConcertWithoutSeats = isConcert && 
+                                !venueLower.includes("stadium") && 
+                                !venueLower.includes("arena");
+
+  const [step, setStep] = useState(isConcertWithoutSeats ? "tickets" : "seats"); // "seats" | "tickets"
   const [confirmedSeats, setConfirmedSeats] = useState([]);
 
   if (step === "tickets") {
@@ -28,7 +41,13 @@ function SeatSelectionPageContent() {
         <TicketSelection
           event={eventDetails}
           confirmedSeats={confirmedSeats}
-          onBack={() => setStep("seats")}
+          onBack={() => {
+            if (isConcertWithoutSeats) {
+              router.back();
+            } else {
+              setStep("seats");
+            }
+          }}
           onConfirmBooking={(ticketDetails) => {
             localStorage.setItem("pendingBooking", JSON.stringify(ticketDetails));
             router.push("/checkout");

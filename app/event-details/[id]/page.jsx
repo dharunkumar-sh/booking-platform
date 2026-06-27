@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import EventHeader from "@/components/EventHeader";
 import EventDetails from "@/components/EventDetails";
@@ -8,13 +8,12 @@ import EventDetails from "@/components/EventDetails";
 export default function EventDetailsPage() {
   const [event, setEvent] = useState(null);
   const router = useRouter();
+  const params = useParams();
 
   useEffect(() => {
     const storedEvent = localStorage.getItem("selectedEvent");
     if (storedEvent) {
       const parsedEvent = JSON.parse(storedEvent);
-      // Map properties to match what EventHeader expects if necessary
-      // For instance, TrendingEvents uses `location`, FeaturedEvents uses `venue`.
       setEvent({
         title: parsedEvent.title,
         category: parsedEvent.category || "Event",
@@ -31,7 +30,7 @@ export default function EventDetailsPage() {
         reviews: parsedEvent.reviews,
       });
     }
-  }, []);
+  }, [params.id]);
 
   if (!event) {
     return (

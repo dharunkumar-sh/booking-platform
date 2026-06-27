@@ -4,6 +4,7 @@ import { useState } from "react";
 import MovieSeatMap from "@/app/seat-booking/components/MovieSeatMap";
 import ArenaSeatMap from "@/app/seat-booking/components/ArenaSeatMap";
 import OpenSpaceSeatMap from "@/app/seat-booking/components/OpenSpaceSeatMap";
+import StadiumSeatMap from "@/app/seat-booking/components/StadiumSeatMap";
 import "@/app/seat-booking/seat-booking.css";
 
 const LEGENDS = {
@@ -14,9 +15,16 @@ const LEGENDS = {
     { css: "bg-neutral-900/80 border-b-2 border-neutral-800 opacity-40", label: "Booked" },
     { css: "bg-orange-500 border-b-2 border-orange-700", label: "Selected" },
   ],
-  open_space: [
+  stadium: [
+    { css: "bg-green-900/60 border-b-2 border-green-600", label: "Floor Pit", price: "₹1500" },
+    { css: "bg-rose-900/60 border-b-2 border-rose-600", label: "Lower Bowl", price: "₹900-1000" },
+    { css: "bg-indigo-900/60 border-b-2 border-indigo-600", label: "Upper Bowl", price: "₹500" },
+    { css: "bg-neutral-900/80 border-b-2 border-neutral-800 opacity-40", label: "Booked" },
+    { css: "bg-orange-500 border-b-2 border-orange-700", label: "Selected" },
+  ],
+  hall: [
     { css: "bg-neutral-800 border-b-2 border-neutral-600", label: "General Admission", price: "₹500" },
-    { css: "bg-purple-900/60 border-b-2 border-purple-600", label: "Premium Pod", price: "₹1500" },
+    { css: "bg-purple-900/60 border-b-2 border-purple-600", label: "Premium Seat", price: "₹1500" },
     { css: "bg-yellow-900/60 border-b-2 border-yellow-600", label: "VIP Pod", price: "₹2000" },
     { css: "bg-neutral-900/80 border-b-2 border-neutral-800 opacity-40", label: "Booked" },
     { css: "bg-orange-500 border-b-2 border-orange-700", label: "Selected" },
@@ -52,36 +60,25 @@ export default function SeatSelection({
     ) {
       return "theatre";
     }
-    if (
-      name.includes("stadium") ||
-      name.includes("arena") ||
-      name.includes("indoor") ||
-      name.includes("hall") ||
-      name.includes("expo")
-    ) {
-      return "arena";
+    if (name.includes("stadium")) {
+      return "stadium";
     }
-    if (
-      name.includes("grounds") ||
-      name.includes("beach") ||
-      name.includes("club") ||
-      name.includes("lawn") ||
-      name.includes("island") ||
-      name.includes("park") ||
-      name.includes("kodambakkam")
-    ) {
-      return "open_space";
+    if (name.includes("hall")) {
+      return "hall";
+    }
+    if (name.includes("arena")) {
+      return "arena";
     }
     return "theatre"; // Default fallback
   };
 
   const venueType = getVenueType(event.venue);
-  const containerMaxWidth = venueType === "arena" ? "1200px" : "850px";
-  const headerMaxWidth = venueType === "arena" ? "1200px" : "800px";
-  const outerPadding = venueType === "arena" ? "20px 20px 110px 20px" : "40px 20px 140px 20px";
-  const headerMarginBottom = venueType === "arena" ? "16px" : "40px";
-  const containerPadding = venueType === "arena" ? "20px 30px" : "30px";
-  const legendsMarginTop = venueType === "arena" ? "16px" : "40px";
+  const containerMaxWidth = (venueType === "arena" || venueType === "stadium") ? "1200px" : "850px";
+  const headerMaxWidth = (venueType === "arena" || venueType === "stadium") ? "1200px" : "800px";
+  const outerPadding = (venueType === "arena" || venueType === "stadium") ? "20px 20px 110px 20px" : "40px 20px 140px 20px";
+  const headerMarginBottom = (venueType === "arena" || venueType === "stadium") ? "16px" : "40px";
+  const containerPadding = (venueType === "arena" || venueType === "stadium") ? "20px 30px" : "30px";
+  const legendsMarginTop = (venueType === "arena" || venueType === "stadium") ? "16px" : "40px";
 
   const handleSeatToggle = (seat) => {
     setSelectedSeats((prev) => {
@@ -198,11 +195,14 @@ export default function SeatSelection({
           {venueType === "theatre" && (
             <MovieSeatMap selectedSeats={selectedSeats} onSeatToggle={handleSeatToggle} />
           )}
+          {venueType === "stadium" && (
+            <StadiumSeatMap selectedSeats={selectedSeats} onSeatToggle={handleSeatToggle} />
+          )}
+          {venueType === "hall" && (
+            <OpenSpaceSeatMap selectedSeats={selectedSeats} onSeatToggle={handleSeatToggle} />
+          )}
           {venueType === "arena" && (
             <ArenaSeatMap selectedSeats={selectedSeats} onSeatToggle={handleSeatToggle} />
-          )}
-          {venueType === "open_space" && (
-            <OpenSpaceSeatMap selectedSeats={selectedSeats} onSeatToggle={handleSeatToggle} />
           )}
         </div>
 
