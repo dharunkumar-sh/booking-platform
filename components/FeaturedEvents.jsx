@@ -192,7 +192,10 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
         {events.map((event, i) => (
           <div
             key={i}
-            onClick={() => setSelectedCategory(event.category)}
+            onClick={() => {
+              localStorage.setItem("selectedEvent", JSON.stringify(event));
+              router.push("/event-details");
+            }}
             className="group relative rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-orange-500/40 transition duration-300"
           >
             {/* IMAGE */}

@@ -241,6 +241,10 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
         {events.map((event, index) => (
           <div
             key={event.id}
+            onClick={() => {
+              localStorage.setItem("selectedEvent", JSON.stringify(event));
+              router.push("/event-details");
+            }}
             style={{
               minWidth: "330px",
               background: "rgba(255,255,255,0.08)",
@@ -251,6 +255,7 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
               boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
               position: "relative",
               transition: "all 0.3s ease",
+              cursor: "pointer",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform =
@@ -281,7 +286,10 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
 
             {/* Heart */}
             <button
-              onClick={() => toggleLike(event.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleLike(event.id);
+              }}
               style={{
                 position: "absolute",
                 top: "15px",
