@@ -236,16 +236,8 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-<<<<<<< HEAD
                   localStorage.setItem("selectedEvent", JSON.stringify(event));
                   router.push("/event-details");
-=======
-                  onBookEvent({
-                    title: event.title,
-                    venue: event.venue,
-                    priceVal: 499,
-                  });
->>>>>>> ec3c0592d6de81c28cbc5c3ef2ca23a7ec709f93
                 }}
                 className="mt-3 w-full bg-gradient-to-r from-orange-500 to-rose-500 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition cursor-pointer"
               >
