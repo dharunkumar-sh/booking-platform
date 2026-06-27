@@ -36,57 +36,126 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
     {
       id: 1,
       title: "Coolie",
-      image:
-        "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800",
+      category: "movie",
+      image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800",
       date: "Now Showing",
+      time: "Various Timings",
       location: "PVR Palazzo Chennai",
       rating: "4.9",
+      description: "An action-packed blockbuster featuring stunning visuals, intense drama, and a gripping storyline that will keep you on the edge of your seat.",
+      price: "₹350.00",
+      organizer: "Sun Pictures",
+      features: ["Dolby Atmos", "Recliner Seats", "Free Popcorn Combo"],
+      crew: [
+        { name: "Lokesh Kanagaraj", role: "Director", img: "https://ui-avatars.com/api/?name=Lokesh+Kanagaraj&background=random&size=200" },
+        { name: "Rajinikanth", role: "Lead Actor", img: "https://ui-avatars.com/api/?name=Rajinikanth&background=random&size=200" }
+      ],
+      reviews: [
+        { name: "Ashwin", rating: 5, comment: "Pure mass! The BGM is lit." }
+      ]
     },
     {
       id: 2,
       title: "Vijay Antony Live Concert",
-      image:
-        "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800",
+      category: "music",
+      image: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800",
       date: "20 Jun 2026",
+      time: "6:30 PM",
       location: "YMCA Grounds Chennai",
       rating: "4.8",
+      description: "Experience the musical genius of Vijay Antony in a spectacular live show featuring all his greatest hits.",
+      price: "₹1499.00",
+      organizer: "Fatima Vijay Antony",
+      features: ["VIP Seating", "Food Stalls", "Merchandise"],
+      crew: [
+        { name: "Vijay Antony", role: "Artist", img: "https://ui-avatars.com/api/?name=Vijay+Antony&background=random&size=200" }
+      ],
+      reviews: [
+        { name: "Ram", rating: 5, comment: "Amazing vibes. Loved the classical fusion." }
+      ]
     },
     {
       id: 3,
       title: "AR Rahman Live",
-      image:
-        "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800",
+      category: "music",
+      image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800",
       date: "22 Jun 2026",
+      time: "7:00 PM",
       location: "Nehru Indoor Stadium",
       rating: "4.9",
+      description: "The Mozart of Madras returns with a magical symphony of his most iconic soundtracks, accompanied by a 50-piece orchestra.",
+      price: "₹3499.00",
+      organizer: "KM Music",
+      features: ["Premium Acoustics", "Meet & Greet (VIP)", "Signed Merch"],
+      crew: [
+        { name: "A.R. Rahman", role: "Composer", img: "https://ui-avatars.com/api/?name=A+R+Rahman&background=random&size=200" },
+        { name: "Shreya Ghoshal", role: "Singer", img: "https://ui-avatars.com/api/?name=Shreya+Ghoshal&background=random&size=200" }
+      ],
+      reviews: [
+        { name: "Nisha", rating: 5, comment: "It felt heavenly! Literal goosebumps." }
+      ]
     },
     {
       id: 4,
       title: "CSK Fan Festival",
-      image:
-        "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800",
+      category: "sports",
+      image: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800",
       date: "25 Jun 2026",
+      time: "4:00 PM",
       location: "Chepauk Stadium",
       rating: "4.8",
+      description: "Join the yellow army for an exclusive fan festival! Meet the players, enjoy live music, and get access to exclusive merchandise.",
+      price: "₹999.00",
+      organizer: "Chennai Super Kings",
+      features: ["Player Autographs", "Fan Zone Access", "Jersey Giveaway"],
+      crew: [
+        { name: "MS Dhoni", role: "Captain", img: "https://ui-avatars.com/api/?name=MS+Dhoni&background=random&size=200" },
+        { name: "Ruturaj Gaikwad", role: "Player", img: "https://ui-avatars.com/api/?name=Ruturaj+Gaikwad&background=random&size=200" }
+      ],
+      reviews: [
+        { name: "Kiran", rating: 5, comment: "Whistle Podu! Best day ever." }
+      ]
     },
     {
       id: 5,
       title: "Comedy Night Chennai",
-      image:
-        "https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800",
+      category: "comedy",
+      image: "https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800",
       date: "28 Jun 2026",
+      time: "8:00 PM",
       location: "Kodambakkam",
       rating: "4.7",
+      description: "An evening of endless laughter featuring the city's best local comics and a surprise guest performer.",
+      price: "₹599.00",
+      organizer: "Madras Comedy Club",
+      features: ["Free Drink", "VIP Sofa Seating", "After-party"],
+      crew: [
+        { name: "Aravind SA", role: "Comedian", img: "https://ui-avatars.com/api/?name=Aravind+SA&background=random&size=200" }
+      ],
+      reviews: [
+        { name: "Sneha", rating: 4, comment: "Really funny, great crowd work!" }
+      ]
     },
     {
       id: 6,
       title: "Food Festival",
-      image:
-        "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800",
+      category: "food",
+      image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800",
       date: "30 Jun 2026",
+      time: "11:00 AM",
       location: "Island Grounds",
       rating: "4.8",
-    },
+      description: "A culinary journey exploring street food and gourmet cuisines from all over the world. Taste the best dishes from top chefs.",
+      price: "₹299.00",
+      organizer: "Foodie Nation",
+      features: ["Tasting Sessions", "Live Cooking Demos", "Chef Meet & Greet"],
+      crew: [
+        { name: "Chef Damu", role: "Head Chef", img: "https://ui-avatars.com/api/?name=Chef+Damu&background=random&size=200" }
+      ],
+      reviews: [
+        { name: "Ravi", rating: 5, comment: "The biryani stall was amazing." }
+      ]
+    }
   ];
 
   return (
@@ -266,11 +335,8 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
 
               <button
                 onClick={() => {
-                  onBookEvent({
-                    title: event.title,
-                    venue: event.location,
-                    priceVal: 499,
-                  });
+                  localStorage.setItem("selectedEvent", JSON.stringify(event));
+                  router.push("/event-details");
                 }}
                 style={{
                   width: "100%",

@@ -42,9 +42,10 @@ export default function Home() {
   return (
     <div>
       <Hero />
-      <FeaturedEvents onBookEvent={handleBookEvent} />
-      <TrendingEvents onBookEvent={handleBookEvent} />
-      <EventMapWrapper onBookEvent={handleBookEvent} />
+      
+      <FeaturedEvents />
+      <TrendingEvents />
+      <EventMapWrapper /> 
     </div>
   );
 }
