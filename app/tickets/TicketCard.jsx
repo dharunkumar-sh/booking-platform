@@ -3,12 +3,12 @@ import React from 'react';
 import { Plus, Minus, CheckCircle2 } from 'lucide-react';
 import styles from './Tickets.module.css';
 
-const TicketCard = ({ ticket, quantity, onUpdateQuantity }) => {
+const TicketCard = ({ ticket, quantity, onUpdateQuantity, plusDisabled }) => {
   const { id, title, price, description, benefits, availableCount, status, isPopular } = ticket;
   const isSoldOut = status === 'Sold Out' || availableCount === 0;
 
   const handleIncrement = () => {
-    if (quantity < availableCount && !isSoldOut) {
+    if (quantity < availableCount && !isSoldOut && !plusDisabled) {
       onUpdateQuantity(id, quantity + 1);
     }
   };
@@ -53,8 +53,8 @@ const TicketCard = ({ ticket, quantity, onUpdateQuantity }) => {
       <div className={styles.priceSection}>
         <div className={styles.priceWrapper}>
           <div className={styles.price}>
-            <span className={styles.currency}>$</span>
-            {price.toFixed(2)}
+            <span className={styles.currency}>₹</span>
+            {price}
           </div>
           <span className={styles.priceLabel}>Per Ticket</span>
         </div>
@@ -72,7 +72,7 @@ const TicketCard = ({ ticket, quantity, onUpdateQuantity }) => {
           <button 
             className={styles.qtyButton} 
             onClick={handleIncrement}
-            disabled={quantity >= availableCount || quantity >= 10 || isSoldOut}
+            disabled={quantity >= availableCount || quantity >= 10 || isSoldOut || plusDisabled}
             aria-label="Increase quantity"
           >
             <Plus size={16} />
@@ -81,7 +81,7 @@ const TicketCard = ({ ticket, quantity, onUpdateQuantity }) => {
 
         {quantity > 0 && (
           <div className={styles.subtotal}>
-            Subtotal: <span className={styles.subtotalValue}>${(price * quantity).toFixed(2)}</span>
+            Subtotal: <span className={styles.subtotalValue}>₹{price * quantity}</span>
           </div>
         )}
       </div>

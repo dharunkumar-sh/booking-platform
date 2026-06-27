@@ -1,8 +1,9 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import SeatSelection from "@/components/SeatSelection";
+import TicketSelection from "@/app/tickets/TicketSelection";
 
 function SeatSelectionPageContent() {
   const searchParams = useSearchParams();
@@ -18,12 +19,31 @@ function SeatSelectionPageContent() {
     priceVal,
   };
 
+  const [step, setStep] = useState("seats"); // "seats" | "tickets"
+  const [confirmedSeats, setConfirmedSeats] = useState([]);
+
+  if (step === "tickets") {
+    return (
+      <div style={{ paddingTop: '20px', paddingBottom: '80px' }}>
+        <TicketSelection
+          event={eventDetails}
+          confirmedSeats={confirmedSeats}
+          onBack={() => setStep("seats")}
+          onConfirmBooking={(ticketDetails) => {
+            console.log("Confirmed Ticket Booking details:", ticketDetails);
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <SeatSelection
       event={eventDetails}
       onCancel={() => router.push("/")}
-      onConfirmSelection={(details) => {
-        console.log("Confirmed Ticket Booking:", details);
+      onConfirmSelection={(seats) => {
+        setConfirmedSeats(seats);
+        setStep("tickets");
       }}
     />
   );

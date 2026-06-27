@@ -2,28 +2,68 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  font-family: 'Inter', system-ui, sans-serif;
-  color: #f1f5f9;
+  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  color: #f4f4f5;
+  background: #0a0a0a;
+  min-height: 100vh;
+}
+
+.headerRow {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 16px;
+  border-radius: 10px;
+  color: #e4e4e7;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  width: fit-content;
+  transition: all 0.2s;
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .title {
   font-size: 2.5rem;
-  font-weight: 700;
+  font-weight: 800;
   margin-bottom: 0.5rem;
-  background: linear-gradient(135deg, #e0e7ff 0%, #a5b4fc 100%);
+  background: linear-gradient(to right, #ffffff, #a1a1aa);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
-  color: #94a3b8;
-  margin-bottom: 3rem;
+  color: #a1a1aa;
+  margin-bottom: 1.5rem;
   font-size: 1.1rem;
+}
+
+.seatsNotification {
+  background: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.25);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2.5rem;
+  color: #fdba74;
+  font-size: 0.95rem;
 }
 
 .contentWrapper {
   display: grid;
-  grid-template-columns: 1fr 350px;
+  grid-template-columns: 1fr 380px;
   gap: 2rem;
   align-items: start;
 }
@@ -43,27 +83,28 @@
 /* Ticket Card Styles */
 .card {
   position: relative;
-  background: rgba(30, 41, 59, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 1.25rem;
-  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1.5rem;
+  padding: 1.75rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
   overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .card:hover {
   transform: translateY(-4px);
-  background: rgba(30, 41, 59, 0.9);
-  border-color: rgba(99, 102, 241, 0.5);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3), 0 0 20px rgba(99, 102, 241, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(249, 115, 22, 0.4);
+  box-shadow: 0 20px 35px rgba(0, 0, 0, 0.4), 0 0 25px rgba(249, 115, 22, 0.15);
 }
 
 .cardSoldOut {
-  opacity: 0.6;
+  opacity: 0.4;
   pointer-events: none;
   filter: grayscale(100%);
 }
@@ -71,7 +112,7 @@
 .cardHeader {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.6rem;
   flex: 1;
   padding-right: 2rem;
 }
@@ -84,54 +125,54 @@
 
 .cardTitle {
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #fff;
   margin: 0;
 }
 
 .mostPopularBadge {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+  background: linear-gradient(90deg, #f97316, #ff5862);
   color: white;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
   padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
+  border-radius: 20px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.2);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
 }
 
 .statusBadge {
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
   padding: 0.25rem 0.6rem;
-  border-radius: 0.375rem;
+  border-radius: 6px;
   display: inline-block;
   width: fit-content;
 }
 
 .statusAvailable {
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(16, 185, 129, 0.1);
   color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .statusFilling {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: rgba(249, 115, 22, 0.1);
+  color: #fdba74;
+  border: 1px solid rgba(249, 115, 22, 0.2);
 }
 
 .statusSoldOut {
-  background: rgba(239, 68, 68, 0.15);
+  background: rgba(239, 68, 68, 0.1);
   color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .description {
-  color: #cbd5e1;
+  color: #a1a1aa;
   font-size: 0.95rem;
-  margin: 0.5rem 0;
+  margin: 0.25rem 0;
   line-height: 1.5;
 }
 
@@ -146,14 +187,14 @@
 
 .benefitItem {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: #71717a;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .benefitIcon {
-  color: #6366f1;
+  color: #f97316;
 }
 
 .priceSection {
@@ -170,19 +211,20 @@
 
 .price {
   font-size: 1.75rem;
-  font-weight: 700;
+  font-weight: 800;
   color: #fff;
 }
 
 .currency {
-  font-size: 1rem;
-  color: #94a3b8;
-  font-weight: 500;
+  font-size: 1.25rem;
+  color: #f97316;
+  font-weight: 700;
+  margin-right: 2px;
 }
 
 .priceLabel {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #52525b;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   display: block;
@@ -191,7 +233,7 @@
 .quantitySelector {
   display: flex;
   align-items: center;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(0, 0, 0, 0.4);
   border-radius: 0.75rem;
   padding: 0.25rem;
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -213,15 +255,16 @@
 
 .qtyButton:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.1);
+  color: #f97316;
 }
 
 .qtyButton:disabled {
-  opacity: 0.3;
+  opacity: 0.25;
   cursor: not-allowed;
 }
 
 .qtyValue {
-  font-weight: 600;
+  font-weight: 700;
   width: 36px;
   text-align: center;
   color: #fff;
@@ -229,34 +272,34 @@
 
 .subtotal {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: #a1a1aa;
   margin-top: 0.25rem;
 }
 
 .subtotalValue {
   color: #fff;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* Summary Panel Styles */
 .summaryPanel {
-  background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  border-radius: 1.25rem;
-  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(249, 115, 22, 0.2);
+  border-radius: 1.5rem;
+  padding: 1.75rem;
   position: sticky;
   top: 6rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(20px);
 }
 
 .summaryTitle {
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0 0 1.5rem 0;
   color: #fff;
   padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .summaryList {
@@ -274,17 +317,17 @@
 }
 
 .summaryItemName {
-  color: #cbd5e1;
+  color: #a1a1aa;
 }
 
 .summaryItemPrice {
   color: #fff;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .summaryDivider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   margin: 1rem 0;
 }
 
@@ -298,27 +341,27 @@
 .summaryTotalLabel {
   font-size: 1.1rem;
   color: #fff;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .summaryTotalValue {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #6366f1;
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #f97316;
 }
 
 .checkoutButton {
   width: 100%;
-  padding: 1rem;
-  border-radius: 0.75rem;
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  padding: 1.1rem;
+  border-radius: 0.85rem;
+  background: linear-gradient(90deg, #f97316, #ff5862);
   color: #fff;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1rem;
   border: none;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 10px 20px rgba(249, 115, 22, 0.3);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -327,20 +370,245 @@
 
 .checkoutButton:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 15px 20px -3px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 15px 25px rgba(249, 115, 22, 0.4);
 }
 
 .checkoutButton:disabled {
-  background: #334155;
-  color: #94a3b8;
+  background: #27272a;
+  color: #71717a;
   cursor: not-allowed;
   box-shadow: none;
 }
 
 .emptyState {
   text-align: center;
-  color: #94a3b8;
+  color: #71717a;
   font-size: 0.95rem;
   margin-bottom: 1.5rem;
-  padding: 1rem 0;
+  padding: 1.5rem 0;
+}
+
+/* Success Booking Layout */
+.successContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  padding: 2rem;
+  font-family: 'Outfit', 'Inter', sans-serif;
+}
+
+.successCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 2rem;
+  padding: 3rem;
+  width: 100%;
+  max-width: 580px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+}
+
+.successHeader {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.successIconWrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem auto;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+}
+
+.successIcon {
+  color: #34d399;
+}
+
+.successTitle {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.successSubtitle {
+  color: #a1a1aa;
+  font-size: 0.95rem;
+}
+
+/* Virtual Ticket Styling */
+.virtualTicket {
+  width: 100%;
+  background: rgba(20, 20, 20, 0.85);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+  margin-bottom: 2.5rem;
+}
+
+.ticketMain {
+  padding: 1.75rem 2rem;
+}
+
+.ticketBrand {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.brandText {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #f97316;
+}
+
+.ticketBadge {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fdba74;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
+.ticketEventTitle {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 1.5rem;
+  line-height: 1.3;
+}
+
+.ticketMetaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.metaLabel {
+  font-size: 0.7rem;
+  color: #52525b;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.metaValue {
+  font-size: 0.95rem;
+  color: #e4e4e7;
+  font-weight: 600;
+}
+
+.ticketDivider {
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: 20px;
+}
+
+.leftCutout {
+  width: 20px;
+  height: 20px;
+  background: #0a0a0a;
+  border-radius: 50%;
+  position: absolute;
+  left: -10px;
+  border-right: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.rightCutout {
+  width: 20px;
+  height: 20px;
+  background: #0a0a0a;
+  border-radius: 50%;
+  position: absolute;
+  right: -10px;
+  border-left: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.dashedLine {
+  width: 100%;
+  border-top: 2px dashed rgba(249, 115, 22, 0.25);
+}
+
+.ticketStub {
+  padding: 1.75rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.qrWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.qrCode {
+  padding: 6px;
+  background: white;
+  border-radius: 10px;
+  color: #000;
+}
+
+.stubSerial {
+  font-size: 10px;
+  font-family: monospace;
+  color: #71717a;
+}
+
+.priceSummary {
+  text-align: right;
+}
+
+.stubLabel {
+  font-size: 0.7rem;
+  color: #71717a;
+  font-weight: 700;
+  letter-spacing: 1px;
+  display: block;
+}
+
+.stubPrice {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.homeButton {
+  width: 100%;
+  padding: 1.1rem;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.homeButton:hover {
+  background: rgba(255, 255, 255, 0.1);
 }

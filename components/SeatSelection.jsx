@@ -274,17 +274,7 @@ export default function SeatSelection({
           </div>
           <button
             onClick={() => {
-              onConfirmSelection({
-                event,
-                seats: selectedSeats,
-                total: selectedSeats.reduce((acc, curr) => acc + (curr.price || 0), 0),
-              });
-              alert(
-                `Successfully booked ${selectedSeats.length} seats for "${event.title}"!\nTotal amount: ₹${selectedSeats.reduce(
-                  (acc, curr) => acc + (curr.price || 0),
-                  0
-                )}`
-              );
+              onConfirmSelection(selectedSeats);
             }}
             className="vp-proceed-btn"
             style={{
@@ -298,7 +288,7 @@ export default function SeatSelection({
               boxShadow: "0 8px 24px rgba(249, 115, 22, 0.4)",
             }}
           >
-            Confirm Booking
+            Confirm Seats
           </button>
         </div>
       )}
