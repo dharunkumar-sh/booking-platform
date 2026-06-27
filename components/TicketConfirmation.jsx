@@ -13,15 +13,17 @@ import {
   Phone, 
   Ticket, 
   FileText,
-  AlertCircle
+  AlertCircle,
+  CreditCard
 } from "lucide-react";
+import PaymentGateway from "@/components/PaymentGateway";
 
 export default function TicketConfirmation() {
   const router = useRouter();
   const [booking, setBooking] = useState(null);
   const [bookingId, setBookingId] = useState("");
   const [audiNumber, setAudiNumber] = useState("");
-  const [isConfirmed, setIsConfirmed] = useState(false);
+  const [step, setStep] = useState("review"); // "review" | "payment" | "confirmed"
 
   useEffect(() => {
     const pending = localStorage.getItem("pendingBooking");
@@ -86,7 +88,7 @@ export default function TicketConfirmation() {
     localStorage.setItem("confirmedBookings", JSON.stringify(list));
     localStorage.removeItem("pendingBooking"); // Clear pending flow
     
-    setIsConfirmed(true);
+    setStep("confirmed");
   };
 
   const handleCancel = () => {
@@ -105,39 +107,136 @@ export default function TicketConfirmation() {
 
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrData)}`;
 
-  if (isConfirmed) {
+  if (step === "payment") {
+    return (
+      <PaymentGateway
+        amount={finalTotal}
+        booking={booking}
+        onBack={() => setStep("review")}
+        onSuccess={handleConfirm}
+      />
+    );
+  }
+  if (step === "confirmed") {
     return (
       <div className="min-h-screen bg-neutral-950 text-white flex flex-col justify-center items-center px-6 py-12">
-        <div className="w-full max-w-md bg-neutral-900/60 backdrop-blur-lg border border-neutral-800 rounded-3xl p-8 shadow-2xl text-center space-y-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-orange-500 to-rose-500 shadow-lg mb-2">
-            <CheckCircle2 size={36} className="text-white" />
-          </div>
-          <h2 className="text-3xl font-extrabold bg-gradient-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent">
-            Booking Confirmed!
-          </h2>
-          <p className="text-neutral-400 text-sm">
-            Thank you! Your ticket booking is confirmed. Your unique Booking ID is <strong className="text-white">{bookingId}</strong>.
-          </p>
+        <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Detailed Ticket Stub */}
+          <div className="lg:col-span-7 bg-neutral-900/60 backdrop-blur-lg border border-neutral-800 rounded-3xl p-8 relative overflow-hidden flex flex-col justify-between shadow-2xl">
+            {/* Ticket Cutouts */}
+            <div className="absolute top-1/2 -left-4 w-8 h-8 bg-neutral-950 rounded-full border-r border-neutral-800 hidden lg:block"></div>
+            <div className="absolute top-1/2 -right-4 w-8 h-8 bg-neutral-950 rounded-full border-l border-neutral-800 hidden lg:block"></div>
+            
+            <div className="space-y-6">
+              <div className="flex justify-between items-center border-b border-neutral-800/80 pb-4">
+                <span className="text-xs font-bold text-orange-500 uppercase tracking-widest">E-Ticket Stub</span>
+                <span className="text-xs text-neutral-500 font-mono">ID: {bookingId}</span>
+              </div>
 
-          <div className="bg-neutral-950/60 border border-neutral-800 rounded-2xl p-4 flex flex-col items-center justify-center gap-3">
-            <img src={qrUrl} alt="Booking QR Code" className="w-40 h-40 rounded-xl border border-neutral-800 bg-white p-2" />
-            <span className="text-xs text-neutral-500 font-mono">{bookingId}</span>
+              <div>
+                <h3 className="text-2xl lg:text-3xl font-extrabold bg-gradient-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent mb-2">
+                  {event.title}
+                </h3>
+                <div className="flex flex-wrap gap-4 text-xs text-neutral-400 mt-2">
+                  <span className="flex items-center gap-1">📅 {event.date || "July 15, 2026"}</span>
+                  <span className="flex items-center gap-1">🕒 {event.time || "7:00 PM"}</span>
+                  <span className="flex items-center gap-1">📍 {event.venue}</span>
+                </div>
+              </div>
+
+              <div className="border-t border-dashed border-neutral-800 my-4"></div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <span className="text-xs text-neutral-500 block mb-1">SCREEN / AUDI</span>
+                  <span className="font-semibold text-white text-base">{audiNumber}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-500 block mb-1">SEATS BOOKED</span>
+                  <span className="font-semibold text-white text-base truncate block">
+                    {seats.length > 0 ? seats.map(s => s.label || s.id).join(", ") : "General Admission"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <span className="text-xs text-neutral-500 block mb-1">TICKET QUANTITY</span>
+                  <span className="font-semibold text-white text-base">{totalTickets} {totalTickets === 1 ? "Ticket" : "Tickets"}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-neutral-500 block mb-1">TICKET TYPE</span>
+                  <span className="font-semibold text-white text-base font-medium">Standard Admission</span>
+                </div>
+              </div>
+
+              <div className="border-t border-neutral-800/80 pt-4">
+                <span className="text-xs text-neutral-500 block mb-2">CUSTOMER DETAILS</span>
+                <div className="bg-neutral-950/40 border border-neutral-800/60 rounded-2xl p-4 text-sm space-y-1.5">
+                  <div className="flex justify-between text-neutral-300">
+                    <span>Name</span>
+                    <span className="font-semibold text-white">{user?.name}</span>
+                  </div>
+                  <div className="flex justify-between text-neutral-300">
+                    <span>Email</span>
+                    <span className="font-semibold text-white truncate max-w-[200px]">{user?.email}</span>
+                  </div>
+                  <div className="flex justify-between text-neutral-300">
+                    <span>Phone</span>
+                    <span className="font-semibold text-white">{user?.phone}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-xs text-neutral-500 mt-6 pt-4 border-t border-neutral-800/60 text-center lg:text-left">
+              * Please carry a digital copy of this ticket. Gates open 1 hour before showtime.
+            </div>
           </div>
 
-          <div className="space-y-3 pt-4">
-            <button
-              onClick={() => router.push("/tickets")}
-              className="w-full py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white font-bold rounded-xl shadow-lg hover:opacity-95 cursor-pointer"
-            >
-              Go to My Tickets
-            </button>
-            <button
-              onClick={() => router.push("/")}
-              className="w-full py-4 bg-neutral-900 border border-neutral-800 text-neutral-300 font-bold rounded-xl hover:text-white transition-colors cursor-pointer"
-            >
-              Back to Home
-            </button>
+          {/* Booking Status & Actions */}
+          <div className="lg:col-span-5 bg-neutral-900/60 backdrop-blur-lg border border-neutral-800 rounded-3xl p-8 shadow-2xl flex flex-col items-center justify-between text-center space-y-6">
+            <div className="space-y-4 w-full">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-orange-500 to-rose-500 shadow-lg shadow-orange-500/20 mb-2">
+                <CheckCircle2 size={36} className="text-white" />
+              </div>
+              <h2 className="text-2xl lg:text-3xl font-extrabold bg-gradient-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent">
+                Booking Confirmed!
+              </h2>
+              <p className="text-neutral-400 text-sm max-w-sm mx-auto">
+                Thank you! Your ticket booking is confirmed. Your unique Booking ID is <strong className="text-white">{bookingId}</strong>.
+              </p>
+            </div>
+
+            <div className="bg-neutral-950/60 border border-neutral-800 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 w-full max-w-xs mx-auto">
+              <img src={qrUrl} alt="Booking QR Code" className="w-40 h-40 rounded-xl border border-neutral-800 bg-white p-2 hover:scale-105 transition-transform duration-300" />
+              <span className="text-[10px] text-neutral-500 font-mono tracking-wider">{bookingId}</span>
+            </div>
+
+            <div className="space-y-3 w-full">
+              <div className="border-t border-neutral-800/80 pt-4 pb-2">
+                <div className="flex justify-between items-center text-sm text-neutral-400">
+                  <span>Total Amount Paid</span>
+                  <span className="font-extrabold text-lg text-white">₹{finalTotal}</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => router.push("/tickets")}
+                className="w-full py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white font-bold rounded-xl shadow-lg hover:opacity-95 hover:shadow-orange-500/30 transition-all cursor-pointer"
+              >
+                Go to My Tickets
+              </button>
+              <button
+                onClick={() => router.push("/")}
+                className="w-full py-4 bg-neutral-950 border border-neutral-800 text-neutral-300 font-bold rounded-xl hover:text-white hover:border-neutral-700 transition-colors cursor-pointer"
+              >
+                Back to Home
+              </button>
+            </div>
           </div>
+
         </div>
       </div>
     );
@@ -244,11 +343,11 @@ export default function TicketConfirmation() {
             </div>
 
             <button
-              onClick={handleConfirm}
+              onClick={() => setStep("payment")}
               className="w-full py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white font-bold rounded-xl shadow-lg hover:opacity-95 hover:shadow-orange-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              <CheckCircle2 size={18} />
-              Confirm Booking
+              <CreditCard size={18} />
+              Proceed to Payment
             </button>
           </div>
         </div>

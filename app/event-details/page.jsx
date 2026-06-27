@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import EventHeader from "@/components/EventHeader";
 import EventDetails from "@/components/EventDetails";
 
@@ -48,13 +49,13 @@ export default function EventDetailsPage() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white pb-20">
-      {/* Back button */}
       <div className="max-w-7xl mx-auto px-6 pt-8 pb-4">
         <button 
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900/50 backdrop-blur-md border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700 transition-all duration-300 shadow-lg hover:shadow-orange-500/5 hover:-translate-x-0.5 cursor-pointer"
         >
-          <span>←</span> Back to Events
+          <ArrowLeft size={16} className="text-orange-500" />
+          <span className="font-semibold text-sm">Back to Events</span>
         </button>
       </div>
 
