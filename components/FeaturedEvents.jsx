@@ -3,7 +3,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-export default function FeaturedEvents() {
+export default function FeaturedEvents({ onBookEvent = () => {} }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const router = useRouter();
 
@@ -201,6 +201,7 @@ export default function FeaturedEvents() {
                 src={event.image}
                 alt={event.title}
                 fill
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 className="object-cover group-hover:scale-110 transition duration-500"
               />
             </div>
@@ -235,8 +236,16 @@ export default function FeaturedEvents() {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
+<<<<<<< HEAD
                   localStorage.setItem("selectedEvent", JSON.stringify(event));
                   router.push("/event-details");
+=======
+                  onBookEvent({
+                    title: event.title,
+                    venue: event.venue,
+                    priceVal: 499,
+                  });
+>>>>>>> ec3c0592d6de81c28cbc5c3ef2ca23a7ec709f93
                 }}
                 className="mt-3 w-full bg-gradient-to-r from-orange-500 to-rose-500 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition cursor-pointer"
               >

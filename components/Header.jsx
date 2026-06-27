@@ -25,7 +25,7 @@ const CITIES = [
 const OTT_PLATFORMS = [
   "Netflix",
   "Prime Video",
-  "Disney+ Hotstar",
+  "Disney+Hotstar",
   "SonyLIV",
   "Zee5",
   "Others",
