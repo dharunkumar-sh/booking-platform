@@ -69,7 +69,6 @@ const TicketSelection = ({
   };
 
   const handleCheckout = () => {
-    setBookingConfirmed(true);
     onConfirmBooking({
       event,
       seats: confirmedSeats,

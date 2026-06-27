@@ -30,7 +30,8 @@ function SeatSelectionPageContent() {
           confirmedSeats={confirmedSeats}
           onBack={() => setStep("seats")}
           onConfirmBooking={(ticketDetails) => {
-            console.log("Confirmed Ticket Booking details:", ticketDetails);
+            localStorage.setItem("pendingBooking", JSON.stringify(ticketDetails));
+            router.push("/checkout");
           }}
         />
       </div>
