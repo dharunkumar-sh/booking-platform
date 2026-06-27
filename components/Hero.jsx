@@ -256,6 +256,7 @@ const Hero = () => {
             key={`${images[index]}-${index}`}
             src={getImageSrc(index)}
             alt={`Slide ${index + 1}`}
+            loading="eager"
             onError={() =>
               setErrorImages((prev) => ({ ...prev, [index]: true }))
             }

@@ -1,7 +1,20 @@
+"use client";
 import { Info, User, Ticket, CheckCircle2, Users, Star, MessageSquare } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function EventDetails({ event, description, organizer, price, features, crew, reviews }) {
+  const router = useRouter();
   if (!event) return null;
+
+  const handleCheckout = () => {
+    const numericPrice = event.price ? parseInt(event.price.toString().replace(/[^\d]/g, "")) : (event.priceVal || 499);
+    const query = new URLSearchParams({
+      title: event.title || "",
+      venue: event.venue || event.location || "",
+      price: numericPrice.toString(),
+    }).toString();
+    router.push(`/seat-selection?${query}`);
+  };
 
   const defaultDescription = "Join us for an unforgettable experience! This event brings together the best in the industry for a night of entertainment, learning, and connection. Don't miss out on what promises to be the highlight of the year.";
   const defaultFeatures = [
@@ -115,7 +128,10 @@ export default function EventDetails({ event, description, organizer, price, fea
             </div>
           </div>
 
-          <button className="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-orange-500/50 cursor-pointer">
+          <button 
+            onClick={handleCheckout}
+            className="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-orange-500/50 cursor-pointer"
+          >
             Proceed to Checkout
           </button>
           
