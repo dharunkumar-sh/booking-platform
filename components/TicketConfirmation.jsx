@@ -120,7 +120,7 @@ export default function TicketConfirmation() {
   if (step === "confirmed") {
     return (
       <div className="min-h-screen bg-neutral-950 text-white flex flex-col justify-center items-center px-6 py-12">
-        <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Detailed Ticket Stub */}
           <div className="lg:col-span-7 bg-neutral-900/60 backdrop-blur-lg border border-neutral-800 rounded-3xl p-8 relative overflow-hidden flex flex-col justify-between shadow-2xl">
@@ -244,10 +244,10 @@ export default function TicketConfirmation() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col items-center justify-center px-6 py-12">
-      <div className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-5 gap-8">
+      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Booking Card & Details */}
-        <div className="md:col-span-3 space-y-6">
+        <div className="lg:col-span-8 space-y-6">
           <div className="bg-neutral-900/60 backdrop-blur-lg border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-6">
             <div className="border-b border-neutral-800 pb-4">
               <span className="text-xs font-bold text-orange-500 uppercase tracking-widest block mb-1">Confirm Booking</span>
@@ -313,7 +313,7 @@ export default function TicketConfirmation() {
         </div>
 
         {/* Pricing Breakdown Sidebar */}
-        <div className="md:col-span-2">
+        <div className="lg:col-span-4">
           <div className="bg-neutral-900/60 backdrop-blur-lg border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-6 sticky top-24">
             <h3 className="font-bold text-lg border-b border-neutral-800 pb-3 flex items-center gap-2"><FileText size={18} className="text-rose-500" /> Payment Summary</h3>
             

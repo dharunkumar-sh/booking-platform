@@ -134,7 +134,7 @@ export default function PaymentGateway({ amount = 499, booking, onBack, onSucces
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col justify-center items-center px-6 py-12">
-      <div className="w-full max-w-3xl bg-neutral-900/60 backdrop-blur-xl border border-neutral-800/80 rounded-3xl overflow-hidden shadow-2xl">
+      <div className="w-full max-w-5xl bg-neutral-900/60 backdrop-blur-xl border border-neutral-800/80 rounded-3xl overflow-hidden shadow-2xl">
         
         {/* Header Bar */}
         <div className="bg-neutral-900/90 border-b border-neutral-800 p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
