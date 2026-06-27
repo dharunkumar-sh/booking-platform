@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   Search,
   Mic,
@@ -32,6 +33,7 @@ const OTT_PLATFORMS = [
 ];
 
 const Header = () => {
+  const router = useRouter();
   // Input and selectors
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("Mumbai");
@@ -126,6 +128,7 @@ const Header = () => {
                 setSearchQuery("");
                 setSelectedOtt("All");
                 setMobileSearchOpen(false);
+                router.push("/");
               }}
               className="group flex items-center gap-2 select-none"
             >
@@ -347,7 +350,10 @@ const Header = () => {
             </div>
 
             {/* 10. User Sign In Button */}
-            <button className="px-5 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:opacity-90 active:scale-95 text-white shadow-lg shadow-orange-500/10 transition-all duration-200 shrink-0 cursor-pointer">
+            <button
+              onClick={() => router.push("/login")}
+              className="px-5 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:opacity-90 active:scale-95 text-white shadow-lg shadow-orange-500/10 transition-all duration-200 shrink-0 cursor-pointer"
+            >
               Sign In
             </button>
           </div>

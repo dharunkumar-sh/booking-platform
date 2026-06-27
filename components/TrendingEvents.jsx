@@ -244,7 +244,7 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
             key={event.id}
             onClick={() => {
               localStorage.setItem("selectedEvent", JSON.stringify(event));
-              router.push("/event-details");
+              router.push(`/event-details/${encodeURIComponent(event.title)}`);
             }}
             style={{
               minWidth: "330px",
