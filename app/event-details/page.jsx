@@ -1,0 +1,75 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import EventHeader from "@/components/EventHeader";
+import EventDetails from "@/components/EventDetails";
+
+export default function EventDetailsPage() {
+  const [event, setEvent] = useState(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const storedEvent = localStorage.getItem("selectedEvent");
+    if (storedEvent) {
+      const parsedEvent = JSON.parse(storedEvent);
+      // Map properties to match what EventHeader expects if necessary
+      // For instance, TrendingEvents uses `location`, FeaturedEvents uses `venue`.
+      setEvent({
+        title: parsedEvent.title,
+        category: parsedEvent.category || "Event",
+        date: parsedEvent.date,
+        time: parsedEvent.time || "7:00 PM",
+        venue: parsedEvent.venue || parsedEvent.location || "Venue TBA",
+        rating: parsedEvent.rating,
+        image: parsedEvent.image,
+        description: parsedEvent.description,
+        price: parsedEvent.price,
+        organizer: parsedEvent.organizer,
+        features: parsedEvent.features,
+        crew: parsedEvent.crew,
+        reviews: parsedEvent.reviews,
+      });
+    }
+  }, []);
+
+  if (!event) {
+    return (
+      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center text-white">
+        <p className="text-xl mb-4">Loading event details...</p>
+        <button 
+          onClick={() => router.push("/")}
+          className="px-6 py-2 bg-gradient-to-r from-orange-500 to-rose-500 rounded-lg"
+        >
+          Go Back Home
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-neutral-950 text-white pb-20">
+      {/* Back button */}
+      <div className="max-w-7xl mx-auto px-6 pt-8 pb-4">
+        <button 
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors"
+        >
+          <span>←</span> Back to Events
+        </button>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6">
+        <EventHeader event={event} />
+        <EventDetails 
+          event={event} 
+          price={event.price || "₹499.00"} 
+          organizer={event.organizer || "Live Nation"}
+          description={event.description || `Experience an unforgettable evening filled with entertainment, and live performances. Join us for ${event.title} on ${event.date} at ${event.venue}. Book your tickets now before they sell out!`}
+          features={event.features}
+          crew={event.crew}
+          reviews={event.reviews}
+        />
+      </div>
+    </div>
+  );
+}

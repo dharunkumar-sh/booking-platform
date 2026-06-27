@@ -10,7 +10,8 @@ export default function Home() {
       
       <FeaturedEvents />
       <TrendingEvents />
-      <EventMapWrapper /> 
+      <EventMapWrapper />
+      
     </div>
   );
 }
