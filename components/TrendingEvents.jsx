@@ -335,11 +335,8 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
 
               <button
                 onClick={() => {
-                  onBookEvent({
-                    title: event.title,
-                    venue: event.location,
-                    priceVal: 499,
-                  });
+                  localStorage.setItem("selectedEvent", JSON.stringify(event));
+                  router.push("/event-details");
                 }}
                 style={{
                   width: "100%",
