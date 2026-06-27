@@ -342,11 +342,6 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
               <p>⭐ {event.rating}/5</p>
 
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  localStorage.setItem("selectedEvent", JSON.stringify(event));
-                  router.push("/event-details");
-                }}
                 style={{
                   width: "100%",
                   marginTop: "15px",
@@ -357,6 +352,7 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
                   color: "white",
                   fontWeight: "bold",
                   cursor: "pointer",
+                  pointerEvents: "none",
                 }}
               >
                 Book Now

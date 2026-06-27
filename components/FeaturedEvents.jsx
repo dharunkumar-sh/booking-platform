@@ -210,10 +210,10 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
             </div>
 
             {/* GRADIENT */}
-            <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
             {/* CONTENT */}
-            <div className="absolute bottom-0 p-4 w-full">
+            <div className="absolute bottom-0 p-4 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               
               {/* Rating */}
               <div className="flex justify-between items-center mb-1">
@@ -236,16 +236,11 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
               </p>
 
               {/* BOOK BUTTON */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  localStorage.setItem("selectedEvent", JSON.stringify(event));
-                  router.push("/event-details");
-                }}
-                className="mt-3 w-full bg-gradient-to-r from-orange-500 to-rose-500 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition cursor-pointer text-center font-semibold text-white"
+              <div
+                className="mt-3 w-full bg-gradient-to-r from-orange-500 to-rose-500 py-2 rounded-lg text-center font-semibold text-white pointer-events-none"
               >
                 🎟 Book Now
-              </button>
+              </div>
             </div>
           </div>
         ))}
