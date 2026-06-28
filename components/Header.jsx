@@ -131,14 +131,14 @@ const Header = () => {
                 setMobileSearchOpen(false);
                 router.push("/");
               }}
-              className="group flex items-center ml-2 select-none"
+              className="group flex items-center gap-1 select-none"
             >
               <Image
                 src="/logo.svg"
                 alt="VibePass Logo"
-                width={100}
-                height={100}
-                className="h-14 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+                width={80}
+                height={80}
+                className="h-10 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
               />
               <span className="text-2xl font-extrabold tracking-tight bg-linear-to-r from-orange-400 via-orange-500 to-rose-500 bg-clip-text text-transparent group-hover:opacity-90 transition-opacity mr-3">
                 VibePass

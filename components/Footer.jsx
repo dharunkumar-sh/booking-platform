@@ -87,20 +87,20 @@ const Footer = () => {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr_1fr_1fr]">
           <div className="lg:col-span-1">
-            <a href="/" className="group flex items-center gap-3">
+            <a href="/" className="group flex items-center gap-2">
               <Image
                 src="/logo.svg"
                 alt="VibePass Logo"
                 width={44}
                 height={44}
-                className="h-11 w-auto object-contain transition-transform group-hover:scale-105"
+                className="h-12 w-auto object-contain transition-transform group-hover:scale-105"
               />
               <div>
-                <p className="text-2xl font-extrabold tracking-tight bg-linear-to-r from-orange-400 via-orange-500 to-rose-500 bg-clip-text text-transparent">
+                <p className="text-2xl font-extrabold tracking-leading bg-linear-to-r from-orange-400 via-orange-500 to-rose-500 bg-clip-text text-transparent">
                   VibePass
                 </p>
                 <p className="text-xs font-medium text-neutral-400">
-                  Book every vibe
+                  Book Every Vibe with AI
                 </p>
               </div>
             </a>
