@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Search } from "lucide-react";
+import { Search, MapPin } from "lucide-react";
+import { useGeolocationContext } from "@/context/GeolocationContext";
 
 const HIGH_RES_IMAGES = {
   default: [
@@ -198,6 +199,15 @@ const Hero = () => {
   );
   const intervalRef = useRef(null);
 
+  // Geolocation context
+  const { location } = useGeolocationContext();
+
+  // Compute location-aware display values
+  const locationCity = location?.city || null;
+  const heroSubtitle = locationCity
+    ? `Explore concerts, shows, nightlife, and exclusive events near ${locationCity}.`
+    : "Explore concerts, shows, nightlife, destinations, travel packages, and exclusive experiences happening around you.";
+
  
   useEffect(() => {
     setLoadedImages({});
@@ -309,8 +319,7 @@ const Hero = () => {
         </h2>
 
         <p className="text-gray-300 mb-3 max-w-2xl" style={{ fontSize: "13px" }}>
-          Explore concerts, shows, nightlife, destinations, travel packages, and
-          exclusive experiences happening around you.
+          {heroSubtitle}
         </p>
 
          
@@ -448,7 +457,11 @@ const Hero = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search events, artists, venues or ask AI…"
+              placeholder={
+                locationCity
+                  ? `Search events near ${locationCity}…`
+                  : "Search events, artists, venues or ask AI…"
+              }
               style={{
                 flex: 1,
                 background: "transparent",

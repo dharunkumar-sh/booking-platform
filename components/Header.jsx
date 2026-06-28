@@ -14,6 +14,8 @@ import {
   X,
   Tv,
 } from "lucide-react";
+import LocationDisplay from "@/components/LocationDisplay";
+import { useGeolocationContext } from "@/context/GeolocationContext";
 
 const CITIES = [
   "Mumbai",
@@ -35,6 +37,7 @@ const OTT_PLATFORMS = [
 
 const Header = () => {
   const router = useRouter();
+  const { triggerRequest, location, status } = useGeolocationContext();
   // Input and selectors
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState("Mumbai");
@@ -80,41 +83,21 @@ const Header = () => {
   }, []);
 
   const handleDetectLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by this browser.");
-      return;
-    }
-
-    const originalCity = selectedCity;
-    setSelectedCity("Detecting...");
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-
-        // Match user coordinates to the closest supported Indian city
-        let detected = "Chennai";
-        if (lat < 14) {
-          detected = lon > 79 ? "Chennai" : "Bengaluru";
-        } else if (lat < 18) {
-          detected = "Pune";
-        } else if (lat > 25) {
-          detected = "Delhi";
-        } else if (lon > 80) {
-          detected = "Hyderabad";
-        }
-
-        setSelectedCity(detected);
-        setIsCityOpen(false);
-      },
-      (error) => {
-        console.warn("Location detection failed, fallback to default:", error);
-        setSelectedCity(originalCity);
-        alert("Unable to fetch location. Fallback to default.");
-      },
-    );
+    // Route through global GeolocationContext for unified state management
+    triggerRequest();
+    setIsCityOpen(false);
   };
+
+  // Sync city selector with detected location
+  React.useEffect(() => {
+    if (status === "granted" && location?.city) {
+      // Try to match detected city to our supported list; fall back gracefully
+      const matched = CITIES.find(
+        (c) => location.city.toLowerCase().includes(c.toLowerCase())
+      );
+      if (matched) setSelectedCity(matched);
+    }
+  }, [status, location]);
 
   return (
     <>
@@ -158,6 +141,11 @@ const Header = () => {
                   className={`text-neutral-500 transition-transform duration-200 ${isCityOpen ? "rotate-180" : ""}`}
                 />
               </button>
+
+              {/* LocationDisplay pill — shows detected city / status next to the city selector */}
+              <div className="absolute left-0 -bottom-8 whitespace-nowrap">
+                <LocationDisplay />
+              </div>
 
               {isCityOpen && (
                 <div className="absolute left-0 mt-2 w-48 rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl p-1.5 animate-in fade-in slide-in-from-top-2 duration-150 z-50">
