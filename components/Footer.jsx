@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   MapPin,
   Gift,
@@ -87,9 +88,13 @@ const Footer = () => {
         <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr_1fr_1fr]">
           <div className="lg:col-span-1">
             <a href="/" className="group flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-tr from-orange-500 to-rose-500 font-black text-white shadow-lg shadow-orange-500/20 transition-transform group-hover:scale-105">
-                VP
-              </div>
+              <Image
+                src="/logo.svg"
+                alt="VibePass Logo"
+                width={44}
+                height={44}
+                className="h-11 w-auto object-contain transition-transform group-hover:scale-105"
+              />
               <div>
                 <p className="text-2xl font-extrabold tracking-tight bg-linear-to-r from-orange-400 via-orange-500 to-rose-500 bg-clip-text text-transparent">
                   VibePass

@@ -175,26 +175,35 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
 
   return (
     <div className="px-6 py-10 bg-neutral-950 min-h-screen text-white">
-      
-      <h2
-        className="text-2xl font-extrabold mb-8"
+      <h1
         style={{
+          fontSize: "36px",
+          fontWeight: "bold",
+          marginBottom: "30px",
           background: "linear-gradient(90deg, #f97316, #ff5862)",
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
           backgroundClip: "text",
         }}
       >
-        🎟 Featured Events
-      </h2>
+        Featured Events
+      </h1>
 
       {/* GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
         {events.map((event, i) => (
           <div
             key={i}
-            onClick={() => {
-              localStorage.setItem("selectedEvent", JSON.stringify(event));
+            onClick={async () => {
+              try {
+                await fetch("/api/redis", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ key: "selectedEvent", value: event }),
+                });
+              } catch (e) {
+                console.error(e);
+              }
               router.push(`/event-details/${encodeURIComponent(event.title)}`);
             }}
             className="group relative rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-orange-500/40 transition duration-300"
@@ -215,7 +224,6 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
 
             {/* CONTENT */}
             <div className="absolute bottom-0 p-4 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              
               {/* Rating */}
               <div className="flex justify-between items-center mb-1">
                 <span className="bg-gradient-to-r from-orange-500 to-rose-500 text-xs px-2 py-1 rounded">
@@ -228,9 +236,7 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
 
               <h3 className="text-lg font-semibold">{event.title}</h3>
 
-              <p className="text-xs text-gray-300">
-                📍 {event.venue}
-              </p>
+              <p className="text-xs text-gray-300">📍 {event.venue}</p>
 
               <p className="text-xs text-gray-300">
                 📅 {event.date} • ⏰ {event.time}

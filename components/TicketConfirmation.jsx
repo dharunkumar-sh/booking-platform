@@ -26,22 +26,29 @@ export default function TicketConfirmation() {
   const [step, setStep] = useState("review"); // "review" | "payment" | "confirmed"
 
   useEffect(() => {
-    const pending = localStorage.getItem("pendingBooking");
-    if (pending) {
-      const parsed = JSON.parse(pending);
-      setBooking(parsed);
-      
-      // Generate unique Booking ID
-      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-      const rand = Math.floor(1000 + Math.random() * 9000);
-      setBookingId(`AG-${dateStr}-${rand}`);
-      
-      // Assign random Screen/Audi
-      setAudiNumber(`Audi ${Math.floor(1 + Math.random() * 5)}`);
-    } else {
-      // Redirect home if no booking in progress
-      router.push("/");
-    }
+    fetch("/api/redis?key=pendingBooking")
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.data) {
+          const parsed = res.data;
+          setBooking(parsed);
+          
+          // Generate unique Booking ID
+          const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+          const rand = Math.floor(1000 + Math.random() * 9000);
+          setBookingId(`AG-${dateStr}-${rand}`);
+          
+          // Assign random Screen/Audi
+          setAudiNumber(`Audi ${Math.floor(1 + Math.random() * 5)}`);
+        } else {
+          // Redirect home if no booking in progress
+          router.push("/");
+        }
+      })
+      .catch((e) => {
+        console.error(e);
+        router.push("/");
+      });
   }, [router]);
 
   if (!booking) {
@@ -66,34 +73,57 @@ export default function TicketConfirmation() {
   const convenienceFee = 60 * totalTickets; // ₹60 flat convenience fee per ticket
   const finalTotal = ticketCost + gstAmount + convenienceFee;
 
-  const handleConfirm = () => {
-    // Save to confirmedBookings list in localStorage
-    const existing = localStorage.getItem("confirmedBookings");
-    const list = existing ? JSON.parse(existing) : [];
-    
-    const confirmedBooking = {
-      ...booking,
-      bookingId,
-      audiNumber,
-      pricing: {
-        ticketCost,
-        gstAmount,
-        convenienceFee,
-        finalTotal
-      },
-      confirmedAt: new Date().toISOString()
-    };
-    
-    list.push(confirmedBooking);
-    localStorage.setItem("confirmedBookings", JSON.stringify(list));
-    localStorage.removeItem("pendingBooking"); // Clear pending flow
+  const handleConfirm = async () => {
+    try {
+      const getRes = await fetch("/api/redis?key=confirmedBookings");
+      const getResJson = await getRes.json();
+      const existing = getResJson.data;
+      const list = existing || [];
+
+      const confirmedBooking = {
+        ...booking,
+        bookingId,
+        audiNumber,
+        pricing: {
+          ticketCost,
+          gstAmount,
+          convenienceFee,
+          finalTotal
+        },
+        confirmedAt: new Date().toISOString()
+      };
+
+      list.push(confirmedBooking);
+
+      await fetch("/api/redis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "confirmedBookings", value: list }),
+      });
+
+      await fetch("/api/redis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "pendingBooking", value: null }),
+      });
+    } catch (e) {
+      console.error(e);
+    }
     
     setStep("confirmed");
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (confirm("Are you sure you want to cancel your booking? Your selected seats will be released.")) {
-      localStorage.removeItem("pendingBooking");
+      try {
+        await fetch("/api/redis", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: "pendingBooking", value: null }),
+        });
+      } catch (e) {
+        console.error(e);
+      }
       router.push("/");
     }
   };

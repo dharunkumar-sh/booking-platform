@@ -7,10 +7,8 @@ export default function EventDetails({ event, description, organizer, price, fea
   if (!event) return null;
 
   const handleCheckout = () => {
-    const numericPrice = event.price ? parseInt(event.price.toString().replace(/[^\d]/g, "")) : (event.priceVal || 499);
     const query = new URLSearchParams({
       venue: event.venue || event.location || "",
-      price: numericPrice.toString(),
       category: event.category || "",
     }).toString();
     router.push(`/seat-selection/${encodeURIComponent(event.title)}?${query}`);

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   ArrowLeft,
   Mail,
@@ -135,6 +136,19 @@ export default function LoginPage() {
           <div className="absolute -top-12 -left-12 w-48 h-48 bg-orange-500/20 rounded-full blur-2xl pointer-events-none" />
           
           <div className="space-y-6 z-10">
+            <div className="flex items-center gap-3 mb-4 select-none">
+              <Image
+                src="/logo.svg"
+                alt="VibePass Logo"
+                width={40}
+                height={40}
+                className="h-10 w-auto object-contain"
+              />
+              <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-orange-400 via-orange-500 to-rose-500 bg-clip-text text-transparent">
+                VibePass
+              </span>
+            </div>
+
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs font-bold tracking-wide uppercase">
               <Sparkles size={14} />
               <span>Premium Access</span>

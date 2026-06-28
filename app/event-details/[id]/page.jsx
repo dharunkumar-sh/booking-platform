@@ -11,25 +11,29 @@ export default function EventDetailsPage() {
   const params = useParams();
 
   useEffect(() => {
-    const storedEvent = localStorage.getItem("selectedEvent");
-    if (storedEvent) {
-      const parsedEvent = JSON.parse(storedEvent);
-      setEvent({
-        title: parsedEvent.title,
-        category: parsedEvent.category || "Event",
-        date: parsedEvent.date,
-        time: parsedEvent.time || "7:00 PM",
-        venue: parsedEvent.venue || parsedEvent.location || "Venue TBA",
-        rating: parsedEvent.rating,
-        image: parsedEvent.image,
-        description: parsedEvent.description,
-        price: parsedEvent.price,
-        organizer: parsedEvent.organizer,
-        features: parsedEvent.features,
-        crew: parsedEvent.crew,
-        reviews: parsedEvent.reviews,
-      });
-    }
+    fetch(`/api/redis?key=selectedEvent`)
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.data) {
+          const parsedEvent = res.data;
+          setEvent({
+            title: parsedEvent.title,
+            category: parsedEvent.category || "Event",
+            date: parsedEvent.date,
+            time: parsedEvent.time || "7:00 PM",
+            venue: parsedEvent.venue || parsedEvent.location || "Venue TBA",
+            rating: parsedEvent.rating,
+            image: parsedEvent.image,
+            description: parsedEvent.description,
+            price: parsedEvent.price,
+            organizer: parsedEvent.organizer,
+            features: parsedEvent.features,
+            crew: parsedEvent.crew,
+            reviews: parsedEvent.reviews,
+          });
+        }
+      })
+      .catch((e) => console.error(e));
   }, [params.id]);
 
   if (!event) {

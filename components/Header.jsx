@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   Search,
   Mic,
@@ -130,12 +131,16 @@ const Header = () => {
                 setMobileSearchOpen(false);
                 router.push("/");
               }}
-              className="group flex items-center gap-2 select-none"
+              className="group flex items-center ml-2 select-none"
             >
-              <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-orange-500 to-rose-500 flex items-center justify-center font-black text-xl shadow-lg shadow-orange-500/20 group-hover:scale-105 transition-transform duration-200">
-                VP
-              </div>
-              <span className="text-2xl font-extrabold tracking-tight bg-linear-to-r from-orange-400 via-orange-500 to-rose-500 bg-clip-text text-transparent group-hover:opacity-90 transition-opacity">
+              <Image
+                src="/logo.svg"
+                alt="VibePass Logo"
+                width={100}
+                height={100}
+                className="h-14 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+              />
+              <span className="text-2xl font-extrabold tracking-tight bg-linear-to-r from-orange-400 via-orange-500 to-rose-500 bg-clip-text text-transparent group-hover:opacity-90 transition-opacity mr-3">
                 VibePass
               </span>
             </a>
@@ -288,7 +293,7 @@ const Header = () => {
                       </button>
                     ))}
 
-                    <div className="h-[1px] bg-neutral-800 my-2" />
+                    <div className="h-px bg-neutral-800 my-2" />
 
                     {/* 5. Search Other OTT Platforms Toggle Inside Filter Dropdown */}
                     <div className="px-2.5 py-1.5 flex items-center justify-between">
@@ -352,7 +357,7 @@ const Header = () => {
             {/* 10. User Sign In Button */}
             <button
               onClick={() => router.push("/login")}
-              className="px-5 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:opacity-90 active:scale-95 text-white shadow-lg shadow-orange-500/10 transition-all duration-200 shrink-0 cursor-pointer"
+              className="px-5 py-2 text-sm font-semibold rounded-xl bg-linear-to-r from-orange-500 to-rose-500 hover:opacity-90 active:scale-95 text-white shadow-lg shadow-orange-500/10 transition-all duration-200 shrink-0 cursor-pointer"
             >
               Sign In
             </button>

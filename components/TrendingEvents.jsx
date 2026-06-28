@@ -178,7 +178,7 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
           backgroundClip: "text",
         }}
       >
-        🔥 Trending Events
+        Trending Events
       </h1>
 
       {/* Left Arrow */}
@@ -242,8 +242,16 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
         {events.map((event, index) => (
           <div
             key={event.id}
-            onClick={() => {
-              localStorage.setItem("selectedEvent", JSON.stringify(event));
+            onClick={async () => {
+              try {
+                await fetch("/api/redis", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ key: "selectedEvent", value: event }),
+                });
+              } catch (e) {
+                console.error(e);
+              }
               router.push(`/event-details/${encodeURIComponent(event.title)}`);
             }}
             style={{

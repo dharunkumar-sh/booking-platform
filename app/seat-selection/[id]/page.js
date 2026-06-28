@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter, useParams } from "next/navigation";
 import SeatSelection from "@/components/SeatSelection";
 import TicketSelection from "@/app/tickets/TicketSelection";
@@ -10,17 +10,33 @@ function SeatSelectionPageContent() {
   const router = useRouter();
   const params = useParams();
 
-  const title = params.id ? decodeURIComponent(params.id) : (searchParams.get("title") || "Special Event Concert");
-  const venue = searchParams.get("venue") || "Main Arena";
-  const priceVal = parseInt(searchParams.get("price") || "499", 10);
-  const category = searchParams.get("category") || "";
+  const [eventDetails, setEventDetails] = useState({
+    title: params.id ? decodeURIComponent(params.id) : (searchParams.get("title") || "Special Event Concert"),
+    venue: searchParams.get("venue") || "Main Arena",
+    priceVal: parseInt(searchParams.get("price") || "499", 10),
+    category: searchParams.get("category") || "",
+  });
 
-  const eventDetails = {
-    title,
-    venue,
-    priceVal,
-    category,
-  };
+  useEffect(() => {
+    fetch("/api/redis?key=selectedEvent")
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.data) {
+          const parsed = res.data;
+          setEventDetails({
+            title: parsed.title,
+            venue: parsed.venue || parsed.location || "Main Arena",
+            priceVal: parsed.price ? parseInt(parsed.price.toString().replace(/[^\d]/g, "")) : (parsed.priceVal || 499),
+            category: parsed.category || "",
+          });
+        }
+      })
+      .catch((e) => {
+        console.error(e);
+      });
+  }, [params.id, searchParams]);
+
+  const { title, venue, priceVal, category } = eventDetails;
 
   const venueLower = venue.toLowerCase();
   const isConcert = category.toLowerCase() === "music" || 
@@ -48,8 +64,16 @@ function SeatSelectionPageContent() {
               setStep("seats");
             }
           }}
-          onConfirmBooking={(ticketDetails) => {
-            localStorage.setItem("pendingBooking", JSON.stringify(ticketDetails));
+          onConfirmBooking={async (ticketDetails) => {
+            try {
+              await fetch("/api/redis", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ key: "pendingBooking", value: ticketDetails }),
+              });
+            } catch (e) {
+              console.error(e);
+            }
             router.push("/checkout");
           }}
         />

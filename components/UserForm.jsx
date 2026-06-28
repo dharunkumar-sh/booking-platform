@@ -15,10 +15,14 @@ export default function UserForm() {
 
   useEffect(() => {
     // Load pending booking details to show summary
-    const pending = localStorage.getItem("pendingBooking");
-    if (pending) {
-      setBookingDetails(JSON.parse(pending));
-    }
+    fetch("/api/redis?key=pendingBooking")
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.data) {
+          setBookingDetails(res.data);
+        }
+      })
+      .catch((e) => console.error(e));
   }, []);
 
   const handleChange = (e) => {
@@ -54,16 +58,26 @@ export default function UserForm() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      // Store user details in local storage
-      localStorage.setItem("bookingUser", JSON.stringify(formData));
-      
-      // Update pendingBooking with user details
-      if (bookingDetails) {
-        const updatedBooking = { ...bookingDetails, user: formData };
-        localStorage.setItem("pendingBooking", JSON.stringify(updatedBooking));
+      try {
+        await fetch("/api/redis", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: "bookingUser", value: formData }),
+        });
+        
+        if (bookingDetails) {
+          const updatedBooking = { ...bookingDetails, user: formData };
+          await fetch("/api/redis", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key: "pendingBooking", value: updatedBooking }),
+          });
+        }
+      } catch (e) {
+        console.error(e);
       }
 
       router.push("/confirmation");

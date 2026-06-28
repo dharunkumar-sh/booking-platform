@@ -31,10 +31,8 @@ export default function Home() {
   const router = useRouter();
 
   const handleBookEvent = (event) => {
-    const numericPrice = event.price ? parseInt(event.price.replace(/[^\d]/g, "")) : (event.priceVal || 499);
     const query = new URLSearchParams({
       venue: event.venue || event.location || "",
-      price: numericPrice,
       category: event.category || "",
     }).toString();
     router.push(`/seat-selection/${encodeURIComponent(event.title)}?${query}`);
