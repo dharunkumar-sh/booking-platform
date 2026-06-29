@@ -33,8 +33,61 @@ export default function LoginPage() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [loginError, setLoginError] = useState("");
+  const [googleClient, setGoogleClient] = useState(null);
 
   const inputRefs = useRef([]);
+
+  // Load and initialize Google Identity Services client
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      if (window.google?.accounts?.oauth2) {
+        const client = window.google.accounts.oauth2.initTokenClient({
+          client_id: "237277861490-o58m383op558nge14090njg6gn3h3eip.apps.googleusercontent.com",
+          scope: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
+          callback: async (tokenResponse) => {
+            if (tokenResponse && tokenResponse.access_token) {
+              await handleGoogleLogin(tokenResponse.access_token);
+            }
+          },
+        });
+        setGoogleClient(client);
+      }
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  const handleGoogleLogin = async (accessToken) => {
+    setLoginError("");
+    setIsVerifying(true);
+    try {
+      const response = await axios.post("/api/auth/google", { accessToken });
+      if (response.data.success) {
+        const user = response.data.user;
+        localStorage.setItem("vibepass_user", JSON.stringify(user));
+        
+        // Dispatch custom storage event so Header updates immediately
+        window.dispatchEvent(new Event("storage"));
+        
+        setLoginSuccess(true);
+        setTimeout(() => {
+          router.push("/");
+        }, 1500);
+      }
+    } catch (error) {
+      const msg = error.response?.data?.error || "Google sign-in failed. Please try again.";
+      setLoginError(msg);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   // Handle OTP countdown timer for normal login
   useEffect(() => {
@@ -355,7 +408,15 @@ export default function LoginPage() {
                 <div className="flex justify-center">
                   <button
                     type="button"
-                    className="w-full py-4 px-6 rounded-2xl bg-neutral-950/80 hover:bg-neutral-850 border border-neutral-800 text-sm font-bold text-neutral-300 hover:text-white flex items-center justify-center gap-3 transition-all cursor-pointer"
+                    onClick={() => {
+                      if (googleClient) {
+                        googleClient.requestAccessToken();
+                      } else {
+                        setLoginError("Google Sign-In is initializing. Please try again in a moment.");
+                      }
+                    }}
+                    disabled={isVerifying}
+                    className="w-full py-4 px-6 rounded-2xl bg-neutral-950/80 hover:bg-neutral-850 border border-neutral-800 text-sm font-bold text-neutral-300 hover:text-white flex items-center justify-center gap-3 transition-all cursor-pointer disabled:opacity-50"
                   >
                     <img src="/google.png" alt="Google" className="w-5 h-5 object-contain" />
                     <span>Google</span>
