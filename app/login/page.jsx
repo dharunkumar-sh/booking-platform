@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import axios from "axios";
 import {
   ArrowLeft,
   Mail,
@@ -37,6 +38,8 @@ export default function LoginPage() {
   const [timer, setTimer] = useState(30);
   const [isVerifying, setIsVerifying] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [devOtp, setDevOtp] = useState("");
 
   // Forgot password states
   const [isForgotMode, setIsForgotMode] = useState(false);
@@ -108,32 +111,94 @@ export default function LoginPage() {
     }
   };
 
-  const handleSendOtp = (e) => {
+  const handleSendOtp = async (e) => {
     e.preventDefault();
+    setLoginError("");
+    setDevOtp("");
+    
     if (authMethod === "email_password_otp" && (!email || !password)) return;
     if (authMethod === "phone_otp" && !phone) return;
-    setOtpSent(true);
-    setTimer(30);
-    setOtpValues(["", "", "", "", "", ""]);
-  };
 
-  const handleResendOtp = () => {
-    if (timer === 0) {
-      setTimer(30);
-      setOtpValues(["", "", "", "", "", ""]);
+    setIsVerifying(true);
+    try {
+      const payload = authMethod === "phone_otp" ? { phone } : { email, password };
+      const response = await axios.post("/api/auth/send-otp", payload);
+      
+      if (response.data.success) {
+        setOtpSent(true);
+        setTimer(30);
+        setOtpValues(["", "", "", "", "", ""]);
+        if (response.data.otp) {
+          setDevOtp(response.data.otp);
+        }
+      }
+    } catch (error) {
+      const msg = error.response?.data?.error || "Failed to send verification code.";
+      setLoginError(msg);
+    } finally {
+      setIsVerifying(false);
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleResendOtp = async () => {
+    if (timer === 0) {
+      setLoginError("");
+      setDevOtp("");
+      setIsVerifying(true);
+      try {
+        const payload = authMethod === "phone_otp" ? { phone } : { email, password };
+        const response = await axios.post("/api/auth/send-otp", payload);
+        if (response.data.success) {
+          setTimer(30);
+          setOtpValues(["", "", "", "", "", ""]);
+          if (response.data.otp) {
+            setDevOtp(response.data.otp);
+          }
+        }
+      } catch (error) {
+        const msg = error.response?.data?.error || "Failed to resend verification code.";
+        setLoginError(msg);
+      } finally {
+        setIsVerifying(false);
+      }
+    }
+  };
+
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+    setLoginError("");
+    const otpCode = otpValues.join("").trim();
+    if (otpCode.length < 6) {
+      setLoginError("Please enter the complete 6-digit verification code.");
+      return;
+    }
+
     setIsVerifying(true);
-    setTimeout(() => {
+    try {
+      const payload = authMethod === "phone_otp" 
+        ? { phone, otp: otpCode } 
+        : { email, otp: otpCode };
+        
+      const response = await axios.post("/api/auth/verify-otp", payload);
+      
+      if (response.data.success) {
+        const user = response.data.user;
+        localStorage.setItem("vibepass_user", JSON.stringify(user));
+        
+        // Dispatch custom storage event so Header updates immediately
+        window.dispatchEvent(new Event("storage"));
+        
+        setLoginSuccess(true);
+        setTimeout(() => {
+          router.push("/");
+        }, 1500);
+      }
+    } catch (error) {
+      const msg = error.response?.data?.error || "Verification failed. Please try again.";
+      setLoginError(msg);
+    } finally {
       setIsVerifying(false);
-      setLoginSuccess(true);
-      setTimeout(() => {
-        router.push("/");
-      }, 1500);
-    }, 1200);
+    }
   };
 
   // Forgot password handlers
@@ -203,6 +268,8 @@ export default function LoginPage() {
     setAuthMethod(method);
     setOtpSent(false);
     setOtpValues(["", "", "", "", "", ""]);
+    setLoginError("");
+    setDevOtp("");
   };
 
   return (
@@ -564,6 +631,11 @@ export default function LoginPage() {
                 <>
                   {/* Form Area */}
                   <form onSubmit={otpSent ? handleSubmit : handleSendOtp} className="space-y-5">
+                    {loginError && (
+                      <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold text-center">
+                        {loginError}
+                      </div>
+                    )}
                     
                     {/* CREDENTIALS INPUT: MOBILE OTP FLOW */}
                     {authMethod === "phone_otp" && !otpSent && (
@@ -677,6 +749,12 @@ export default function LoginPage() {
                             Change {authMethod === "email_password_otp" ? "Email" : "Phone Number"}
                           </button>
                         </div>
+
+                        {devOtp && (
+                          <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold text-center">
+                            🔑 Dev Mode OTP: <span className="underline tracking-widest text-white ml-1 font-mono text-sm">{devOtp}</span>
+                          </div>
+                        )}
 
                         {/* 6 Digit OTP Input Boxes */}
                         <div className="flex justify-between gap-2 max-w-xs mx-auto">

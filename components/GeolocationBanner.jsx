@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   MapPin,
   X,
@@ -35,23 +35,40 @@ export default function GeolocationBanner() {
     manualRetry,
   } = useGeolocationContext();
 
-  const autoDismissRef = useRef(null);
+  const [localDismissed, setLocalDismissed] = useState(false);
+
+  // Reset localDismissed when a new request starts
+  useEffect(() => {
+    if (status === "requesting") {
+      setLocalDismissed(false);
+    }
+  }, [status]);
 
   // Auto-dismiss the success toast after 3 seconds
   useEffect(() => {
     if (status === "granted") {
-      autoDismissRef.current = setTimeout(() => {
+      const timer = setTimeout(() => {
+        setLocalDismissed(true);
         dismissBanner();
       }, 3000);
+      return () => clearTimeout(timer);
     }
-    return () => clearTimeout(autoDismissRef.current);
   }, [status, dismissBanner]);
+
+  const handleClose = () => {
+    setLocalDismissed(true);
+    dismissBanner();
+  };
 
   // Keyboard: Escape closes the banner
   useEffect(() => {
     const handleKey = (e) => {
-      if (e.key === "Escape" && (showBanner || ["requesting", "granted", "denied", "timeout", "unavailable", "error"].includes(status))) {
-        dismissBanner();
+      if (
+        e.key === "Escape" &&
+        (showBanner ||
+          ["requesting", "granted", "denied", "timeout", "unavailable", "error"].includes(status))
+      ) {
+        handleClose();
       }
     };
     window.addEventListener("keydown", handleKey);
@@ -60,13 +77,14 @@ export default function GeolocationBanner() {
 
   // Only render when the banner should be shown OR during an active geolocation state
   const isVisible =
-    showBanner ||
-    status === "requesting" ||
-    status === "granted" ||
-    status === "denied" ||
-    status === "timeout" ||
-    status === "unavailable" ||
-    status === "error";
+    !localDismissed &&
+    (showBanner ||
+      status === "requesting" ||
+      status === "granted" ||
+      status === "denied" ||
+      status === "timeout" ||
+      status === "unavailable" ||
+      status === "error");
 
   if (!isVisible) return null;
 
@@ -79,7 +97,7 @@ export default function GeolocationBanner() {
       {showBanner && status === "idle" && (
         <div
           className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
-          onClick={dismissBanner}
+          onClick={handleClose}
           aria-hidden="true"
         />
       )}
@@ -107,7 +125,7 @@ export default function GeolocationBanner() {
 
             {/* Close button */}
             <button
-              onClick={dismissBanner}
+              onClick={handleClose}
               className="absolute top-3 right-3 p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 transition-all cursor-pointer"
               aria-label="Dismiss location request"
             >
@@ -152,7 +170,7 @@ export default function GeolocationBanner() {
                   Allow Location
                 </button>
                 <button
-                  onClick={dismissBanner}
+                  onClick={handleClose}
                   className="px-4 py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white font-semibold text-sm transition-all cursor-pointer"
                 >
                   Not now
@@ -189,7 +207,7 @@ export default function GeolocationBanner() {
               </p>
             </div>
             <button
-              onClick={dismissBanner}
+              onClick={handleClose}
               className="text-neutral-500 hover:text-white transition-colors cursor-pointer shrink-0"
               aria-label="Close"
             >
@@ -215,7 +233,7 @@ export default function GeolocationBanner() {
                   </p>
                 </div>
                 <button
-                  onClick={dismissBanner}
+                  onClick={handleClose}
                   className="text-neutral-500 hover:text-white transition-colors cursor-pointer shrink-0"
                   aria-label="Close"
                 >
@@ -241,7 +259,7 @@ export default function GeolocationBanner() {
                   </p>
                   <p className="text-neutral-400 text-xs mt-0.5 leading-relaxed">{error}</p>
                   <button
-                    onClick={() => { manualRetry(); dismissBanner(); }}
+                    onClick={() => { manualRetry(); handleClose(); }}
                     className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
                   >
                     <RefreshCw size={12} />
@@ -249,7 +267,7 @@ export default function GeolocationBanner() {
                   </button>
                 </div>
                 <button
-                  onClick={dismissBanner}
+                  onClick={handleClose}
                   className="text-neutral-500 hover:text-white transition-colors cursor-pointer shrink-0"
                   aria-label="Close"
                 >
@@ -269,7 +287,7 @@ export default function GeolocationBanner() {
               <p className="text-neutral-400 text-xs">{error}</p>
             </div>
             <button
-              onClick={dismissBanner}
+              onClick={handleClose}
               className="text-neutral-500 hover:text-white transition-colors cursor-pointer shrink-0"
               aria-label="Close"
             >
