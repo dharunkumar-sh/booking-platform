@@ -22,9 +22,29 @@ export function GeolocationProvider({ children }) {
   const { location, status, error, requestLocation, clearLocation } =
     useGeolocation();
 
-  // Automatically request location on every mount/load
+  const [showBanner, setShowBanner] = useState(false);
+
+  const dismissBanner = useCallback(() => {
+    setShowBanner(false);
+  }, []);
+
+  // On first load/mount: check if location exists in localStorage
   useEffect(() => {
-    requestLocation();
+    const saved = localStorage.getItem(LOCATION_KEY);
+    if (!saved) {
+      // If first load (no saved location), show the themed prompt banner
+      setShowBanner(true);
+    } else {
+      try {
+        const { status: savedStatus } = JSON.parse(saved);
+        if (savedStatus === "granted") {
+          // If already granted in the past, refresh silently in the background
+          requestLocation();
+        }
+      } catch {
+        // ignore
+      }
+    }
   }, [requestLocation]);
 
   // Persist location and status to localStorage whenever they change
@@ -54,10 +74,12 @@ export function GeolocationProvider({ children }) {
     location,
     status,
     error,
+    showBanner,
     // Actions
     triggerRequest: requestLocation,
     manualRetry,
     clearLocation,
+    dismissBanner,
   };
 
   return (
