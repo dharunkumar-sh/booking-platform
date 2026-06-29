@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 
 /**
  * Geolocation position shape:
@@ -72,6 +72,23 @@ export function useGeolocation() {
   const [error, setError] = useState(null);
   const requestedRef = useRef(false);
 
+  // Restore saved location from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("vibepass_geo_location");
+      if (saved) {
+        const { status: savedStatus, location: savedLocation } = JSON.parse(saved);
+        if (savedStatus && savedLocation) {
+          setStatus(savedStatus);
+          setLocation(savedLocation);
+          requestedRef.current = savedStatus === "granted" || savedStatus === "requesting";
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const requestLocation = useCallback(() => {
     if (!navigator?.geolocation) {
       setStatus("unavailable");
@@ -80,7 +97,7 @@ export function useGeolocation() {
     }
 
     // Prevent duplicate simultaneous requests
-    if (status === "requesting") return;
+    if (requestedRef.current) return;
 
     setStatus("requesting");
     setError(null);
@@ -135,10 +152,11 @@ export function useGeolocation() {
         setStatus(statusMap[code] || "error");
         setError(ERROR_MESSAGES[code] || "An unknown error occurred while fetching your location.");
         setLocation(null);
+        requestedRef.current = false; // Allow retry on failure
       },
       GEO_OPTIONS
     );
-  }, [status]);
+  }, []);
 
   const clearLocation = useCallback(() => {
     setStatus("idle");

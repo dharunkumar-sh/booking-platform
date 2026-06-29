@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { GeolocationProvider } from "@/context/GeolocationContext";
+import GeolocationBanner from "../components/GeolocationBanner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,6 +27,7 @@ export default function RootLayout({ children }) {
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
+          <GeolocationBanner />
         </GeolocationProvider>
       </body>
     </html>
