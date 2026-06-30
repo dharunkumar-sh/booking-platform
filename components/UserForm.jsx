@@ -75,7 +75,7 @@ export default function UserForm() {
           finalUserPayload.userId = dbData.userId;
         }
 
-        // 2. Sync to Redis/fallback store
+        // 2. Sync to store
         await fetch("/api/redis", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
