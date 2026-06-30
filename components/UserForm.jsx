@@ -62,14 +62,28 @@ export default function UserForm() {
     e.preventDefault();
     if (validateForm()) {
       try {
+        // 1. Store user in Neon Database
+        const dbRes = await fetch("/api/user-form", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+        const dbData = await dbRes.json();
+        
+        let finalUserPayload = { ...formData };
+        if (dbRes.ok && dbData.userId) {
+          finalUserPayload.userId = dbData.userId;
+        }
+
+        // 2. Sync to Redis/fallback store
         await fetch("/api/redis", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key: "bookingUser", value: formData }),
+          body: JSON.stringify({ key: "bookingUser", value: finalUserPayload }),
         });
         
         if (bookingDetails) {
-          const updatedBooking = { ...bookingDetails, user: formData };
+          const updatedBooking = { ...bookingDetails, user: finalUserPayload };
           await fetch("/api/redis", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -77,7 +91,7 @@ export default function UserForm() {
           });
         }
       } catch (e) {
-        console.error(e);
+        console.error("Error storing booking details:", e);
       }
 
       router.push("/confirmation");
