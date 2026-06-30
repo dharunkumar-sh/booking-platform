@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { Ticket } from "lucide-react";
 
 export default function FeaturedEvents({ onBookEvent = () => {} }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -51,7 +52,7 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
     {
       title: "Stand-up Comedy Show",
       category: "comedy",
-      venue: "Hyderabad Club",
+      venue: "Hyderabad Comedy Hall",
       date: "Sep 15, 2026",
       time: "8:00 PM",
       rating: "4.7",
@@ -127,7 +128,7 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
     {
       title: "Hip Hop Night",
       category: "dance",
-      venue: "Chandigarh Club",
+      venue: "Chandigarh Arena",
       date: "Nov 02, 2026",
       time: "7:30 PM",
       rating: "4.4",
@@ -174,25 +175,37 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
 
   return (
     <div className="px-6 py-10 bg-neutral-950 min-h-screen text-white">
-      
-      <h2
-        className="text-2xl font-extrabold mb-8"
+      <h1
         style={{
+          fontSize: "36px",
+          fontWeight: "bold",
+          marginBottom: "30px",
           background: "linear-gradient(90deg, #f97316, #ff5862)",
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
           backgroundClip: "text",
         }}
       >
-        🎟 Featured Events
-      </h2>
+        Featured Events
+      </h1>
 
       {/* GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
         {events.map((event, i) => (
           <div
             key={i}
-            onClick={() => setSelectedCategory(event.category)}
+            onClick={async () => {
+              try {
+                await fetch("/api/redis", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ key: "selectedEvent", value: event }),
+                });
+              } catch (e) {
+                console.error(e);
+              }
+              router.push(`/event-details/${encodeURIComponent(event.title)}`);
+            }}
             className="group relative rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-orange-500/40 transition duration-300"
           >
             {/* IMAGE */}
@@ -207,11 +220,10 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
             </div>
 
             {/* GRADIENT */}
-            <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
             {/* CONTENT */}
-            <div className="absolute bottom-0 p-4 w-full">
-              
+            <div className="absolute bottom-0 p-4 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               {/* Rating */}
               <div className="flex justify-between items-center mb-1">
                 <span className="bg-gradient-to-r from-orange-500 to-rose-500 text-xs px-2 py-1 rounded">
@@ -224,9 +236,7 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
 
               <h3 className="text-lg font-semibold">{event.title}</h3>
 
-              <p className="text-xs text-gray-300">
-                📍 {event.venue}
-              </p>
+              <p className="text-xs text-gray-300">📍 {event.venue}</p>
 
               <p className="text-xs text-gray-300">
                 📅 {event.date} • ⏰ {event.time}
@@ -236,12 +246,11 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  localStorage.setItem("selectedEvent", JSON.stringify(event));
-                  router.push("/event-details");
+                  onBookEvent(event);
                 }}
-                className="mt-3 w-full bg-gradient-to-r from-orange-500 to-rose-500 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                className="mt-3 w-full bg-gradient-to-r from-orange-500 to-rose-500 py-2 rounded-lg flex items-center justify-center gap-2 font-semibold text-white cursor-pointer relative z-10"
               >
-                🎟 Book Now
+                <Ticket size={16} /> Book Now
               </button>
             </div>
           </div>

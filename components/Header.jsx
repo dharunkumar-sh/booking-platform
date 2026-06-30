@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   Search,
   Mic,
@@ -12,16 +14,8 @@ import {
   X,
   Tv,
 } from "lucide-react";
+import { useGeolocationContext } from "@/context/GeolocationContext";
 
-const CITIES = [
-  "Mumbai",
-  "Delhi",
-  "Bengaluru",
-  "Chennai",
-  "Hyderabad",
-  "Pune",
-  "Goa",
-];
 const OTT_PLATFORMS = [
   "Netflix",
   "Prime Video",
@@ -32,15 +26,14 @@ const OTT_PLATFORMS = [
 ];
 
 const Header = () => {
+  const router = useRouter();
+  const { triggerRequest, location, status } = useGeolocationContext();
   // Input and selectors
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCity, setSelectedCity] = useState("Mumbai");
   const [selectedOtt, setSelectedOtt] = useState("All");
   const [crossOttSearch, setCrossOttSearch] = useState(true);
 
   // Interactive states
-
-  const [isCityOpen, setIsCityOpen] = useState(false);
   const [isOttOpen, setIsOttOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
@@ -53,7 +46,6 @@ const Header = () => {
   ];
 
   // Refs
-  const cityRef = useRef(null);
   const ottRef = useRef(null);
 
   // Cycling placeholder text
@@ -67,8 +59,6 @@ const Header = () => {
   // Close dropdowns on clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (cityRef.current && !cityRef.current.contains(e.target))
-        setIsCityOpen(false);
       if (ottRef.current && !ottRef.current.contains(e.target))
         setIsOttOpen(false);
     };
@@ -76,41 +66,54 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleDetectLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by this browser.");
-      return;
-    }
+  const [user, setUser] = useState(null);
 
-    const originalCity = selectedCity;
-    setSelectedCity("Detecting...");
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-
-        // Match user coordinates to the closest supported Indian city
-        let detected = "Chennai";
-        if (lat < 14) {
-          detected = lon > 79 ? "Chennai" : "Bengaluru";
-        } else if (lat < 18) {
-          detected = "Pune";
-        } else if (lat > 25) {
-          detected = "Delhi";
-        } else if (lon > 80) {
-          detected = "Hyderabad";
+  useEffect(() => {
+    const checkUser = () => {
+      const stored = localStorage.getItem("vibepass_user");
+      if (stored) {
+        try {
+          setUser(JSON.parse(stored));
+        } catch {
+          setUser(null);
         }
+      } else {
+        setUser(null);
+      }
+    };
 
-        setSelectedCity(detected);
-        setIsCityOpen(false);
-      },
-      (error) => {
-        console.warn("Location detection failed, fallback to default:", error);
-        setSelectedCity(originalCity);
-        alert("Unable to fetch location. Fallback to default.");
-      },
-    );
+    checkUser();
+    
+    // Listen for storage/custom events to update user state dynamically
+    window.addEventListener("storage", checkUser);
+    return () => window.removeEventListener("storage", checkUser);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("vibepass_user");
+    setUser(null);
+    router.push("/");
+  };
+
+  const getCurrentLocationText = () => {
+    if (status === "requesting") return "Detecting…";
+    if (status === "granted") {
+      if (location?.city) return location.city;
+      if (location?.latitude && location?.longitude) {
+        return `${location.latitude.toFixed(1)}°, ${location.longitude.toFixed(1)}°`;
+      }
+      return "Location Active";
+    }
+    if (status === "denied") return "Location Denied";
+    if (status === "timeout") return "Timeout";
+    if (status === "unavailable") return "Unavailable";
+    return "Detect Location";
+  };
+
+  const handleLocationClick = () => {
+    if (status === "denied" || status === "timeout" || status === "unavailable" || status === "idle") {
+      triggerRequest();
+    }
   };
 
   return (
@@ -126,68 +129,37 @@ const Header = () => {
                 setSearchQuery("");
                 setSelectedOtt("All");
                 setMobileSearchOpen(false);
+                router.push("/");
               }}
-              className="group flex items-center gap-2 select-none"
+              className="group flex items-center gap-1 select-none"
             >
-              <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-orange-500 to-rose-500 flex items-center justify-center font-black text-xl shadow-lg shadow-orange-500/20 group-hover:scale-105 transition-transform duration-200">
-                VP
-              </div>
-              <span className="text-2xl font-extrabold tracking-tight bg-linear-to-r from-orange-400 via-orange-500 to-rose-500 bg-clip-text text-transparent group-hover:opacity-90 transition-opacity">
+              <Image
+                src="/logo.svg"
+                alt="VibePass Logo"
+                width={80}
+                height={80}
+                className="h-10 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+              />
+              <span className="text-2xl font-extrabold tracking-tight bg-linear-to-r from-orange-400 via-orange-500 to-rose-500 bg-clip-text text-transparent group-hover:opacity-90 transition-opacity mr-3">
                 VibePass
               </span>
             </a>
 
             {/* 11. Location Selector (Desktop) */}
-            <div className="relative hidden md:block" ref={cityRef}>
+            <div className="hidden md:block">
               <button
-                onClick={() => setIsCityOpen(!isCityOpen)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 hover:border-orange-500/40 text-sm font-medium text-neutral-300 hover:text-white transition-all duration-200 cursor-pointer"
+                onClick={handleLocationClick}
+                disabled={status === "requesting" || status === "granted"}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 text-sm font-medium text-neutral-300 transition-all duration-200 ${
+                  status !== "requesting" && status !== "granted"
+                    ? "hover:border-orange-500/40 hover:text-white cursor-pointer"
+                    : "cursor-default"
+                }`}
+                title={status === "granted" && location ? `Lat: ${location.latitude.toFixed(4)}, Lng: ${location.longitude.toFixed(4)}` : "Click to detect location"}
               >
-                <MapPin className="text-orange-500" size={15} />
-                <span>{selectedCity}</span>
-                <ChevronDown
-                  size={14}
-                  className={`text-neutral-500 transition-transform duration-200 ${isCityOpen ? "rotate-180" : ""}`}
-                />
+                <MapPin className="text-orange-500 shrink-0" size={15} />
+                <span>{getCurrentLocationText()}</span>
               </button>
-
-              {isCityOpen && (
-                <div className="absolute left-0 mt-2 w-48 rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl p-1.5 animate-in fade-in slide-in-from-top-2 duration-150 z-50">
-                  <button
-                    onClick={handleDetectLocation}
-                    className="w-full text-left flex items-center gap-2 px-3 py-2 text-xs font-semibold text-orange-400 hover:bg-neutral-800 rounded-lg border-b border-neutral-800/60 transition-colors mb-1.5 cursor-pointer"
-                  >
-                    <MapPin size={12} className="animate-pulse" />
-                    <span>Detect My Location</span>
-                  </button>
-                  <div className="px-3 py-1.5 text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-                    Select City
-                  </div>
-                  {CITIES.map((city) => (
-                    <button
-                      key={city}
-                      onClick={() => {
-                        setSelectedCity(city);
-                        setIsCityOpen(false);
-                      }}
-                      className="w-full text-left flex items-center justify-between px-3 py-2 text-sm rounded-lg hover:bg-neutral-800 transition-colors cursor-pointer"
-                    >
-                      <span
-                        className={
-                          selectedCity === city
-                            ? "text-orange-400 font-medium"
-                            : "text-neutral-300"
-                        }
-                      >
-                        {city}
-                      </span>
-                      {selectedCity === city && (
-                        <Check size={14} className="text-orange-500" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
 
@@ -285,7 +257,7 @@ const Header = () => {
                       </button>
                     ))}
 
-                    <div className="h-[1px] bg-neutral-800 my-2" />
+                    <div className="h-px bg-neutral-800 my-2" />
 
                     {/* 5. Search Other OTT Platforms Toggle Inside Filter Dropdown */}
                     <div className="px-2.5 py-1.5 flex items-center justify-between">
@@ -347,9 +319,26 @@ const Header = () => {
             </div>
 
             {/* 10. User Sign In Button */}
-            <button className="px-5 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:opacity-90 active:scale-95 text-white shadow-lg shadow-orange-500/10 transition-all duration-200 shrink-0 cursor-pointer">
-              Sign In
-            </button>
+            {user ? (
+              <div className="flex items-center gap-3">
+                <span className="hidden sm:inline text-xs font-semibold text-neutral-400">
+                  Hi, <span className="text-white">{user.name || user.email || user.phone}</span>
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 text-xs font-semibold rounded-xl bg-neutral-900 border border-neutral-800 hover:border-rose-500/40 text-neutral-300 hover:text-white transition-all cursor-pointer shrink-0"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => router.push("/login")}
+                className="px-5 py-2 text-sm font-semibold rounded-xl bg-linear-to-r from-orange-500 to-rose-500 hover:opacity-90 active:scale-95 text-white shadow-lg shadow-orange-500/10 transition-all duration-200 shrink-0 cursor-pointer"
+              >
+                Sign In
+              </button>
+            )}
           </div>
         </div>
 
@@ -361,17 +350,18 @@ const Header = () => {
               <span className="text-xs font-semibold text-neutral-400">
                 Current Location:
               </span>
-              <select
-                value={selectedCity}
-                onChange={(e) => setSelectedCity(e.target.value)}
-                className="bg-neutral-800 border border-neutral-700 text-xs text-orange-400 font-semibold rounded-lg px-2.5 py-1 focus:outline-none cursor-pointer"
+              <button
+                onClick={handleLocationClick}
+                disabled={status === "requesting" || status === "granted"}
+                className={`flex items-center gap-1 text-xs text-orange-400 font-semibold ${
+                  status !== "requesting" && status !== "granted"
+                    ? "cursor-pointer active:scale-95"
+                    : "cursor-default"
+                }`}
               >
-                {CITIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+                <MapPin size={12} className="text-orange-500" />
+                <span>{getCurrentLocationText()}</span>
+              </button>
             </div>
 
             <div className="flex items-center gap-2 bg-neutral-950 border border-neutral-800 rounded-lg px-2.5 py-1.5 focus-within:border-orange-500/50">

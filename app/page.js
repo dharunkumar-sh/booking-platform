@@ -32,20 +32,19 @@ export default function Home() {
 
   const handleBookEvent = (event) => {
     const query = new URLSearchParams({
-      title: event.title,
       venue: event.venue || event.location || "",
-      price: event.priceVal || 499,
+      category: event.category || "",
     }).toString();
-    router.push(`/seat-selection?${query}`);
+    router.push(`/seat-selection/${encodeURIComponent(event.title)}?${query}`);
   };
 
   return (
     <div>
       <Hero />
       
-      <FeaturedEvents />
-      <TrendingEvents />
-      <EventMapWrapper /> 
+      <FeaturedEvents onBookEvent={handleBookEvent} />
+      <TrendingEvents onBookEvent={handleBookEvent} />
+      <EventMapWrapper onBookEvent={handleBookEvent} /> 
     </div>
   );
 }

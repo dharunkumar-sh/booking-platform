@@ -3,6 +3,7 @@ import "leaflet/dist/leaflet.css";
 import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { Ticket } from "lucide-react";
 
 export default function EventMap({ onBookEvent = () => {} }) {
   const [userLocation, setUserLocation] = useState(null);
@@ -11,7 +12,7 @@ export default function EventMap({ onBookEvent = () => {} }) {
     {
       id: 1,
       title: "Vijay Antony Concert",
-      venue: "YMCA Grounds Chennai",
+      venue: "YMCA Stadium Chennai",
       price: "₹499",
       image:
         "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800",
@@ -21,7 +22,7 @@ export default function EventMap({ onBookEvent = () => {} }) {
     {
       id: 2,
       title: "AR Rahman Live",
-      venue: "Nehru Indoor Stadium",
+      venue: "Nehru Indoor Arena Chennai",
       price: "₹999",
       image:
         "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800",
@@ -31,7 +32,7 @@ export default function EventMap({ onBookEvent = () => {} }) {
     {
       id: 3,
       title: "Coolie",
-      venue: "PVR Palazzo Chennai",
+      venue: "PVR Palazzo Theatre Chennai",
       price: "₹190",
       image:
         "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800",
@@ -87,11 +88,11 @@ export default function EventMap({ onBookEvent = () => {} }) {
         Nearby Events
       </h1>
 
-      <div style={{ display: "flex", gap: "24px" }}>
+      <div className="flex flex-col lg:flex-row gap-6 w-full overflow-hidden">
         {/* Sidebar */}
         <div
+          className="w-full lg:w-1/3 shrink-0 no-scrollbar"
           style={{
-            flex: 1,
             background: "rgba(255,255,255,0.05)",
             backdropFilter: "blur(12px)",
             border: "1px solid rgba(255,255,255,0.08)",
@@ -196,6 +197,10 @@ export default function EventMap({ onBookEvent = () => {} }) {
                   cursor: "pointer",
                   boxShadow: "0 4px 15px rgba(249,115,22,0.3)",
                   transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.opacity = "0.9";
@@ -212,7 +217,7 @@ export default function EventMap({ onBookEvent = () => {} }) {
                   e.currentTarget.style.transform = "scale(1)";
                 }}
               >
-                Book Now
+                <Ticket size={16} /> Book Now
               </button>
             </div>
           ))}
@@ -220,8 +225,8 @@ export default function EventMap({ onBookEvent = () => {} }) {
 
         {/* Map */}
         <div
+          className="w-full lg:w-2/3 grow"
           style={{
-            flex: 2,
             background: "rgba(255,255,255,0.05)",
             backdropFilter: "blur(12px)",
             border: "1px solid rgba(255,255,255,0.08)",
@@ -232,6 +237,7 @@ export default function EventMap({ onBookEvent = () => {} }) {
           <MapContainer
             center={[13.0827, 80.2707]}
             zoom={11}
+            attributionControl={false}
             style={{
               height: "600px",
               width: "100%",
@@ -336,9 +342,13 @@ export default function EventMap({ onBookEvent = () => {} }) {
                         fontWeight: 600,
                         cursor: "pointer",
                         boxShadow: "0 4px 12px rgba(249,115,22,0.3)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "6px",
                       }}
                     >
-                      Book Tickets
+                      <Ticket size={15} /> Book Tickets
                     </button>
                   </div>
                 </Popup>

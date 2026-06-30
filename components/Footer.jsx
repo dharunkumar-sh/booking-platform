@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   MapPin,
   Gift,
@@ -49,17 +50,6 @@ const footerLinks = [
       { label: "Safety Guidelines", href: "/support/safety" },
     ],
   },
-  {
-    title: "Partners",
-    links: [
-      { label: "List an Event", href: "/partners/list-event" },
-      { label: "Cinema Partners", href: "/partners/cinemas" },
-      { label: "Travel Operators", href: "/partners/travel" },
-      { label: "Advertise", href: "/partners/advertise" },
-      { label: "Affiliate Program", href: "/partners/affiliate" },
-      { label: "Contact Sales", href: "/partners/contact-sales" },
-    ],
-  },
 ];
 
 const socialLinks = [
@@ -97,16 +87,20 @@ const Footer = () => {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr_1fr_1fr]">
           <div className="lg:col-span-1">
-            <a href="/" className="group flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-tr from-orange-500 to-rose-500 font-black text-white shadow-lg shadow-orange-500/20 transition-transform group-hover:scale-105">
-                VP
-              </div>
+            <a href="/" className="group flex items-center gap-2">
+              <Image
+                src="/logo.svg"
+                alt="VibePass Logo"
+                width={44}
+                height={44}
+                className="h-12 w-auto object-contain transition-transform group-hover:scale-105"
+              />
               <div>
-                <p className="text-2xl font-extrabold tracking-tight bg-linear-to-r from-orange-400 via-orange-500 to-rose-500 bg-clip-text text-transparent">
+                <p className="text-2xl font-extrabold tracking-leading bg-linear-to-r from-orange-400 via-orange-500 to-rose-500 bg-clip-text text-transparent">
                   VibePass
                 </p>
                 <p className="text-xs font-medium text-neutral-400">
-                  Book every vibe
+                  Book Every Vibe with AI
                 </p>
               </div>
             </a>
