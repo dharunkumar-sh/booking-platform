@@ -5,7 +5,7 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { Ticket } from "lucide-react";
 
-export default function TrendingEvents({ onBookEvent = () => {} }) {
+export default function TrendingEvents({ searchQuery = "", onBookEvent = () => {} }) {
   const sliderRef = useRef(null);
   const [likedEvents, setLikedEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -159,6 +159,17 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
     }
   ];
 
+  const filteredEvents = events.filter((e) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      e.title.toLowerCase().includes(q) ||
+      e.category.toLowerCase().includes(q) ||
+      (e.location && e.location.toLowerCase().includes(q)) ||
+      (e.organizer && e.organizer.toLowerCase().includes(q))
+    );
+  });
+
   return (
     <section
       className="bg-neutral-950"
@@ -239,7 +250,7 @@ export default function TrendingEvents({ onBookEvent = () => {} }) {
           scrollbarWidth: "none",
         }}
       >
-        {events.map((event, index) => (
+        {filteredEvents.map((event, index) => (
           <div
             key={event.id}
             onClick={async () => {

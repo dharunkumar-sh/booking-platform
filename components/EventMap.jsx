@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Ticket } from "lucide-react";
 
-export default function EventMap({ onBookEvent = () => {} }) {
+export default function EventMap({ searchQuery = "", onBookEvent = () => {} }) {
   const [userLocation, setUserLocation] = useState(null);
 
   const events = [
@@ -40,6 +40,15 @@ export default function EventMap({ onBookEvent = () => {} }) {
       lng: 80.278,
     },
   ];
+
+  const filteredEvents = events.filter((e) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      e.title.toLowerCase().includes(q) ||
+      e.venue.toLowerCase().includes(q)
+    );
+  });
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -113,7 +122,7 @@ export default function EventMap({ onBookEvent = () => {} }) {
             Events
           </h2>
 
-          {events.map((event) => (
+          {filteredEvents.map((event) => (
             <div
               key={event.id}
               style={{
@@ -259,7 +268,7 @@ export default function EventMap({ onBookEvent = () => {} }) {
               </Marker>
             )}
 
-            {events.map((event) => (
+            {filteredEvents.map((event) => (
               <Marker key={event.id} position={[event.lat, event.lng]}>
                 <Popup>
                   <div

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Ticket } from "lucide-react";
 
-export default function FeaturedEvents({ onBookEvent = () => {} }) {
+export default function FeaturedEvents({ searchQuery = "", onBookEvent = () => {} }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const router = useRouter();
 
@@ -165,6 +165,17 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
     }
   ];
 
+  const filteredEvents = events.filter((e) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      e.title.toLowerCase().includes(q) ||
+      e.category.toLowerCase().includes(q) ||
+      (e.venue && e.venue.toLowerCase().includes(q)) ||
+      (e.organizer && e.organizer.toLowerCase().includes(q))
+    );
+  });
+
   const categoryData = {
     music: ["Concert Night", "DJ Party", "Live Band"],
     comedy: ["Standup Special", "Improv Night"],
@@ -191,7 +202,7 @@ export default function FeaturedEvents({ onBookEvent = () => {} }) {
 
       {/* GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-        {events.map((event, i) => (
+        {filteredEvents.map((event, i) => (
           <div
             key={i}
             onClick={async () => {

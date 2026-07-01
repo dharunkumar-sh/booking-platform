@@ -4,6 +4,6 @@ import dynamic from "next/dynamic";
 
 const EventMap = dynamic(() => import("./EventMap"), { ssr: false });
 
-export default function EventMapWrapper({ onBookEvent = () => {} }) {
-  return <EventMap onBookEvent={onBookEvent} />;
+export default function EventMapWrapper({ searchQuery = "", onBookEvent = () => {} }) {
+  return <EventMap searchQuery={searchQuery} onBookEvent={onBookEvent} />;
 }

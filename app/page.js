@@ -6,6 +6,8 @@ import TrendingEvents from "@/components/TrendingEvents";
 import EventMapWrapper from "@/components/EventMapWrapper";
 import { useRouter } from "next/navigation";
 
+import { useState } from "react";
+
 const isTheatreEvent = (event) => {
   if (!event) return false;
   const title = (event.title || "").toLowerCase();
@@ -29,6 +31,7 @@ const isTheatreEvent = (event) => {
 
 export default function Home() {
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleBookEvent = (event) => {
     const query = new URLSearchParams({
@@ -40,11 +43,11 @@ export default function Home() {
 
   return (
     <div>
-      <Hero />
+      <Hero searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       
-      <FeaturedEvents onBookEvent={handleBookEvent} />
-      <TrendingEvents onBookEvent={handleBookEvent} />
-      <EventMapWrapper onBookEvent={handleBookEvent} /> 
+      <FeaturedEvents searchQuery={searchQuery} onBookEvent={handleBookEvent} />
+      <TrendingEvents searchQuery={searchQuery} onBookEvent={handleBookEvent} />
+      <EventMapWrapper searchQuery={searchQuery} onBookEvent={handleBookEvent} /> 
     </div>
   );
 }
