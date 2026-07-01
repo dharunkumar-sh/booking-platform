@@ -1,8 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Ticket, Heart } from "lucide-react";
+import { Ticket, Heart, ThumbsUp } from "lucide-react";
 
 function formatPrice(price) {
   if (price == null) return "";
@@ -34,6 +35,81 @@ export default function EventCard({
   style = {},
 }) {
   const router = useRouter();
+  const [likesCount, setLikesCount] = useState(0);
+  const [hasLiked, setHasLiked] = useState(false);
+  const [likesLoaded, setLikesLoaded] = useState(false);
+  const fallbackImage = "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80";
+  const [imgSrc, setImgSrc] = useState(event.image || fallbackImage);
+
+  // Sync state if event prop changes
+  useEffect(() => {
+    setImgSrc(event.image || fallbackImage);
+  }, [event.image]);
+
+  // Fetch likes count and user like status dynamically on mount
+  useEffect(() => {
+    const userStored = localStorage.getItem("vibepass_user");
+    const userId = userStored ? JSON.parse(userStored).id : "";
+    fetch(`/api/events/like?eventId=${event.id}&userId=${userId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setLikesCount(data.likes);
+          setHasLiked(data.hasLiked);
+          setLikesLoaded(true);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch dynamic like count:", err));
+  }, [event.id]);
+
+  // Auto-apply pending like after auth redirect
+  useEffect(() => {
+    const pendingId = localStorage.getItem("like_pending_event_id");
+    const userStored = localStorage.getItem("vibepass_user");
+    if (pendingId && Number(pendingId) === event.id && userStored) {
+      localStorage.removeItem("like_pending_event_id");
+      const user = JSON.parse(userStored);
+      fetch("/api/events/like", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: event.id, userId: user.id })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setLikesCount(data.likes);
+          setHasLiked(true);
+        }
+      })
+      .catch(err => console.error("Pending like apply failed:", err));
+    }
+  }, [event.id]);
+
+  const handleLike = async (e) => {
+    e.stopPropagation();
+    const userStored = localStorage.getItem("vibepass_user");
+    if (!userStored) {
+      localStorage.setItem("like_pending_event_id", event.id);
+      localStorage.setItem("login_redirect", window.location.pathname);
+      router.push("/login");
+      return;
+    }
+    const user = JSON.parse(userStored);
+    try {
+      const res = await fetch("/api/events/like", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: event.id, userId: user.id })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLikesCount(data.likes);
+        setHasLiked(true);
+      }
+    } catch (err) {
+      console.error("Like failed:", err);
+    }
+  };
 
   return (
     <div
@@ -50,12 +126,13 @@ export default function EventCard({
     >
       <div className="relative h-64 w-full overflow-hidden">
         <Image
-          src={
-            event.image ||
-            "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80"
-          }
+          src={imgSrc}
           alt={event.title}
           fill
+          priority
+          loading="eager"
+          unoptimized
+          onError={() => setImgSrc(fallbackImage)}
           sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="object-cover group-hover:scale-105 transition duration-500"
         />
@@ -79,6 +156,41 @@ export default function EventCard({
           🔥 Trending
         </div>
       )}
+
+      <button
+        onClick={handleLike}
+        style={{
+          position: "absolute",
+          top: "15px",
+          right: "65px",
+          padding: "0 12px",
+          height: "40px",
+          borderRadius: "20px",
+          border: "none",
+          background: hasLiked ? "rgba(249,115,22,0.95)" : "rgba(255,255,255,0.92)",
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          cursor: "pointer",
+          zIndex: 2,
+          transition: "all 0.2s",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.25)",
+        }}
+        title="Like this event"
+      >
+        <ThumbsUp
+          size={15}
+          style={{
+            color: hasLiked ? "white" : "#f97316",
+            fill: hasLiked ? "white" : "none",
+          }}
+        />
+        {likesLoaded && likesCount > 0 && (
+          <span style={{ fontSize: "12px", fontWeight: "bold", color: hasLiked ? "white" : "#1f2937" }}>
+            {likesCount}
+          </span>
+        )}
+      </button>
 
       <button
         onClick={(e) => {

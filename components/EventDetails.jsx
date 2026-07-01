@@ -1,9 +1,78 @@
 "use client";
-import { Info, User, Ticket, CheckCircle2, Users, Star, MessageSquare, ArrowRight } from "lucide-react";
+
+import { useState, useEffect } from "react";
+import { Info, User, Ticket, CheckCircle2, Users, Star, MessageSquare, ArrowRight, ThumbsUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function EventDetails({ event, description, organizer, price, features, crew, reviews }) {
   const router = useRouter();
+  const [likesCount, setLikesCount] = useState(0);
+  const [hasLiked, setHasLiked] = useState(false);
+  const [likesLoaded, setLikesLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!event?.id) return;
+    const userStored = localStorage.getItem("vibepass_user");
+    const userId = userStored ? JSON.parse(userStored).id : "";
+    fetch(`/api/events/like?eventId=${event.id}&userId=${userId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setLikesCount(data.likes);
+          setHasLiked(data.hasLiked);
+          setLikesLoaded(true);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, [event?.id]);
+
+  useEffect(() => {
+    if (!event?.id) return;
+    const pendingId = localStorage.getItem("like_pending_event_id");
+    const userStored = localStorage.getItem("vibepass_user");
+    if (pendingId && Number(pendingId) === event.id && userStored) {
+      localStorage.removeItem("like_pending_event_id");
+      const user = JSON.parse(userStored);
+      fetch("/api/events/like", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: event.id, userId: user.id })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setLikesCount(data.likes);
+          setHasLiked(true);
+        }
+      });
+    }
+  }, [event?.id]);
+
+  const handleLike = async () => {
+    const userStored = localStorage.getItem("vibepass_user");
+    if (!userStored) {
+      localStorage.setItem("like_pending_event_id", event.id);
+      localStorage.setItem("login_redirect", window.location.pathname);
+      router.push("/login");
+      return;
+    }
+    const user = JSON.parse(userStored);
+    try {
+      const res = await fetch("/api/events/like", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: event.id, userId: user.id })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLikesCount(data.likes);
+        setHasLiked(true);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if (!event) return null;
 
   const handleCheckout = () => {
@@ -132,6 +201,23 @@ export default function EventDetails({ event, description, organizer, price, fea
           >
             <span>Proceed to Checkout</span>
             <ArrowRight size={18} />
+          </button>
+
+          <button 
+            onClick={handleLike}
+            className={`w-full mt-3 py-3 rounded-xl font-bold flex items-center justify-center gap-2 border transition-all duration-300 cursor-pointer ${
+              hasLiked 
+                ? "bg-orange-500/10 border-orange-500 text-orange-400" 
+                : "bg-neutral-900 border-neutral-800 text-neutral-300 hover:border-orange-500/40 hover:text-white"
+            }`}
+          >
+            <ThumbsUp size={16} className={hasLiked ? "fill-orange-400 text-orange-400" : ""} />
+            <span>{hasLiked ? "Liked" : "Like Event"}</span>
+            {likesLoaded && likesCount > 0 && (
+              <span className="ml-1.5 px-2 py-0.5 rounded-md bg-neutral-800 text-xs text-neutral-400 font-extrabold">
+                {likesCount}
+              </span>
+            )}
           </button>
           
           <p className="text-xs text-center text-neutral-500 mt-4">

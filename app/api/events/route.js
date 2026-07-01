@@ -1,6 +1,6 @@
 import { db } from "@/db/index";
-import { events } from "@/db/schema";
-import { eq, and, ilike } from "drizzle-orm";
+import { events, eventLikes } from "@/db/schema";
+import { eq, and, ilike, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 /**
@@ -18,19 +18,47 @@ export async function GET(request) {
     const category = searchParams.get("category") || null;
     const state    = searchParams.get("state")    || null;
 
-    // Build filter conditions
-    const conditions = [];
-    if (type)     conditions.push(eq(events.type, type));
-    if (category) conditions.push(eq(events.category, category));
-    if (state)    conditions.push(ilike(events.location, `%${state}%`));
+    // Build query using leftJoin and groupBy to calculate likes count dynamically
+    const query = db
+      .select({
+        id: events.id,
+        title: events.title,
+        type: events.type,
+        category: events.category,
+        description: events.description,
+        image: events.image,
+        location: events.location,
+        latitude: events.latitude,
+        longitude: events.longitude,
+        price: events.price,
+        date: events.date,
+        time: events.time,
+        rating: events.rating,
+        organizer: events.organizer,
+        features: events.features,
+        crew: events.crew,
+        reviews: events.reviews,
+        likes: sql`count(${eventLikes.id})`.mapWith(Number),
+        createdAt: events.createdAt,
+      })
+      .from(events)
+      .leftJoin(eventLikes, eq(events.id, eventLikes.eventId))
+      .groupBy(events.id);
 
-    const rows =
-      conditions.length > 0
-        ? await db
-            .select()
-            .from(events)
-            .where(conditions.length === 1 ? conditions[0] : and(...conditions))
-        : await db.select().from(events);
+    const whereConditions = [];
+    if (type)     whereConditions.push(eq(events.type, type));
+    if (category) whereConditions.push(eq(events.category, category));
+    if (state)    whereConditions.push(ilike(events.location, `%${state}%`));
+
+    if (whereConditions.length > 0) {
+      query.where(whereConditions.length === 1 ? whereConditions[0] : and(...whereConditions));
+    }
+
+    if (type === "trending") {
+      query.having(sql`count(${eventLikes.id}) > 5`);
+    }
+
+    const rows = await query;
 
     return NextResponse.json({ success: true, events: rows });
   } catch (error) {

@@ -8,21 +8,73 @@ const FavouritesContext = createContext(null);
 
 export function FavouritesProvider({ children }) {
   const [favourites, setFavourites] = useState([]);
+  const [user, setUser] = useState(null);
 
-  // Load from localStorage on mount
+  // 1. Monitor user authentication status
   useEffect(() => {
+    const checkUser = () => {
+      const stored = localStorage.getItem("vibepass_user");
+      if (stored) {
+        try {
+          setUser(JSON.parse(stored));
+        } catch {
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+    };
+    checkUser();
+    window.addEventListener("storage", checkUser);
+    return () => window.removeEventListener("storage", checkUser);
+  }, []);
+
+  // 2. Fetch favourites from backend or localStorage
+  const loadFavourites = useCallback(async () => {
+    if (user?.id) {
+      try {
+        const res = await fetch(`/api/events/favourite?userId=${user.id}`);
+        const data = await res.json();
+        if (data.success) {
+          setFavourites(data.events || []);
+          return;
+        }
+      } catch (err) {
+        console.error("Failed to load favourites from backend:", err);
+      }
+    }
+    // Fallback to localStorage
     try {
       const saved = localStorage.getItem(FAV_KEY);
       if (saved) setFavourites(JSON.parse(saved));
     } catch {
       setFavourites([]);
     }
-  }, []);
+  }, [user]);
 
-  const persist = (list) => {
-    setFavourites(list);
-    try { localStorage.setItem(FAV_KEY, JSON.stringify(list)); } catch {}
-  };
+  useEffect(() => {
+    loadFavourites();
+  }, [loadFavourites]);
+
+  // 3. Process pending favourite action post-login
+  useEffect(() => {
+    const pendingId = localStorage.getItem("favourite_pending_event_id");
+    if (pendingId && user?.id) {
+      localStorage.removeItem("favourite_pending_event_id");
+      fetch("/api/events/favourite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: Number(pendingId), userId: user.id })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          loadFavourites();
+        }
+      })
+      .catch(err => console.error("Auto-apply pending favourite failed:", err));
+    }
+  }, [user, loadFavourites]);
 
   const isFavourite = useCallback(
     (id) => favourites.some((f) => f.id === id),
@@ -30,27 +82,61 @@ export function FavouritesProvider({ children }) {
   );
 
   const toggleFavourite = useCallback(
-    (item) => {
-      setFavourites((prev) => {
-        const exists = prev.some((f) => f.id === item.id);
-        const next = exists ? prev.filter((f) => f.id !== item.id) : [...prev, item];
-        try { localStorage.setItem(FAV_KEY, JSON.stringify(next)); } catch {}
-        return next;
-      });
+    async (item) => {
+      const storedUser = localStorage.getItem("vibepass_user");
+      if (!storedUser) {
+        // Redirect to login
+        localStorage.setItem("favourite_pending_event_id", item.id);
+        localStorage.setItem("login_redirect", window.location.pathname);
+        window.location.href = "/login";
+        return;
+      }
+
+      const parsedUser = JSON.parse(storedUser);
+      try {
+        const res = await fetch("/api/events/favourite", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ eventId: item.id, userId: parsedUser.id })
+        });
+        const data = await res.json();
+        if (data.success) {
+          loadFavourites();
+        }
+      } catch (err) {
+        console.error("Failed to toggle favourite on backend:", err);
+      }
     },
-    []
+    [loadFavourites]
   );
 
-  const removeFavourite = useCallback((id) => {
+  const removeFavourite = useCallback(async (id) => {
+    const storedUser = localStorage.getItem("vibepass_user");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      try {
+        await fetch("/api/events/favourite", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ eventId: id, userId: parsedUser.id })
+        });
+        loadFavourites();
+        return;
+      } catch (err) {
+        console.error("Failed to remove favourite on backend:", err);
+      }
+    }
+    // Fallback local remove
     setFavourites((prev) => {
       const next = prev.filter((f) => f.id !== id);
       try { localStorage.setItem(FAV_KEY, JSON.stringify(next)); } catch {}
       return next;
     });
-  }, []);
+  }, [loadFavourites]);
 
   const clearFavourites = useCallback(() => {
-    persist([]);
+    setFavourites([]);
+    try { localStorage.removeItem(FAV_KEY); } catch {}
   }, []);
 
   return (

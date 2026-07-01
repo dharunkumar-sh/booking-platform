@@ -29,6 +29,7 @@ export const events = pgTable("events", {
   features: jsonb("features").default([]),
   crew: jsonb("crew").default([]),
   reviews: jsonb("reviews").default([]),
+  likes: integer("likes").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -49,4 +50,19 @@ export const userform = pgTable("userform", {
   phone: varchar("phone", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const eventLikes = pgTable("event_likes", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").references(() => events.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const eventFavourites = pgTable("event_favourites", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").references(() => events.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 

@@ -616,8 +616,6 @@ const Header = () => {
               <div 
                 ref={profileRef}
                 className="relative flex items-center"
-                onMouseEnter={() => setIsProfileOpen(true)}
-                onMouseLeave={() => setIsProfileOpen(false)}
               >
                 {/* Profile Trigger */}
                 <button

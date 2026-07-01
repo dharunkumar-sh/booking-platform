@@ -1,7 +1,20 @@
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Calendar, MapPin, Clock, Star, Tag } from "lucide-react";
 
 export default function EventHeader({ event }) {
+  const fallbackImage = "https://images.unsplash.com/photo-1501386761578-eac5c94b800a";
+  const [imgSrc, setImgSrc] = useState(fallbackImage);
+
+  // Sync state if event prop changes
+  useEffect(() => {
+    if (event?.image) {
+      setImgSrc(event.image);
+    } else {
+      setImgSrc(fallbackImage);
+    }
+  }, [event]);
+
   if (!event) return null;
 
   return (
@@ -9,11 +22,14 @@ export default function EventHeader({ event }) {
       {/* Background Image */}
       <div className="absolute inset-0">
         <Image
-          src={event.image || "https://images.unsplash.com/photo-1501386761578-eac5c94b800a"}
+          src={imgSrc}
           alt={event.title || "Event Image"}
           fill
           className="object-cover"
           priority
+          loading="eager"
+          unoptimized
+          onError={() => setImgSrc(fallbackImage)}
         />
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-900/60 to-transparent" />

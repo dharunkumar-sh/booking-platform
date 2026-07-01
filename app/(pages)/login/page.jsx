@@ -78,7 +78,9 @@ export default function LoginPage() {
         
         setLoginSuccess(true);
         setTimeout(() => {
-          router.push("/");
+          const redirect = localStorage.getItem("login_redirect") || "/";
+          localStorage.removeItem("login_redirect");
+          router.push(redirect);
         }, 1500);
       }
     } catch (error) {
@@ -184,7 +186,9 @@ export default function LoginPage() {
         
         setLoginSuccess(true);
         setTimeout(() => {
-          router.push("/");
+          const redirect = localStorage.getItem("login_redirect") || "/";
+          localStorage.removeItem("login_redirect");
+          router.push(redirect);
         }, 1500);
       }
     } catch (error) {
