@@ -8,10 +8,13 @@ import { readFileSync } from "fs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Load .env from project root FIRST before any DB module is imported
-const result = config({ path: resolve(__dirname, "../.env") });
+// Load .env.local (or .env) from project root FIRST before any DB module is imported
+let result = config({ path: resolve(__dirname, "../.env.local") });
 if (result.error) {
-  console.error("❌ Failed to load .env:", result.error.message);
+  result = config({ path: resolve(__dirname, "../.env") });
+}
+if (result.error) {
+  console.error("❌ Failed to load environment variables:", result.error.message);
   process.exit(1);
 }
 
@@ -28,8 +31,8 @@ const { neon } = await import("@neondatabase/serverless");
 
 const sql = neon(DATABASE_URL);
 
-const dataPath = resolve(__dirname, "../data.json");
-const { events: eventsList } = JSON.parse(readFileSync(dataPath, "utf-8"));
+// Import seed data from our JS module instead of data.json
+const { seedEvents: eventsList } = await import("../db/seed-data.js");
 
 async function seed() {
   console.log(`📦 Seeding ${eventsList.length} events into the database...`);

@@ -7,39 +7,34 @@ import { Ticket } from "lucide-react";
 
 export default function EventMap({ onBookEvent = () => {} }) {
   const [userLocation, setUserLocation] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const events = [
-    {
-      id: 1,
-      title: "Vijay Antony Concert",
-      venue: "YMCA Stadium Chennai",
-      price: "₹499",
-      image:
-        "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800",
-      lat: 13.042,
-      lng: 80.233,
-    },
-    {
-      id: 2,
-      title: "AR Rahman Live",
-      venue: "Nehru Indoor Arena Chennai",
-      price: "₹999",
-      image:
-        "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800",
-      lat: 13.065,
-      lng: 80.248,
-    },
-    {
-      id: 3,
-      title: "Coolie",
-      venue: "PVR Palazzo Theatre Chennai",
-      price: "₹190",
-      image:
-        "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800",
-      lat: 13.087,
-      lng: 80.278,
-    },
-  ];
+  useEffect(() => {
+    async function loadEvents() {
+      try {
+        const res = await fetch("/api/events");
+        const data = await res.json();
+        if (data.success && data.events) {
+          const mapped = data.events.map((e) => ({
+            id: e.id,
+            title: e.title,
+            venue: e.location,
+            price: e.price != null ? `₹${Math.round(e.price / 100)}` : "₹0",
+            image: e.image || "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800",
+            lat: e.latitude || 13.0827,
+            lng: e.longitude || 80.2707,
+          }));
+          setEvents(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to load events for map:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadEvents();
+  }, []);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
