@@ -38,6 +38,10 @@ async function reverseGeocode(latitude, longitude) {
       }
     );
     if (!res.ok) throw new Error("Geocoding failed");
+    const contentType = res.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error("Nominatim response is not JSON");
+    }
     const data = await res.json();
     const addr = data.address || {};
     const city =

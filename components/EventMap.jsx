@@ -15,7 +15,7 @@ const customMarkerIcon = typeof window !== "undefined" ? new L.Icon({
   shadowSize: [41, 41]
 }) : null;
 
-export default function EventMap({ onBookEvent = () => {} }) {
+export default function EventMap({ onBookEvent = () => {}, searchQuery = "", selectedCategories = [] }) {
   const [userLocation, setUserLocation] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,6 +30,7 @@ export default function EventMap({ onBookEvent = () => {} }) {
             id: e.id,
             title: e.title,
             venue: e.location,
+            category: e.category,
             price: e.price != null ? `₹${Math.round(e.price / 100)}` : "₹0",
             image: e.image || "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800",
             lat: e.latitude || 13.0827,
@@ -135,9 +136,27 @@ export default function EventMap({ onBookEvent = () => {} }) {
               </Marker>
             )}
 
-            {events.map((event) => (
-              customMarkerIcon && (
-                <Marker key={event.id} position={[event.lat, event.lng]} icon={customMarkerIcon}>
+            {(() => {
+              const filteredEvents = events.filter((e) => {
+                if (selectedCategories.length > 0) {
+                  if (!selectedCategories.includes((e.category || "").toLowerCase())) {
+                    return false;
+                  }
+                }
+                if (searchQuery && searchQuery.trim()) {
+                  const q = searchQuery.toLowerCase().trim();
+                  return (
+                    (e.title || "").toLowerCase().includes(q) ||
+                    (e.venue || "").toLowerCase().includes(q) ||
+                    (e.category || "").toLowerCase().includes(q)
+                  );
+                }
+                return true;
+              });
+
+              return filteredEvents.map((event) => (
+                customMarkerIcon && (
+                  <Marker key={event.id} position={[event.lat, event.lng]} icon={customMarkerIcon}>
                   <Popup>
                     <div
                       style={{
@@ -230,8 +249,9 @@ export default function EventMap({ onBookEvent = () => {} }) {
                     </div>
                   </Popup>
                 </Marker>
-              )
-            ))}
+                )
+              ))
+            })()}
           </MapContainer>
         </div>
       </div>

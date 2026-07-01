@@ -131,6 +131,10 @@ export default function TrendingEvents({
       }
 
       const res = await fetch(`/api/events?${params.toString()}`);
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("TrendingEvents response is not JSON");
+      }
       const data = await res.json();
       if (data.success) {
         let rows = data.events || [];
@@ -159,7 +163,7 @@ export default function TrendingEvents({
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedCategories]);
+  }, [searchQuery, selectedCategories.join(",")]);
 
   useEffect(() => {
     const timer = setTimeout(fetchEvents, 300);

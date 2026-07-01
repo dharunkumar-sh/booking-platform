@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import eventsData from '@/data.json';
+import { db } from "@/db/index";
+import { events as eventsTable } from "@/db/schema";
 
 export async function POST(request) {
   try {
@@ -9,14 +10,18 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing or empty query' }, { status: 400 });
     }
     const trimmedQuery = query.trim();
-    const eventsSummary = eventsData.events
-      .map((e) => '- ' + e.title + ' (' + e.category + ', ' + e.location + ', Rs.' + (e.price / 100).toFixed(0) + ')')
+
+    // Query events from Drizzle DB
+    const dbEvents = await db.select().from(eventsTable);
+
+    const eventsSummary = dbEvents
+      .map((e) => '- ' + e.title + ' (' + e.category + ', ' + e.location + ', Rs.' + (e.price ? (e.price / 100).toFixed(0) : '0') + ')')
       .join('\n');
     const locationContext = location ? 'The user is near ' + location + '.' : '';
     const prompt = 'You are a smart event and travel booking assistant for an Indian platform.\n' + locationContext + '\n\nAvailable events:\n' + eventsSummary + '\n\nUser searched: ' + trimmedQuery + '\n\nGenerate exactly 5 short search suggestions (Google autocomplete style) based on what the user might be looking for.\nEach suggestion must start with a relevant emoji.\nRespond ONLY with a valid JSON array of 5 strings. No explanation, no code fences.';
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      const fallback = generateLocalSuggestions(trimmedQuery, eventsData.events, location);
+      const fallback = generateLocalSuggestions(trimmedQuery, dbEvents, location);
       return NextResponse.json({ suggestions: fallback, source: 'local' });
     }
     const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey;
@@ -29,22 +34,22 @@ export async function POST(request) {
       }),
     });
     if (!geminiResponse.ok) {
-      const fallback = generateLocalSuggestions(trimmedQuery, eventsData.events, location);
+      const fallback = generateLocalSuggestions(trimmedQuery, dbEvents, location);
       return NextResponse.json({ suggestions: fallback, source: 'local' });
     }
     const geminiData = await geminiResponse.json();
     const rawText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
     let suggestions = [];
     try {
-      const cleaned = rawText.replace(/\\\\json|\\\\/g, '').trim();
+      const cleaned = rawText.replace(/\\json|\\/g, '').trim();
       suggestions = JSON.parse(cleaned);
       if (!Array.isArray(suggestions)) suggestions = [];
       suggestions = suggestions.filter((s) => typeof s === 'string').slice(0, 5);
     } catch (_) {
-      suggestions = generateLocalSuggestions(trimmedQuery, eventsData.events, location);
+      suggestions = generateLocalSuggestions(trimmedQuery, dbEvents, location);
     }
     if (suggestions.length === 0) {
-      suggestions = generateLocalSuggestions(trimmedQuery, eventsData.events, location);
+      suggestions = generateLocalSuggestions(trimmedQuery, dbEvents, location);
     }
     return NextResponse.json({ suggestions, source: 'gemini' });
   } catch (err) {
@@ -57,8 +62,8 @@ function generateLocalSuggestions(query, events, location) {
   const q = query.toLowerCase();
   const results = [];
   const titleMatches = events.filter((e) =>
-    e.title.toLowerCase().includes(q) ||
-    e.category.toLowerCase().includes(q) ||
+    (e.title || '').toLowerCase().includes(q) ||
+    (e.category || '').toLowerCase().includes(q) ||
     (e.organizer && e.organizer.toLowerCase().includes(q)) ||
     (e.location && e.location.toLowerCase().includes(q))
   );

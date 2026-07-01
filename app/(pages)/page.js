@@ -86,7 +86,11 @@ export default function Home() {
         selectedCategories={selectedCategories}
       />
 
-      <EventMapWrapper onBookEvent={handleBookEvent} />
+      <EventMapWrapper
+        searchQuery={searchQuery}
+        selectedCategories={selectedCategories}
+        onBookEvent={handleBookEvent}
+      />
     </div>
   );
 }

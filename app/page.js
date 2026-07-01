@@ -29,9 +29,32 @@ const isTheatreEvent = (event) => {
   );
 };
 
+// Maps Hero mood keys → event category values stored in DB
+const MOOD_TO_CATEGORY = {
+  relaxed: ["comedy", "food"],
+  adventure: ["sports"],
+  romantic: ["drama"],
+  productive: ["games"],
+  luxury: ["music"],
+};
+
 export default function Home() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState([]);
+
+  const handleSearchChange = (query) => {
+    setSearchQuery(query);
+  };
+
+  const handleMoodChange = (moodKey) => {
+    if (!moodKey) {
+      setSelectedCategories([]);
+      return;
+    }
+    const cats = MOOD_TO_CATEGORY[moodKey] || [];
+    setSelectedCategories(cats);
+  };
 
   const handleBookEvent = (event) => {
     const query = new URLSearchParams({
@@ -43,11 +66,26 @@ export default function Home() {
 
   return (
     <div>
-      <Hero searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+      <Hero
+        onSearchChange={handleSearchChange}
+        onMoodChange={handleMoodChange}
+      />
       
-      <FeaturedEvents searchQuery={searchQuery} onBookEvent={handleBookEvent} />
-      <TrendingEvents searchQuery={searchQuery} onBookEvent={handleBookEvent} />
-      <EventMapWrapper searchQuery={searchQuery} onBookEvent={handleBookEvent} /> 
+      <FeaturedEvents
+        searchQuery={searchQuery}
+        selectedCategories={selectedCategories}
+        onBookEvent={handleBookEvent}
+      />
+      <TrendingEvents
+        searchQuery={searchQuery}
+        selectedCategories={selectedCategories}
+        onBookEvent={handleBookEvent}
+      />
+      <EventMapWrapper
+        searchQuery={searchQuery}
+        selectedCategories={selectedCategories}
+        onBookEvent={handleBookEvent}
+      /> 
     </div>
   );
 }

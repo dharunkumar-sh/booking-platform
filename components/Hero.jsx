@@ -235,6 +235,10 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
       const res = await fetch(
         `/api/events/search?q=${encodeURIComponent(q)}&limit=6`
       );
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Hero autocomplete response is not JSON");
+      }
       const data = await res.json();
       if (data.success) {
         setSuggestions(data.results || []);
@@ -861,57 +865,7 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
           </div>
         </div>
 
-        {/* ── Mood destination suggestions ── */}
-        {selectedMoodKey && MOOD_PLACES[selectedMoodKey] && (
-          <div
-            className="mb-5"
-            style={{ animation: "slideUp 0.4s ease-out forwards" }}
-          >
-            <h4 className="text-white text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-              <span>📍</span> Suggested Destinations for {selectedMood}
-            </h4>
-            <div
-              className="flex gap-3 overflow-x-auto pb-2"
-              style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}
-            >
-              {MOOD_PLACES[selectedMoodKey].map((place) => (
-                <div
-                  key={place.name}
-                  onClick={() => {
-                    setSearchQuery(place.name);
-                    onSearchChange(place.name);
-                    clearTimeout(debounceRef.current);
-                    debounceRef.current = setTimeout(
-                      () => fetchSuggestions(place.name),
-                      280
-                    );
-                  }}
-                  className="flex items-center gap-3 p-2 rounded-xl backdrop-blur-md transition-all duration-300 hover:scale-105 cursor-pointer"
-                  style={{
-                    background: "rgba(255, 255, 255, 0.08)",
-                    border: "1px solid rgba(255, 255, 255, 0.12)",
-                    minWidth: "240px",
-                    flex: "0 0 auto",
-                  }}
-                >
-                  <img
-                    src={place.image}
-                    alt={place.name}
-                    className="w-10 h-10 rounded-lg object-cover"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h5 className="text-white text-xs font-bold truncate" style={{ margin: 0 }}>
-                      {place.name}
-                    </h5>
-                    <p className="text-gray-300 text-[10px] truncate" style={{ margin: 0 }}>
-                      {place.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+
 
         {/* ── Slide indicator dots ── */}
         <div className="flex gap-2">

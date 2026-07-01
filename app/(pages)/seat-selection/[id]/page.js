@@ -25,7 +25,11 @@ function SeatSelectionPageContent() {
         setEventDetails({
           title: parsed.title,
           venue: parsed.venue || parsed.location || "Main Arena",
-          priceVal: parsed.price ? parseInt(parsed.price.toString().replace(/[^\d]/g, "")) : (parsed.priceVal || 499),
+          priceVal: parsed.price != null
+            ? (typeof parsed.price === "number"
+                ? (parsed.price >= 10000 ? Math.round(parsed.price / 100) : parsed.price)
+                : parseInt(parsed.price.toString().replace(/[^\d]/g, ""), 10))
+            : (parsed.priceVal || 499),
           category: parsed.category || "",
         });
       }

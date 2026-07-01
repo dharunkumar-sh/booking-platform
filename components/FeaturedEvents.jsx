@@ -102,6 +102,10 @@ export default function FeaturedEvents({
       }
 
       const res = await fetch(`/api/events?${params.toString()}`);
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("FeaturedEvents response is not JSON");
+      }
       const data = await res.json();
       if (data.success) {
         let rows = data.events || [];
@@ -131,7 +135,7 @@ export default function FeaturedEvents({
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedCategories]);
+  }, [searchQuery, selectedCategories.join(",")]);
 
   // Debounce re-fetch on search/category changes
   useEffect(() => {
@@ -156,27 +160,6 @@ export default function FeaturedEvents({
         Featured Events
       </h1>
 
-      {/* Active filter badge */}
-      {(searchQuery || selectedCategories.length > 0) && (
-        <p className="text-gray-400 mb-6" style={{ fontSize: "13px" }}>
-          {searchQuery && (
-            <span>
-              Results for <strong className="text-white">"{searchQuery}"</strong>
-              {selectedCategories.length > 0 ? " · " : ""}
-            </span>
-          )}
-          {selectedCategories.length > 0 && (
-            <span>
-              Category:{" "}
-              <strong className="text-orange-400">
-                {selectedCategories
-                  .map((c) => `${getCategoryEmoji(c)} ${c}`)
-                  .join(", ")}
-              </strong>
-            </span>
-          )}
-        </p>
-      )}
 
       {!searchQuery && !selectedCategories.length && (
         <p style={{ marginBottom: "30px" }} />
@@ -199,42 +182,42 @@ export default function FeaturedEvents({
                   }
                   router.push(`/event-details/${encodeURIComponent(event.title)}`);
                 }}
-                className="group relative rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-orange-500/40 transition duration-300"
+                className="group relative flex flex-col rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-orange-500/20 bg-neutral-900/30 border border-white/5 transition duration-300"
               >
                 {/* IMAGE */}
-                <div className="relative h-72 w-full">
+                <div className="relative h-64 w-full overflow-hidden">
                   <Image
                     src={event.image || "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80"}
                     alt={event.title}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                    className="object-cover group-hover:scale-110 transition duration-500"
+                    className="object-cover group-hover:scale-105 transition duration-500"
                   />
                 </div>
 
-                {/* GRADIENT */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
                 {/* CONTENT */}
-                <div className="absolute bottom-0 p-4 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  {/* Rating & category */}
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="bg-gradient-to-r from-orange-500 to-rose-500 text-xs px-2 py-1 rounded">
-                      ⭐ {event.rating}
-                    </span>
-                    <span className="text-xs bg-white/20 px-2 py-1 rounded backdrop-blur">
-                      {getCategoryEmoji(event.category)} {event.category}
-                    </span>
-                  </div>
+                <div className="p-5 flex flex-col justify-between flex-grow">
+                  <div>
+                    {/* Rating */}
+                    <div className="flex justify-between items-center mb-2.5">
+                      <span className="bg-gradient-to-r from-orange-500 to-rose-500 text-[11px] font-bold px-2 py-0.5 rounded text-white flex items-center gap-1 shadow-sm">
+                        ⭐ {event.rating}
+                      </span>
+                    </div>
 
-                  <h3 className="text-lg font-semibold">{event.title}</h3>
-                  <p className="text-xs text-gray-300">📍 {event.location}</p>
-                  <p className="text-xs text-gray-300">
-                    📅 {formatDate(event.date)} • ⏰ {event.time}
-                  </p>
-                  <p className="text-xs text-orange-400 font-semibold mt-1">
-                    {formatPrice(event.price)}
-                  </p>
+                    <h3 className="text-lg font-bold text-white line-clamp-1 mb-1 group-hover:text-orange-400 transition-colors">
+                      {event.title}
+                    </h3>
+                    <p className="text-xs text-neutral-400 mb-1 flex items-center gap-1">
+                      📍 {event.location}
+                    </p>
+                    <p className="text-xs text-neutral-400 flex items-center gap-1">
+                      📅 {formatDate(event.date)} • ⏰ {event.time}
+                    </p>
+                    <p className="text-sm text-orange-500 font-bold mt-2">
+                      {formatPrice(event.price)}
+                    </p>
+                  </div>
 
                   {/* BOOK BUTTON */}
                   <button
@@ -242,7 +225,7 @@ export default function FeaturedEvents({
                       e.stopPropagation();
                       onBookEvent(event);
                     }}
-                    className="mt-3 w-full bg-gradient-to-r from-orange-500 to-rose-500 py-2 rounded-lg flex items-center justify-center gap-2 font-semibold text-white cursor-pointer relative z-10"
+                    className="mt-4 w-full bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 py-2.5 rounded-xl flex items-center justify-center gap-2 font-bold text-white transition-all duration-300 shadow-md hover:shadow-orange-500/20 cursor-pointer relative z-10 text-sm"
                   >
                     <Ticket size={16} /> Book Now
                   </button>

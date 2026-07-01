@@ -1,6 +1,6 @@
 import { db } from "@/db/index";
 import { events } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, ilike } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 /**
@@ -15,11 +15,15 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") || null;
     const category = searchParams.get("category") || null;
+    const id = searchParams.get("id") || null;
+    const title = searchParams.get("title") || null;
 
     // Build filter conditions
     const conditions = [];
     if (type) conditions.push(eq(events.type, type));
     if (category) conditions.push(eq(events.category, category));
+    if (id) conditions.push(eq(events.id, parseInt(id, 10)));
+    if (title) conditions.push(ilike(events.title, title));
 
     const rows =
       conditions.length > 0
