@@ -152,7 +152,7 @@ const Hero = ({
   onMoodChange,
 }) => {
   const router = useRouter();
-  const { location } = useGeolocationContext();
+  const { location, selectedState } = useGeolocationContext();
 
   // Controlled/Uncontrolled search query integration
   const [internalSearchQuery, setInternalSearchQuery] = useState("");
@@ -176,26 +176,18 @@ const Hero = ({
     UPCOMING_EVENTS.map(() => ({ d: 0, h: 0, m: 0, s: 0 }))
   );
 
-  // AI Search state
-  const [aiSuggestions, setAiSuggestions] = useState([]);
-  const [isAiLoading, setIsAiLoading] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const [aiSource, setAiSource] = useState("");
   const searchContainerRef = useRef(null);
   const debounceTimerRef = useRef(null);
 
-  // ── Search & autocomplete ────────────────────────────────────────────────
   const [suggestions, setSuggestions] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(-1); // keyboard nav
+  const [activeIndex, setActiveIndex] = useState(-1);
   const [searchLoading, setSearchLoading] = useState(false);
 
   const searchWrapperRef = useRef(null);
   const inputRef = useRef(null);
   const debounceRef = useRef(null);
 
-  // ── Geolocation ──────────────────────────────────────────────────────────
   const locationCity = location?.city || null;
   const heroSubtitle = locationCity
     ? `Explore concerts, shows, nightlife, and exclusive events near ${locationCity}.`
@@ -242,35 +234,6 @@ const Hero = ({
     }
   };
 
-  // Fetch AI suggestions with debounce
-  const fetchAiSuggestions = useCallback(async (query) => {
-    if (!query || query.trim().length < 2) {
-      setAiSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-    setIsAiLoading(true);
-    setShowSuggestions(true);
-    try {
-      const res = await fetch("/api/ai-search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: query.trim(), location: locationCity }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAiSuggestions(data.suggestions || []);
-        setAiSource(data.source || "local");
-        setHighlightedIndex(-1);
-      }
-    } catch (err) {
-      console.error("AI search error:", err);
-    } finally {
-      setIsAiLoading(false);
-    }
-  }, [locationCity]);
-
-  // Fetch autocomplete suggestions
   const fetchSuggestions = useCallback(async (q) => {
     if (!q.trim()) {
       setSuggestions([]);
@@ -280,7 +243,7 @@ const Hero = ({
     setSearchLoading(true);
     try {
       const res = await fetch(
-        `/api/events/search?q=${encodeURIComponent(q)}&limit=6`
+        `/api/events/search?q=${encodeURIComponent(q)}&state=${encodeURIComponent(selectedState || "")}&limit=6`
       );
       const contentType = res.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
@@ -297,9 +260,8 @@ const Hero = ({
     } finally {
       setSearchLoading(false);
     }
-  }, []);
+  }, [selectedState]);
 
-  // Debounced input change
   const handleInputChange = (e) => {
     const val = e.target.value;
     setSearchQuery(val);
@@ -307,67 +269,38 @@ const Hero = ({
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       fetchSuggestions(val);
-      fetchAiSuggestions(val);
     }, 300);
   };
 
-  // Click handler for AI suggestions
-  const handleSuggestionClick = (suggestion) => {
-    const cleaned = suggestion.replace(/^[\p{Emoji}\s]+/u, "").trim();
-    setSearchQuery(cleaned);
-    setShowDropdown(false);
-    setShowSuggestions(false);
-    setAiSuggestions([]);
-    setHighlightedIndex(-1);
-
-    // Fetch database suggestions for the clicked query phrase
-    fetchSuggestions(cleaned);
-  };
-
-  // Keyboard navigation
   const handleKeyDown = (e) => {
     const hasDbSuggestions = showDropdown && suggestions.length > 0;
-    const hasAiSuggestions = showSuggestions && aiSuggestions.length > 0;
 
     if (e.key === "ArrowDown") {
       if (hasDbSuggestions) {
         e.preventDefault();
         setActiveIndex((prev) => Math.min(prev + 1, suggestions.length - 1));
-      } else if (hasAiSuggestions) {
-        e.preventDefault();
-        setHighlightedIndex((prev) => Math.min(prev + 1, aiSuggestions.length - 1));
       }
     } else if (e.key === "ArrowUp") {
       if (hasDbSuggestions) {
         e.preventDefault();
         setActiveIndex((prev) => Math.max(prev - 1, -1));
-      } else if (hasAiSuggestions) {
-        e.preventDefault();
-        setHighlightedIndex((prev) => Math.max(prev - 1, -1));
       }
     } else if (e.key === "Enter") {
       if (hasDbSuggestions && activeIndex >= 0) {
         e.preventDefault();
         handleSuggestionSelect(suggestions[activeIndex]);
-      } else if (hasAiSuggestions && highlightedIndex >= 0) {
-        e.preventDefault();
-        handleSuggestionClick(aiSuggestions[highlightedIndex]);
       } else {
         handleSearchSubmit();
       }
     } else if (e.key === "Escape") {
       setShowDropdown(false);
-      setShowSuggestions(false);
       setActiveIndex(-1);
-      setHighlightedIndex(-1);
     }
   };
 
-  // Navigate to event detail from suggestion selection
   const handleSuggestionSelect = async (event) => {
     setSearchQuery(event.title);
     setShowDropdown(false);
-    setShowSuggestions(false);
     setActiveIndex(-1);
     try {
       localStorage.setItem("selectedEvent", JSON.stringify(event));
@@ -377,22 +310,17 @@ const Hero = ({
     router.push(`/event-details/${encodeURIComponent(event.title)}`);
   };
 
-  // Submit plain text search — propagate to parent
   const handleSearchSubmit = () => {
     setShowDropdown(false);
-    setShowSuggestions(false);
     if (onSearchChange) {
       onSearchChange(searchQuery);
     }
   };
 
-  // Clear search
   const handleClearSearch = () => {
     setSearchQuery("");
     setSuggestions([]);
-    setAiSuggestions([]);
     setShowDropdown(false);
-    setShowSuggestions(false);
     inputRef.current?.focus();
   };
 
@@ -415,14 +343,10 @@ const Hero = ({
     if (selectedMoodKey === mood.key) {
       setSelectedMood("");
       setSelectedMoodKey("");
-      setCurrentIndex(0);
-      setImages(HIGH_RES_IMAGES.default);
       if (onMoodChange) onMoodChange(null);
     } else {
       setSelectedMood(mood.name);
       setSelectedMoodKey(mood.key);
-      setCurrentIndex(0);
-      setImages(HIGH_RES_IMAGES[mood.key] || HIGH_RES_IMAGES.default);
       if (onMoodChange) onMoodChange(mood.key);
     }
   };
@@ -619,14 +543,14 @@ const Hero = ({
                   width: "32px",
                   height: "32px",
                   borderRadius: "8px",
-                  background: (searchLoading || isAiLoading)
+                  background: searchLoading
                     ? "rgba(249,115,22,0.5)"
                     : "linear-gradient(135deg, #f97316, #ff5862)",
                   flexShrink: 0,
                   transition: "background 0.2s",
                 }}
               >
-                {(searchLoading || isAiLoading) ? (
+                {searchLoading ? (
                   <svg
                     width="15"
                     height="15"
@@ -654,9 +578,6 @@ const Hero = ({
                 onFocus={() => {
                   setIsFocused(true);
                   if (suggestions.length > 0) setShowDropdown(true);
-                  if (searchQuery.trim().length >= 2 && aiSuggestions.length > 0) {
-                    setShowSuggestions(true);
-                  }
                 }}
                 onBlur={() => {
                   setIsFocused(false);
@@ -664,7 +585,7 @@ const Hero = ({
                 placeholder={
                   locationCity
                     ? `Search events near ${locationCity}…`
-                    : "Search events, artists, venues or ask AI…"
+                    : "Search events, artists, or venues…"
                 }
                 style={{
                   flex: 1,
@@ -677,7 +598,7 @@ const Hero = ({
                 }}
                 aria-label="Search events"
                 aria-autocomplete="list"
-                aria-expanded={showDropdown || showSuggestions}
+                aria-expanded={showDropdown}
                 autoComplete="off"
               />
 
@@ -722,7 +643,7 @@ const Hero = ({
                 border: "1px solid rgba(249,115,22,0.3)",
                 backdropFilter: "blur(24px)",
                 boxShadow:
-                  "0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(249,115,22,0.1)",
+                  "0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(249,115,22,0.15)",
                 animation: "dropdownFadeIn 0.18s ease-out",
               }}
             >
@@ -901,143 +822,6 @@ const Hero = ({
               🔍 No events found for "{searchQuery}"
             </div>
           )}
-
-          {/* AI Search Suggestions Dropdown */}
-          {showSuggestions && (aiSuggestions.length > 0 || isAiLoading) && (
-            <div
-              style={{
-                position: "absolute",
-                top: "calc(100% + 8px)",
-                left: 0,
-                right: 0,
-                background: "rgba(10, 8, 25, 0.97)",
-                border: "1px solid rgba(249,115,22,0.3)",
-                borderRadius: "14px",
-                backdropFilter: "blur(20px)",
-                boxShadow: "0 16px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(249,115,22,0.15)",
-                zIndex: 50,
-                overflow: "hidden",
-                animation: "dropdownFadeIn 0.18s ease-out forwards",
-              }}
-            >
-              {/* Header */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "10px 14px 6px",
-                  borderBottom: "1px solid rgba(255,255,255,0.06)",
-                }}
-              >
-                {isAiLoading ? (
-                  <>
-                    <Loader2
-                      size={12}
-                      color="#a855f7"
-                      style={{ animation: "spin 1s linear infinite" }}
-                    />
-                    <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", letterSpacing: "0.5px" }}>
-                      AI is thinking…
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={12} color="#a855f7" />
-                    <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", letterSpacing: "0.5px" }}>
-                      {aiSource === "gemini" ? "AI Suggestions" : "Smart Suggestions"}
-                    </span>
-                  </>
-                )}
-              </div>
-
-              {/* Suggestions List */}
-              {isAiLoading ? (
-                <div style={{ padding: "14px" }}>
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div
-                      key={i}
-                      style={{
-                        height: "14px",
-                        borderRadius: "6px",
-                        background: "rgba(255,255,255,0.06)",
-                        marginBottom: i < 5 ? "10px" : "0",
-                        width: `${70 + i * 5}%`,
-                        animation: "shimmer 1.5s ease-in-out infinite",
-                      }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <ul style={{ listStyle: "none", margin: 0, padding: "6px 0" }}>
-                  {aiSuggestions.map((suggestion, idx) => (
-                    <li
-                      key={idx}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        handleSuggestionClick(suggestion);
-                      }}
-                      onMouseEnter={() => setHighlightedIndex(idx)}
-                      onMouseLeave={() => setHighlightedIndex(-1)}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        padding: "9px 14px",
-                        cursor: "pointer",
-                        transition: "background 0.12s ease",
-                        background: highlightedIndex === idx
-                          ? "rgba(249,115,22,0.12)"
-                          : "transparent",
-                        borderLeft: highlightedIndex === idx
-                          ? "2px solid #f97316"
-                          : "2px solid transparent",
-                      }}
-                    >
-                      <Search
-                        size={12}
-                        color={highlightedIndex === idx ? "#f97316" : "rgba(255,255,255,0.25)"}
-                        style={{ flexShrink: 0 }}
-                      />
-                      <span
-                        style={{
-                          fontSize: "13px",
-                          color: highlightedIndex === idx ? "#f1f5f9" : "rgba(255,255,255,0.75)",
-                          flex: 1,
-                          letterSpacing: "0.2px",
-                        }}
-                      >
-                        {suggestion}
-                      </span>
-                      {highlightedIndex === idx && (
-                        <span style={{ fontSize: "10px", color: "rgba(249,115,22,0.7)", flexShrink: 0 }}>
-                          ↵
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {/* Footer branding */}
-              <div
-                style={{
-                  padding: "6px 14px 8px",
-                  borderTop: "1px solid rgba(255,255,255,0.05)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  justifyContent: "flex-end",
-                }}
-              >
-                <Sparkles size={9} color="rgba(168,85,247,0.6)" />
-                <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.2)", letterSpacing: "0.4px" }}>
-                  Powered by AI
-                </span>
-              </div>
-            </div>
-          )}
-
         </div>
 
         {/* ── Mood filter pills ── */}

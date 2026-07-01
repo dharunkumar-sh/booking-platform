@@ -1,6 +1,6 @@
 import { db } from "@/db/index";
 import { events } from "@/db/schema";
-import { or, like, sql } from "drizzle-orm";
+import { or, and, like, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 /**
@@ -10,12 +10,14 @@ import { NextResponse } from "next/server";
  *
  * Query params:
  *   q      — search term (required)
+ *   state  — state name filter (optional)
  *   limit  — max results to return (default 6)
  */
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const q = (searchParams.get("q") || "").trim();
+    const state = (searchParams.get("state") || "").trim();
     const limit = Math.min(parseInt(searchParams.get("limit") || "6", 10), 20);
 
     if (!q) {
@@ -23,6 +25,19 @@ export async function GET(request) {
     }
 
     const pattern = `%${q}%`;
+
+    const searchConditions = or(
+      like(sql`LOWER(${events.title})`, `%${q.toLowerCase()}%`),
+      like(sql`LOWER(${events.category})`, `%${q.toLowerCase()}%`),
+      like(sql`LOWER(${events.location})`, `%${q.toLowerCase()}%`),
+      like(sql`LOWER(${events.organizer})`, `%${q.toLowerCase()}%`),
+      like(sql`LOWER(${events.description})`, `%${q.toLowerCase()}%`)
+    );
+
+    const conditions = [searchConditions];
+    if (state) {
+      conditions.push(like(sql`LOWER(${events.location})`, `%${state.toLowerCase()}%`));
+    }
 
     const rows = await db
       .select({
@@ -43,15 +58,7 @@ export async function GET(request) {
         type: events.type,
       })
       .from(events)
-      .where(
-        or(
-          like(sql`LOWER(${events.title})`, `%${q.toLowerCase()}%`),
-          like(sql`LOWER(${events.category})`, `%${q.toLowerCase()}%`),
-          like(sql`LOWER(${events.location})`, `%${q.toLowerCase()}%`),
-          like(sql`LOWER(${events.organizer})`, `%${q.toLowerCase()}%`),
-          like(sql`LOWER(${events.description})`, `%${q.toLowerCase()}%`)
-        )
-      )
+      .where(conditions.length === 1 ? conditions[0] : and(...conditions))
       .limit(limit);
 
     return NextResponse.json({ success: true, results: rows });

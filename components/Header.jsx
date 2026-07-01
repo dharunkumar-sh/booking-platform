@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   Search,
-  Mic,
   Bell,
   BellOff,
   Heart,
@@ -42,7 +41,13 @@ const Header = () => {
   // Input and selectors
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOtt, setSelectedOtt] = useState("All");
-  const [crossOttSearch, setCrossOttSearch] = useState(true);
+  const [crossOttSearch, setCrossOttSearch] = useState(false);
+
+  // Suggestions state
+  const [suggestions, setSuggestions] = useState([]);
+  const [suggestionsType, setSuggestionsType] = useState("db");
+  const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Interactive states
   const [isOttOpen, setIsOttOpen] = useState(false);
@@ -63,6 +68,44 @@ const Header = () => {
   const profileRef = useRef(null);
   const notifRef = useRef(null);
   const stateDropdownRef = useRef(null);
+  const searchContainerRef = useRef(null);
+  const mobileSearchContainerRef = useRef(null);
+
+  // Debounced live suggestions fetching
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSuggestionsLoading(true);
+      setShowSuggestions(true);
+      try {
+        const res = await fetch(`/api/ott/search?q=${encodeURIComponent(searchQuery.trim())}&state=${encodeURIComponent(selectedState || "")}&crossOtt=${crossOttSearch}`);
+        const contentType = res.headers.get("content-type");
+        if (res.ok && contentType && contentType.includes("application/json")) {
+          const data = await res.json();
+          if (data.success) {
+            setSuggestions(data.results || []);
+            setSuggestionsType(data.type || "db");
+          } else {
+            setSuggestions([]);
+          }
+        } else {
+          setSuggestions([]);
+        }
+      } catch (err) {
+        console.error("Suggestions fetch error:", err);
+        setSuggestions([]);
+      } finally {
+        setIsSuggestionsLoading(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, selectedState, crossOttSearch]);
 
   // ── Notifications ──────────────────────────────────────────────────────────
   const DEFAULT_NOTIFICATIONS = [
@@ -173,6 +216,10 @@ const Header = () => {
         setIsNotifOpen(false);
       if (stateDropdownRef.current && !stateDropdownRef.current.contains(e.target))
         setIsStateDropdownOpen(false);
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target))
+        setShowSuggestions(false);
+      if (mobileSearchContainerRef.current && !mobileSearchContainerRef.current.contains(e.target))
+        setShowSuggestions(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -323,7 +370,7 @@ const Header = () => {
           </div>
 
           {/* 2 & 3. Main Search Engine Container (Desktop) */}
-          <div className="hidden lg:flex flex-1 max-w-xl relative">
+          <div className="hidden lg:flex flex-1 max-w-xl relative" ref={searchContainerRef}>
             <div className="w-full flex items-center bg-neutral-900 border border-neutral-800 focus-within:border-orange-500/50 rounded-xl px-3 py-1.5 transition-all shadow-inner">
               <Search className="text-neutral-500 shrink-0 mr-2" size={18} />
 
@@ -343,104 +390,87 @@ const Header = () => {
                   <X size={14} />
                 </button>
               )}
-
-              {/* Voice Search button (UI only) */}
+              
+              {/* Toggle Cross-OTT search on/off */}
               <button
-                className="p-1.5 rounded-lg mr-2 text-neutral-400 hover:text-white hover:bg-neutral-800 transition-all cursor-pointer"
-                title="Voice Search"
+                type="button"
+                onClick={() => setCrossOttSearch(!crossOttSearch)}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer select-none active:scale-95 shrink-0 ${
+                  crossOttSearch 
+                    ? "bg-orange-500/10 border-orange-500/30 text-orange-400" 
+                    : "bg-neutral-850 border-neutral-800 text-neutral-400 hover:text-white"
+                }`}
+                title="Toggle Cross-OTT Search fallback"
               >
-                <Mic size={16} />
+                <Tv size={13} className={crossOttSearch ? "text-orange-500" : "text-neutral-400"} />
+                <span>{crossOttSearch ? "OTT Search On" : "OTT Search Off"}</span>
               </button>
-
-              <div className="h-6 w-px bg-neutral-800 mr-2" />
-
-              {/* 4. OTT Filter dropdown triggers */}
-              <div className="relative shrink-0" ref={ottRef}>
-                <button
-                  onClick={() => setIsOttOpen(!isOttOpen)}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-neutral-800 text-xs font-semibold text-orange-400 transition-colors cursor-pointer"
-                >
-                  <Tv size={13} className="text-orange-500" />
-                  <span>
-                    {selectedOtt === "All" ? "All OTTs" : selectedOtt}
-                  </span>
-                  <ChevronDown size={12} />
-                </button>
-
-                {isOttOpen && (
-                  <div className="absolute right-0 mt-3 w-56 rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl p-2 z-50">
-                    <div className="px-2.5 py-1.5 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
-                      Filter by Platform
-                    </div>
-                    <button
-                      onClick={() => {
-                        setSelectedOtt("All");
-                        setIsOttOpen(false);
-                      }}
-                      className="w-full text-left flex items-center justify-between px-3 py-1.5 text-xs rounded-lg hover:bg-neutral-800 transition-colors cursor-pointer"
-                    >
-                      <span
-                        className={
-                          selectedOtt === "All"
-                            ? "text-orange-400 font-medium"
-                            : "text-neutral-300"
-                        }
-                      >
-                        All Platforms
-                      </span>
-                      {selectedOtt === "All" && (
-                        <Check size={12} className="text-orange-500" />
-                      )}
-                    </button>
-                    {OTT_PLATFORMS.map((ott) => (
-                      <button
-                        key={ott}
-                        onClick={() => {
-                          setSelectedOtt(ott);
-                          setIsOttOpen(false);
-                        }}
-                        className="w-full text-left flex items-center justify-between px-3 py-1.5 text-xs rounded-lg hover:bg-neutral-800 transition-colors cursor-pointer"
-                      >
-                        <span
-                          className={
-                            selectedOtt === ott
-                              ? "text-orange-400 font-medium"
-                              : "text-neutral-300"
-                          }
-                        >
-                          {ott}
-                        </span>
-                        {selectedOtt === ott && (
-                          <Check size={12} className="text-orange-500" />
-                        )}
-                      </button>
-                    ))}
-
-                    <div className="h-px bg-neutral-800 my-2" />
-
-                    {/* 5. Search Other OTT Platforms Toggle Inside Filter Dropdown */}
-                    <div className="px-2.5 py-1.5 flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-medium text-neutral-300">
-                          Auto-Search Cross-OTT
-                        </span>
-                        <span className="text-[10px] text-neutral-500">
-                          Find on other OTTs if missing
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => setCrossOttSearch(!crossOttSearch)}
-                        className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none shrink-0 cursor-pointer ${crossOttSearch ? "bg-orange-500" : "bg-neutral-800"}`}
-                      >
-                        <div
-                          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${crossOttSearch ? "translate-x-4" : "translate-x-0"}`}
-                        />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
+
+            {/* Desktop Live Suggestions Dropdown */}
+            {showSuggestions && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-950/95 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden z-50 backdrop-blur-xl">
+                <div className="max-h-[350px] overflow-y-auto divide-y divide-neutral-800/60 scrollbar-none" style={{ scrollbarWidth: 'none' }}>
+                  {isSuggestionsLoading ? (
+                    <div className="flex items-center justify-center py-6 gap-2 text-neutral-400 text-xs font-medium">
+                      <span className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></span>
+                      Searching matching titles...
+                    </div>
+                  ) : suggestions.length === 0 ? (
+                    <div className="py-6 px-4 text-center text-xs text-neutral-500">
+                      No matching events or OTT titles found.
+                    </div>
+                  ) : (
+                    <>
+                      <div className="px-4 py-2.5 bg-neutral-900/50 flex items-center justify-between text-[10px] font-bold tracking-wider text-neutral-500 uppercase border-b border-neutral-800/50">
+                        <span>{suggestionsType === "db" ? `Events in ${selectedState || "your area"}` : "Cross-OTT Stream Guide"}</span>
+                        <span className="text-orange-400 font-semibold">{suggestionsType === "db" ? "Local Event" : "OTT Search"}</span>
+                      </div>
+
+                      {suggestions.map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setShowSuggestions(false);
+                            setSearchQuery("");
+                            if (item.type === "ott") {
+                              router.push(`/ott/search?q=${encodeURIComponent(item.title)}`);
+                            } else {
+                              router.push(`/event-details/${item.id}`);
+                            }
+                          }}
+                          className="w-full flex items-center gap-3.5 px-4 py-3 text-left hover:bg-neutral-900/60 transition-colors border-b border-neutral-800/30 last:border-b-0"
+                        >
+                          <img
+                            src={item.image}
+                            alt={item.title}
+                            className="w-9 h-12 object-cover rounded-lg bg-neutral-800 border border-neutral-800 shrink-0 shadow-md"
+                            onError={(e) => {
+                              e.target.src = "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80";
+                            }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-white truncate group-hover:text-orange-400 transition-colors">{item.title}</p>
+                            <p className="text-[10px] text-neutral-400 truncate mt-0.5 font-medium">
+                              {item.category} • {item.location}
+                            </p>
+                          </div>
+                          {item.type === "ott" ? (
+                            <span className="px-2.5 py-1 rounded-md bg-orange-500/10 border border-orange-500/20 text-[9px] font-bold text-orange-400 uppercase tracking-wider shrink-0">
+                              Stream
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-md bg-gradient-to-r from-orange-500 to-rose-500 text-[9px] font-black text-white uppercase tracking-wider shrink-0 shadow-lg shadow-orange-500/20">
+                              Book
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Section: Sign In Button, Favourites & Notifications Icons (No dropdown menus on click) */}
@@ -699,51 +729,86 @@ const Header = () => {
               </button>
             </div>
 
-            <div className="flex items-center gap-2 bg-neutral-950 border border-neutral-800 rounded-lg px-2.5 py-1.5 focus-within:border-orange-500/50">
-              <Search className="text-neutral-500 shrink-0" size={16} />
+            <div className="relative mt-2" ref={mobileSearchContainerRef}>
+              <div className="flex items-center gap-2 bg-neutral-950 border border-neutral-800 rounded-lg px-2.5 py-1.5 focus-within:border-orange-500/50">
+                <Search className="text-neutral-500 shrink-0" size={16} />
 
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={placeholders[placeholderIndex]}
-                className="flex-1 text-xs bg-transparent border-none outline-none text-neutral-200 placeholder-neutral-500"
-              />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={placeholders[placeholderIndex]}
+                  className="flex-1 text-xs bg-transparent border-none outline-none text-neutral-200 placeholder-neutral-500"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="p-0.5 rounded-full hover:bg-neutral-800 text-neutral-400 cursor-pointer"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
 
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="p-0.5 rounded-full hover:bg-neutral-800 text-neutral-400 cursor-pointer"
-                >
-                  <X size={12} />
-                </button>
+              {/* Mobile Live Suggestions Dropdown */}
+              {showSuggestions && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-neutral-950 border border-neutral-800 rounded-xl shadow-2xl overflow-hidden z-50 max-h-[300px] overflow-y-auto divide-y divide-neutral-800/60 backdrop-blur-xl">
+                  {isSuggestionsLoading ? (
+                    <div className="flex items-center justify-center py-4 gap-2 text-neutral-400 text-xs font-medium">
+                      <span className="w-3.5 h-3.5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></span>
+                      Searching...
+                    </div>
+                  ) : suggestions.length === 0 ? (
+                    <div className="py-4 px-3 text-center text-xs text-neutral-500">
+                      No matching events or OTT titles found.
+                    </div>
+                  ) : (
+                    <>
+                      <div className="px-3 py-1.5 bg-neutral-900/50 flex items-center justify-between text-[9px] font-bold tracking-wider text-neutral-500 uppercase border-b border-neutral-800/50">
+                        <span>{suggestionsType === "db" ? "Local Events" : "Cross-OTT Stream"}</span>
+                      </div>
+                      {suggestions.map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setShowSuggestions(false);
+                            setSearchQuery("");
+                            setMobileSearchOpen(false);
+                            if (item.type === "ott") {
+                              router.push(`/ott/search?q=${encodeURIComponent(item.title)}`);
+                            } else {
+                              router.push(`/event-details/${item.id}`);
+                            }
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-neutral-900 transition-colors border-b border-neutral-800/30 last:border-b-0"
+                        >
+                          <img
+                            src={item.image}
+                            alt={item.title}
+                            className="w-8 h-10 object-cover rounded bg-neutral-800 border border-neutral-800 shrink-0 shadow-sm"
+                            onError={(e) => {
+                              e.target.src = "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80";
+                            }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-white truncate">{item.title}</p>
+                            <p className="text-[9px] text-neutral-400 truncate mt-0.5 font-medium">
+                              {item.category} • {item.location}
+                            </p>
+                          </div>
+                        </button>
+                      ))}
+                    </>
+                  )}
+                </div>
               )}
-
-              <button className="p-1 rounded text-neutral-400 cursor-default">
-                <Mic size={14} />
-              </button>
             </div>
 
             {/* Mobile Filters */}
-            <div className="flex items-center justify-between gap-3 mt-3">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs text-neutral-400">OTT:</span>
-                <select
-                  value={selectedOtt}
-                  onChange={(e) => setSelectedOtt(e.target.value)}
-                  className="bg-neutral-800 border border-neutral-700 text-xs text-neutral-300 rounded px-2 py-0.5 cursor-pointer"
-                >
-                  <option value="All">All OTTs</option>
-                  {OTT_PLATFORMS.map((o) => (
-                    <option key={o} value={o}>
-                      {o}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
+            <div className="flex items-center justify-end gap-3 mt-3">
               {/* Cross OTT Search Switch */}
               <button
+                type="button"
                 onClick={() => setCrossOttSearch(!crossOttSearch)}
                 className="flex items-center gap-1.5 bg-neutral-850 px-2 py-0.5 rounded text-[10px] text-neutral-400 hover:text-white cursor-pointer"
               >
