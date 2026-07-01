@@ -2,7 +2,8 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Ticket } from "lucide-react";
+import { Ticket, Heart } from "lucide-react";
+import { useFavourites } from "@/context/FavouritesContext";
 
 // ── Category emoji helpers ────────────────────────────────────────────────────
 const CATEGORY_EMOJI = {
@@ -88,17 +89,21 @@ export default function FeaturedEvents({
   selectedCategories = [],
 }) {
   const router = useRouter();
+  const { isFavourite, toggleFavourite } = useFavourites();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const categoriesJoined = (selectedCategories || []).join(",");
 
   // ── Fetch events from /api/events ─────────────────────────────────────────
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
+      const activeCats = categoriesJoined ? categoriesJoined.split(",") : [];
       const params = new URLSearchParams({ type: "featured" });
       // If a single category is active from the mood filter, add it
-      if (selectedCategories.length === 1) {
-        params.set("category", selectedCategories[0]);
+      if (activeCats.length === 1) {
+        params.set("category", activeCats[0]);
       }
 
       const res = await fetch(`/api/events?${params.toString()}`);
@@ -111,13 +116,13 @@ export default function FeaturedEvents({
         let rows = data.events || [];
 
         // Client-side: handle multi-category mood filters & text search
-        if (selectedCategories.length > 1) {
+        if (activeCats.length > 1) {
           rows = rows.filter((e) =>
-            selectedCategories.includes((e.category || "").toLowerCase())
+            activeCats.includes((e.category || "").toLowerCase())
           );
         }
 
-        if (searchQuery.trim()) {
+        if (searchQuery && searchQuery.trim()) {
           const q = searchQuery.trim().toLowerCase();
           rows = rows.filter(
             (e) =>
@@ -135,8 +140,28 @@ export default function FeaturedEvents({
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedCategories.join(",")]);
+  }, [searchQuery, selectedCategories]);
 
+<<<<<<< HEAD
+  const filteredEvents = events.filter((e) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      e.title.toLowerCase().includes(q) ||
+      e.category.toLowerCase().includes(q) ||
+      (e.venue && e.venue.toLowerCase().includes(q)) ||
+      (e.organizer && e.organizer.toLowerCase().includes(q))
+    );
+  });
+
+  const categoryData = {
+    music: ["Concert Night", "DJ Party", "Live Band"],
+    comedy: ["Standup Special", "Improv Night"],
+    drama: ["Stage Play", "Classic Theatre"],
+    dance: ["Hip Hop Battle", "Dance Fest"],
+    games: ["Esports Tournament", "Arcade Challenge"],
+  };
+=======
   // Debounce re-fetch on search/category changes
   useEffect(() => {
     const timer = setTimeout(fetchEvents, 300);
@@ -160,8 +185,29 @@ export default function FeaturedEvents({
         Featured Events
       </h1>
 
+      {/* Active filter badge */}
+      {(searchQuery || selectedCategories.length > 0) && (
+        <p className="text-gray-400 mb-6" style={{ fontSize: "13px" }}>
+          {searchQuery && (
+            <span>
+              Results for <strong className="text-white">"{searchQuery}"</strong>
+              {selectedCategories.length > 0 ? " · " : ""}
+            </span>
+          )}
+          {selectedCategories.length > 0 && (
+            <span>
+              Category:{" "}
+              <strong className="text-orange-400">
+                {selectedCategories
+                  .map((c) => `${getCategoryEmoji(c)} ${c}`)
+                  .join(", ")}
+              </strong>
+            </span>
+          )}
+        </p>
+      )}
 
-      {!searchQuery && !selectedCategories.length && (
+      {(!searchQuery && (!selectedCategories || !selectedCategories.length)) && (
         <p style={{ marginBottom: "30px" }} />
       )}
 
@@ -194,6 +240,9 @@ export default function FeaturedEvents({
                     className="object-cover group-hover:scale-105 transition duration-500"
                   />
                 </div>
+
+                {/* GRADIENT */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                 {/* CONTENT */}
                 <div className="p-5 flex flex-col justify-between flex-grow">

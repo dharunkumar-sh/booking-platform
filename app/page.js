@@ -57,6 +57,11 @@ export default function Home() {
   };
 
   const handleBookEvent = (event) => {
+    try {
+      localStorage.setItem("selectedEvent", JSON.stringify(event));
+    } catch (e) {
+      console.error("Failed to save selected event to localStorage:", e);
+    }
     const query = new URLSearchParams({
       venue: event.venue || event.location || "",
       category: event.category || "",

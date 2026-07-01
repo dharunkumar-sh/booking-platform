@@ -1,7 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+<<<<<<< HEAD
+import { Search, MapPin, Sparkles, Loader2 } from "lucide-react";
+=======
 import { Search, MapPin, X } from "lucide-react";
+>>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
 import { useGeolocationContext } from "@/context/GeolocationContext";
 import { useRouter } from "next/navigation";
 
@@ -145,32 +149,56 @@ function HighlightText({ text = "", query = "" }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
+const Hero = ({
+  searchQuery: externalSearchQuery,
+  setSearchQuery: externalSetSearchQuery,
+  onSearchChange,
+  onMoodChange,
+}) => {
   const router = useRouter();
   const { location } = useGeolocationContext();
 
-  // ── Background slideshow ─────────────────────────────────────────────────
+  // Controlled/Uncontrolled search query integration
+  const [internalSearchQuery, setInternalSearchQuery] = useState("");
+  const isControlledSearch = externalSearchQuery !== undefined && externalSetSearchQuery !== undefined;
+  const searchQuery = isControlledSearch ? externalSearchQuery : internalSearchQuery;
+
+  // Background slideshow
   const [currentIndex, setCurrentIndex] = useState(0);
   const [images, setImages] = useState(HIGH_RES_IMAGES.default);
   const [loadedImages, setLoadedImages] = useState({});
   const [errorImages, setErrorImages] = useState({});
   const intervalRef = useRef(null);
 
-  // ── Mood ─────────────────────────────────────────────────────────────────
+  // Mood
   const [selectedMood, setSelectedMood] = useState("");
   const [selectedMoodKey, setSelectedMoodKey] = useState("");
 
-  // ── Countdown timers ─────────────────────────────────────────────────────
+  // Countdown timers
   const [timers, setTimers] = useState(() =>
     UPCOMING_EVENTS.map(() => ({ d: 0, h: 0, m: 0, s: 0 }))
   );
 
+<<<<<<< HEAD
+  // AI Search state
+  const [aiSuggestions, setAiSuggestions] = useState([]);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [aiSource, setAiSource] = useState("");
+  const searchContainerRef = useRef(null);
+  const debounceTimerRef = useRef(null);
+
+  // Geolocation context
+  const { location } = useGeolocationContext();
+=======
   // ── Search & autocomplete ────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1); // keyboard nav
   const [searchLoading, setSearchLoading] = useState(false);
+>>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
 
   const searchWrapperRef = useRef(null);
   const inputRef = useRef(null);
@@ -211,6 +239,89 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
     return () => clearInterval(tick);
   }, []);
 
+<<<<<<< HEAD
+  // Fetch AI suggestions with debounce
+  const fetchAiSuggestions = useCallback(async (query) => {
+    if (!query || query.trim().length < 2) {
+      setAiSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    setIsAiLoading(true);
+    setShowSuggestions(true);
+    try {
+      const res = await fetch("/api/ai-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: query.trim(), location: locationCity }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAiSuggestions(data.suggestions || []);
+        setAiSource(data.source || "local");
+        setHighlightedIndex(-1);
+      }
+    } catch (err) {
+      console.error("AI search error:", err);
+    } finally {
+      setIsAiLoading(false);
+    }
+  }, [locationCity]);
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    // Debounce: wait 400ms after user stops typing
+    clearTimeout(debounceTimerRef.current);
+    if (val.trim().length >= 2) {
+      debounceTimerRef.current = setTimeout(() => {
+        fetchAiSuggestions(val);
+      }, 400);
+    } else {
+      setAiSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    // Strip the leading emoji + space from suggestion for the input
+    const cleaned = suggestion.replace(/^[\p{Emoji}\s]+/u, "").trim();
+    setSearchQuery(cleaned);
+    setShowSuggestions(false);
+    setAiSuggestions([]);
+    setHighlightedIndex(-1);
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (!showSuggestions || aiSuggestions.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.min(prev + 1, aiSuggestions.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.max(prev - 1, -1));
+    } else if (e.key === "Enter" && highlightedIndex >= 0) {
+      e.preventDefault();
+      handleSuggestionClick(aiSuggestions[highlightedIndex]);
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+      setHighlightedIndex(-1);
+    }
+  };
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+        setHighlightedIndex(-1);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+=======
   // ── Close dropdown on outside click ─────────────────────────────────────
   useEffect(() => {
     const handler = (e) => {
@@ -255,43 +366,74 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
   // Debounced input change
   const handleInputChange = (e) => {
     const val = e.target.value;
-    setSearchQuery(val);
-    onSearchChange(val); // propagate to parent
+    if (isControlledSearch) {
+      externalSetSearchQuery(val);
+    } else {
+      setInternalSearchQuery(val);
+    }
+    if (onSearchChange) {
+      onSearchChange(val); // propagate to parent if applicable
+    }
+
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => fetchSuggestions(val), 280);
+    debounceRef.current = setTimeout(() => {
+      fetchSuggestions(val);
+      fetchAiSuggestions(val);
+    }, 300);
   };
 
-  // ── Keyboard navigation ──────────────────────────────────────────────────
+  // Keyboard navigation
   const handleKeyDown = (e) => {
-    if (!showDropdown || suggestions.length === 0) {
-      if (e.key === "Enter") handleSearchSubmit();
-      return;
-    }
+    const hasDbSuggestions = showDropdown && suggestions.length > 0;
+    const hasAiSuggestions = showSuggestions && aiSuggestions.length > 0;
+
     if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setActiveIndex((prev) => Math.min(prev + 1, suggestions.length - 1));
+      if (hasDbSuggestions) {
+        e.preventDefault();
+        setActiveIndex((prev) => Math.min(prev + 1, suggestions.length - 1));
+      } else if (hasAiSuggestions) {
+        e.preventDefault();
+        setHighlightedIndex((prev) => Math.min(prev + 1, aiSuggestions.length - 1));
+      }
     } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActiveIndex((prev) => Math.max(prev - 1, -1));
+      if (hasDbSuggestions) {
+        e.preventDefault();
+        setActiveIndex((prev) => Math.max(prev - 1, -1));
+      } else if (hasAiSuggestions) {
+        e.preventDefault();
+        setHighlightedIndex((prev) => Math.max(prev - 1, -1));
+      }
     } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (activeIndex >= 0) {
+      if (hasDbSuggestions && activeIndex >= 0) {
+        e.preventDefault();
         handleSuggestionSelect(suggestions[activeIndex]);
+      } else if (hasAiSuggestions && highlightedIndex >= 0) {
+        e.preventDefault();
+        handleSuggestionClick(aiSuggestions[highlightedIndex]);
       } else {
         handleSearchSubmit();
       }
     } else if (e.key === "Escape") {
       setShowDropdown(false);
+      setShowSuggestions(false);
       setActiveIndex(-1);
+      setHighlightedIndex(-1);
     }
   };
 
   // Navigate to event detail from suggestion selection
   const handleSuggestionSelect = async (event) => {
-    setSearchQuery(event.title);
+    if (isControlledSearch) {
+      externalSetSearchQuery(event.title);
+    } else {
+      setInternalSearchQuery(event.title);
+    }
+    if (onSearchChange) {
+      onSearchChange(event.title);
+    }
     setShowDropdown(false);
+    setShowSuggestions(false);
     setActiveIndex(-1);
-    onSearchChange(event.title);
     try {
       localStorage.setItem("selectedEvent", JSON.stringify(event));
     } catch (err) {
@@ -300,43 +442,74 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
     router.push(`/event-details/${encodeURIComponent(event.title)}`);
   };
 
+  // Click handler for AI suggestions
+  const handleSuggestionClick = (suggestion) => {
+    const cleaned = suggestion.replace(/^[\p{Emoji}\s]+/u, "").trim();
+    if (isControlledSearch) {
+      externalSetSearchQuery(cleaned);
+    } else {
+      setInternalSearchQuery(cleaned);
+    }
+    if (onSearchChange) {
+      onSearchChange(cleaned);
+    }
+    setShowDropdown(false);
+    setShowSuggestions(false);
+    setAiSuggestions([]);
+    setHighlightedIndex(-1);
+
+    // Fetch database suggestions for the clicked query phrase
+    fetchSuggestions(cleaned);
+  };
+
   // Submit plain text search — propagate to parent
   const handleSearchSubmit = () => {
     setShowDropdown(false);
-    onSearchChange(searchQuery);
+    setShowSuggestions(false);
+    if (onSearchChange) {
+      onSearchChange(searchQuery);
+    }
   };
 
   // Clear search
   const handleClearSearch = () => {
-    setSearchQuery("");
+    if (isControlledSearch) {
+      externalSetSearchQuery("");
+    } else {
+      setInternalSearchQuery("");
+    }
     setSuggestions([]);
+    setAiSuggestions([]);
     setShowDropdown(false);
-    onSearchChange("");
+    setShowSuggestions(false);
+    if (onSearchChange) {
+      onSearchChange("");
+    }
     inputRef.current?.focus();
   };
 
   // ── Mood selection ───────────────────────────────────────────────────────
+>>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
   const handleMoodSelect = (mood) => {
     if (selectedMoodKey === mood.key) {
-      // Toggle off
       setSelectedMood("");
       setSelectedMoodKey("");
       setCurrentIndex(0);
       setImages(HIGH_RES_IMAGES.default);
-      onMoodChange(null);
+      if (onMoodChange) onMoodChange(null);
     } else {
       setSelectedMood(mood.name);
       setSelectedMoodKey(mood.key);
       setCurrentIndex(0);
       setImages(HIGH_RES_IMAGES[mood.key] || HIGH_RES_IMAGES.default);
-      onMoodChange(mood.key);
+      if (onMoodChange) onMoodChange(mood.key);
     }
   };
 
   const getImageSrc = (index) =>
     errorImages[index] ? FALLBACK_IMAGE : images[index];
 
-  // ── Format price ─────────────────────────────────────────────────────────
+  // Format price
   const formatPrice = (price) => {
     if (price == null) return "";
     if (typeof price === "string" && price.startsWith("₹")) return price;
@@ -499,8 +672,10 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
               borderRadius: "14px",
               padding: "2px",
               background: "linear-gradient(135deg, #f97316, #a855f7, #06b6d4)",
-              boxShadow:
-                "0 8px 32px rgba(249,115,22,0.25), 0 2px 8px rgba(168,85,247,0.15)",
+              boxShadow: isFocused
+                ? "0 0 0 3px rgba(249,115,22,0.4), 0 8px 32px rgba(249,115,22,0.3)"
+                : "0 8px 32px rgba(249,115,22,0.25), 0 2px 8px rgba(168,85,247,0.15)",
+              transition: "box-shadow 0.2s ease",
             }}
           >
             <div
@@ -523,14 +698,14 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
                   width: "32px",
                   height: "32px",
                   borderRadius: "8px",
-                  background: searchLoading
+                  background: (searchLoading || isAiLoading)
                     ? "rgba(249,115,22,0.5)"
                     : "linear-gradient(135deg, #f97316, #ff5862)",
                   flexShrink: 0,
                   transition: "background 0.2s",
                 }}
               >
-                {searchLoading ? (
+                {(searchLoading || isAiLoading) ? (
                   <svg
                     width="15"
                     height="15"
@@ -556,12 +731,19 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 onFocus={() => {
+                  setIsFocused(true);
                   if (suggestions.length > 0) setShowDropdown(true);
+                  if (searchQuery.trim().length >= 2 && aiSuggestions.length > 0) {
+                    setShowSuggestions(true);
+                  }
+                }}
+                onBlur={() => {
+                  setIsFocused(false);
                 }}
                 placeholder={
                   locationCity
                     ? `Search events near ${locationCity}…`
-                    : "Search events, artists, venues…"
+                    : "Search events, artists, venues or ask AI…"
                 }
                 style={{
                   flex: 1,
@@ -574,7 +756,7 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
                 }}
                 aria-label="Search events"
                 aria-autocomplete="list"
-                aria-expanded={showDropdown}
+                aria-expanded={showDropdown || showSuggestions}
                 autoComplete="off"
               />
 
@@ -602,7 +784,7 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
                 </button>
               )}
 
-              {/* Search button */}
+              {/* Search submit button */}
               <button
                 type="button"
                 onClick={handleSearchSubmit}
@@ -635,10 +817,79 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
             </div>
           </div>
 
+<<<<<<< HEAD
+           
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              onKeyDown={handleSearchKeyDown}
+              placeholder={
+                locationCity
+                  ? `Search events near ${locationCity}…`
+                  : "Search events, artists, venues or ask AI…"
+              }
+              style={{
+                flex: 1,
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                color: "#f1f5f9",
+                fontSize: "13px",
+                letterSpacing: "0.2px",
+              }}
+              onFocus={(e) => {
+                e.target.parentElement.parentElement.style.boxShadow =
+                  "0 0 0 3px rgba(249,115,22,0.4), 0 8px 32px rgba(249,115,22,0.3)";
+                if (searchQuery.trim().length >= 2 && aiSuggestions.length > 0) {
+                  setShowSuggestions(true);
+                }
+              }}
+              onBlur={(e) => {
+                e.target.parentElement.parentElement.style.boxShadow =
+                  "0 8px 32px rgba(249,115,22,0.25), 0 2px 8px rgba(168,85,247,0.15)";
+              }}
+            />
+
+           
+            <button
+              type="button"
+              style={{
+                flexShrink: 0,
+                padding: "7px 18px",
+                borderRadius: "9px",
+                border: "none",
+                cursor: "pointer",
+                fontWeight: 700,
+                fontSize: "13px",
+                letterSpacing: "0.4px",
+                color: "#fff",
+                background:
+                  "linear-gradient(135deg, #f97316 0%, #a855f7 60%, #06b6d4 100%)",
+                boxShadow: "0 2px 12px rgba(249,115,22,0.4)",
+                transition: "transform 0.15s ease, box-shadow 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "scale(1.05)";
+                e.currentTarget.style.boxShadow =
+                  "0 4px 20px rgba(249,115,22,0.6)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.boxShadow =
+                  "0 2px 12px rgba(249,115,22,0.4)";
+              }}
+            >
+              Search ✦
+            </button>
+          </div>
+
+          {/* AI Search Suggestions Dropdown */}
+          {showSuggestions && (
+=======
           {/* ── Autocomplete dropdown ── */}
           {showDropdown && suggestions.length > 0 && (
             <div
-              role="listbox"
               style={{
                 position: "absolute",
                 top: "calc(100% + 8px)",
@@ -655,167 +906,278 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
                 animation: "dropdownFadeIn 0.18s ease-out",
               }}
             >
-              {/* Dropdown header */}
-              <div
-                style={{
-                  padding: "8px 14px 6px",
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  color: "rgba(255,255,255,0.35)",
-                  textTransform: "uppercase",
-                  letterSpacing: "1px",
-                  borderBottom: "1px solid rgba(255,255,255,0.06)",
-                }}
-              >
-                ✦ Suggestions
-              </div>
-
-              {suggestions.map((event, idx) => (
-                <div
-                  key={event.id ?? idx}
-                  role="option"
-                  aria-selected={idx === activeIndex}
-                  onClick={() => handleSuggestionSelect(event)}
-                  onMouseEnter={() => setActiveIndex(idx)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    padding: "10px 14px",
-                    cursor: "pointer",
-                    borderBottom:
-                      idx < suggestions.length - 1
-                        ? "1px solid rgba(255,255,255,0.05)"
-                        : "none",
-                    background:
-                      idx === activeIndex
-                        ? "rgba(249,115,22,0.12)"
-                        : "transparent",
-                    transition: "background 0.12s ease",
-                  }}
-                >
-                  {/* Event thumbnail */}
-                  {event.image ? (
-                    <img
-                      src={event.image}
-                      alt={event.title}
-                      style={{
-                        width: "38px",
-                        height: "38px",
-                        borderRadius: "8px",
-                        objectFit: "cover",
-                        flexShrink: 0,
-                        border: "1px solid rgba(255,255,255,0.1)",
-                      }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: "38px",
-                        height: "38px",
-                        borderRadius: "8px",
-                        background: "rgba(249,115,22,0.2)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "18px",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {getCategoryEmoji(event.category)}
-                    </div>
-                  )}
-
-                  {/* Text content */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: 600,
-                        color: "#f1f5f9",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      <HighlightText text={event.title} query={searchQuery} />
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "11px",
-                        color: "rgba(255,255,255,0.45)",
-                        marginTop: "2px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                      }}
-                    >
-                      <span>{getCategoryEmoji(event.category)} {event.category}</span>
-                      {event.location && (
-                        <>
-                          <span style={{ opacity: 0.4 }}>·</span>
-                          <MapPin size={9} style={{ flexShrink: 0 }} />
-                          <span
-                            style={{
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              maxWidth: "160px",
-                            }}
-                          >
-                            {event.location}
-                          </span>
-                        </>
-                      )}
-                    </div>
+              {/* Direct Matches Section */}
+              {showDropdown && suggestions.length > 0 && (
+                <div>
+                  <div
+                    style={{
+                      padding: "8px 14px 6px",
+                      fontSize: "10px",
+                      fontWeight: 700,
+                      color: "rgba(255,255,255,0.35)",
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      borderBottom: "1px solid rgba(255,255,255,0.06)",
+                    }}
+                  >
+                    ✦ Direct Matches
                   </div>
 
-                  {/* Price badge */}
-                  {event.price != null && (
-                    <span
+                  {suggestions.map((event, idx) => (
+                    <div
+                      key={event.id ?? idx}
+                      role="option"
+                      aria-selected={idx === activeIndex}
+                      onClick={() => handleSuggestionSelect(event)}
+                      onMouseEnter={() => setActiveIndex(idx)}
                       style={{
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        color: "#f97316",
-                        flexShrink: 0,
-                        background: "rgba(249,115,22,0.12)",
-                        padding: "2px 8px",
-                        borderRadius: "8px",
-                        border: "1px solid rgba(249,115,22,0.25)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "10px 14px",
+                        cursor: "pointer",
+                        borderBottom: "1px solid rgba(255,255,255,0.05)",
+                        background:
+                          idx === activeIndex
+                            ? "rgba(249,115,22,0.12)"
+                            : "transparent",
+                        transition: "background 0.12s ease",
                       }}
                     >
-                      {formatPrice(event.price)}
-                    </span>
-                  )}
-                </div>
-              ))}
+                      {/* Event thumbnail */}
+                      {event.image ? (
+                        <img
+                          src={event.image}
+                          alt={event.title}
+                          style={{
+                            width: "38px",
+                            height: "38px",
+                            borderRadius: "8px",
+                            objectFit: "cover",
+                            flexShrink: 0,
+                            border: "1px solid rgba(255,255,255,0.1)",
+                          }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: "38px",
+                            height: "38px",
+                            borderRadius: "8px",
+                            background: "rgba(249,115,22,0.2)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "18px",
+                            flexShrink: 0,
+                          }}
+                        >
+                          {getCategoryEmoji(event.category)}
+                        </div>
+                      )}
 
-              {/* Footer hint */}
-              <div
-                style={{
-                  padding: "7px 14px",
-                  fontSize: "10px",
-                  color: "rgba(255,255,255,0.25)",
-                  borderTop: "1px solid rgba(255,255,255,0.05)",
-                  display: "flex",
-                  gap: "12px",
-                }}
-              >
-                <span>↑↓ navigate</span>
-                <span>↵ select</span>
-                <span>Esc close</span>
-              </div>
-            </div>
-          )}
+                      {/* Text content */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontSize: "13px",
+                            fontWeight: 600,
+                            color: "#f1f5f9",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          <HighlightText text={event.title} query={searchQuery} />
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "11px",
+                            color: "rgba(255,255,255,0.45)",
+                            marginTop: "2px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                          }}
+                        >
+                          <span>{getCategoryEmoji(event.category)} {event.category}</span>
+                          {event.location && (
+                            <>
+                              <span style={{ opacity: 0.4 }}>·</span>
+                              <MapPin size={9} style={{ flexShrink: 0 }} />
+                              <span
+                                style={{
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  maxWidth: "160px",
+                                }}
+                              >
+                                {event.location}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Price badge */}
+                      {event.price != null && (
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            fontWeight: 700,
+                            color: "#f97316",
+                            flexShrink: 0,
+                            background: "rgba(249,115,22,0.12)",
+                            padding: "2px 8px",
+                            borderRadius: "8px",
+                            border: "1px solid rgba(249,115,22,0.25)",
+                          }}
+                        >
+                          {formatPrice(event.price)}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
 
           {/* No results state */}
           {showDropdown && !searchLoading && suggestions.length === 0 && searchQuery.trim() && (
+>>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
             <div
               style={{
                 position: "absolute",
                 top: "calc(100% + 8px)",
                 left: 0,
                 right: 0,
+<<<<<<< HEAD
+                background: "rgba(10, 8, 25, 0.97)",
+                border: "1px solid rgba(249,115,22,0.3)",
+                borderRadius: "14px",
+                backdropFilter: "blur(20px)",
+                boxShadow: "0 16px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(249,115,22,0.15)",
+                zIndex: 50,
+                overflow: "hidden",
+                animation: "dropdownFadeIn 0.18s ease-out forwards",
+              }}
+            >
+              {/* Header */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "10px 14px 6px",
+                  borderBottom: "1px solid rgba(255,255,255,0.06)",
+                }}
+              >
+                {isAiLoading ? (
+                  <>
+                    <Loader2
+                      size={12}
+                      color="#a855f7"
+                      style={{ animation: "spin 1s linear infinite" }}
+                    />
+                    <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", letterSpacing: "0.5px" }}>
+                      AI is thinking…
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={12} color="#a855f7" />
+                    <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", letterSpacing: "0.5px" }}>
+                      {aiSource === "gemini" ? "AI Suggestions" : "Smart Suggestions"}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* Suggestions List */}
+              {isAiLoading ? (
+                <div style={{ padding: "14px" }}>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div
+                      key={i}
+                      style={{
+                        height: "14px",
+                        borderRadius: "6px",
+                        background: "rgba(255,255,255,0.06)",
+                        marginBottom: i < 5 ? "10px" : "0",
+                        width: `${70 + i * 5}%`,
+                        animation: "shimmer 1.5s ease-in-out infinite",
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <ul style={{ listStyle: "none", margin: 0, padding: "6px 0" }}>
+                  {aiSuggestions.map((suggestion, idx) => (
+                    <li
+                      key={idx}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleSuggestionClick(suggestion);
+                      }}
+                      onMouseEnter={() => setHighlightedIndex(idx)}
+                      onMouseLeave={() => setHighlightedIndex(-1)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "9px 14px",
+                        cursor: "pointer",
+                        transition: "background 0.12s ease",
+                        background: highlightedIndex === idx
+                          ? "rgba(249,115,22,0.12)"
+                          : "transparent",
+                        borderLeft: highlightedIndex === idx
+                          ? "2px solid #f97316"
+                          : "2px solid transparent",
+                      }}
+                    >
+                      <Search
+                        size={12}
+                        color={highlightedIndex === idx ? "#f97316" : "rgba(255,255,255,0.25)"}
+                        style={{ flexShrink: 0 }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "13px",
+                          color: highlightedIndex === idx ? "#f1f5f9" : "rgba(255,255,255,0.75)",
+                          flex: 1,
+                          letterSpacing: "0.2px",
+                        }}
+                      >
+                        {suggestion}
+                      </span>
+                      {highlightedIndex === idx && (
+                        <span style={{ fontSize: "10px", color: "rgba(249,115,22,0.7)", flexShrink: 0 }}>
+                          ↵
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {/* Footer branding */}
+              <div
+                style={{
+                  padding: "6px 14px 8px",
+                  borderTop: "1px solid rgba(255,255,255,0.05)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  justifyContent: "flex-end",
+                }}
+              >
+                <Sparkles size={9} color="rgba(168,85,247,0.6)" />
+                <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.2)", letterSpacing: "0.4px" }}>
+                  Powered by AI
+                </span>
+              </div>
+=======
                 zIndex: 50,
                 borderRadius: "14px",
                 background: "rgba(10, 8, 24, 0.96)",
@@ -829,6 +1191,7 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
               }}
             >
               🔍 No events found for "{searchQuery}"
+>>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
             </div>
           )}
         </div>
@@ -865,7 +1228,57 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
           </div>
         </div>
 
-
+        {/* ── Mood destination suggestions ── */}
+        {selectedMoodKey && MOOD_PLACES[selectedMoodKey] && (
+          <div
+            className="mb-5"
+            style={{ animation: "slideUp 0.4s ease-out forwards" }}
+          >
+            <h4 className="text-white text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+              <span>📍</span> Suggested Destinations for {selectedMood}
+            </h4>
+            <div
+              className="flex gap-3 overflow-x-auto pb-2"
+              style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}
+            >
+              {MOOD_PLACES[selectedMoodKey].map((place) => (
+                <div
+                  key={place.name}
+                  onClick={() => {
+                    setSearchQuery(place.name);
+                    onSearchChange(place.name);
+                    clearTimeout(debounceRef.current);
+                    debounceRef.current = setTimeout(
+                      () => fetchSuggestions(place.name),
+                      280
+                    );
+                  }}
+                  className="flex items-center gap-3 p-2 rounded-xl backdrop-blur-md transition-all duration-300 hover:scale-105 cursor-pointer"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.08)",
+                    border: "1px solid rgba(255, 255, 255, 0.12)",
+                    minWidth: "240px",
+                    flex: "0 0 auto",
+                  }}
+                >
+                  <img
+                    src={place.image}
+                    alt={place.name}
+                    className="w-10 h-10 rounded-lg object-cover"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h5 className="text-white text-xs font-bold truncate" style={{ margin: 0 }}>
+                      {place.name}
+                    </h5>
+                    <p className="text-gray-300 text-[10px] truncate" style={{ margin: 0 }}>
+                      {place.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ── Slide indicator dots ── */}
         <div className="flex gap-2">
@@ -899,8 +1312,30 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
           to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes dropdownFadeIn {
+<<<<<<< HEAD
+          from {
+            opacity: 0;
+            transform: translateY(-6px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes shimmer {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 0.8; }
+        }
+        .scrollbar-none::-webkit-scrollbar {
+          display: none;
+=======
           from { opacity: 0; transform: translateY(-6px); }
           to   { opacity: 1; transform: translateY(0); }
+>>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
         }
         @keyframes spin {
           from { transform: rotate(0deg); }

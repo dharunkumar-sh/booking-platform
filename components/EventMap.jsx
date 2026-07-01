@@ -35,6 +35,7 @@ export default function EventMap({ onBookEvent = () => {}, searchQuery = "", sel
             image: e.image || "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800",
             lat: e.latitude || 13.0827,
             lng: e.longitude || 80.2707,
+            originalEvent: e,
           }));
           setEvents(mapped);
         }
@@ -121,44 +122,42 @@ export default function EventMap({ onBookEvent = () => {}, searchQuery = "", sel
                 margin: "0 auto",
               }}
             >
-            <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-            />
+              <TileLayer
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+              />
 
-            {userLocation && customMarkerIcon && (
-              <Marker position={[userLocation.lat, userLocation.lng]} icon={customMarkerIcon}>
+              {userLocation && customMarkerIcon && (
+                <Marker position={[userLocation.lat, userLocation.lng]} icon={customMarkerIcon}>
+                  <Popup>
+                    <div style={{ fontWeight: 600 }}>
+                      📍 Your Current Location
+                    </div>
+                  </Popup>
+                </Marker>
+              )}
+
+<<<<<<< HEAD
+            {filteredEvents.map((event) => (
+              <Marker key={event.id} position={[event.lat, event.lng]}>
                 <Popup>
-                  <div style={{ fontWeight: 600 }}>
-                    📍 Your Current Location
-                  </div>
-                </Popup>
-              </Marker>
-            )}
-
-            {(() => {
-              const filteredEvents = events.filter((e) => {
-                if (selectedCategories.length > 0) {
-                  if (!selectedCategories.includes((e.category || "").toLowerCase())) {
-                    return false;
-                  }
-                }
-                if (searchQuery && searchQuery.trim()) {
-                  const q = searchQuery.toLowerCase().trim();
-                  return (
-                    (e.title || "").toLowerCase().includes(q) ||
-                    (e.venue || "").toLowerCase().includes(q) ||
-                    (e.category || "").toLowerCase().includes(q)
-                  );
-                }
-                return true;
-              });
-
-              return filteredEvents.map((event) => (
-                customMarkerIcon && (
-                  <Marker key={event.id} position={[event.lat, event.lng]} icon={customMarkerIcon}>
+                  <div
+                    style={{
+                      width: "220px",
+                      textAlign: "center",
+                      fontFamily: "Inter, sans-serif",
+                    }}
+                  >
+                    <img
+                      src={event.image}
+                      alt={event.title}
+=======
+            {events.map((event) => (
+              customMarkerIcon && (
+                <Marker key={event.id} position={[event.lat, event.lng]} icon={customMarkerIcon}>
                   <Popup>
                     <div
+>>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
                       style={{
                         width: "220px",
                         textAlign: "center",
@@ -177,49 +176,49 @@ export default function EventMap({ onBookEvent = () => {}, searchQuery = "", sel
                         }}
                       />
 
-                      <h3
-                        style={{
-                          fontSize: "15px",
-                          fontWeight: 700,
-                          margin: "0 0 6px",
-                          color: "#1a1a2e",
-                        }}
-                      >
-                        {event.title}
-                      </h3>
+                        <h3
+                          style={{
+                            fontSize: "15px",
+                            fontWeight: 700,
+                            margin: "0 0 6px",
+                            color: "#1a1a2e",
+                          }}
+                        >
+                          {event.title}
+                        </h3>
 
-                      <p
-                        style={{
-                          fontSize: "12px",
-                          color: "#64748b",
-                          margin: "0 0 4px",
-                        }}
-                      >
-                        📍 {event.venue}
-                      </p>
-
-                      <p
-                        style={{
-                          fontSize: "14px",
-                          fontWeight: 700,
-                          color: "#f97316",
-                          margin: "0 0 6px",
-                        }}
-                      >
-                        🎟 {event.price}
-                      </p>
-
-                      {userLocation && (
                         <p
                           style={{
                             fontSize: "12px",
                             color: "#64748b",
-                            margin: "0 0 10px",
+                            margin: "0 0 4px",
                           }}
                         >
-                          📏 {calculateDistance(userLocation.lat, userLocation.lng, event.lat, event.lng)} km away
+                          📍 {event.venue}
                         </p>
-                      )}
+
+                        <p
+                          style={{
+                            fontSize: "14px",
+                            fontWeight: 700,
+                            color: "#f97316",
+                            margin: "0 0 6px",
+                          }}
+                        >
+                          🎟 {event.price}
+                        </p>
+
+                        {userLocation && (
+                          <p
+                            style={{
+                              fontSize: "12px",
+                              color: "#64748b",
+                              margin: "0 0 10px",
+                            }}
+                          >
+                            📏 {calculateDistance(userLocation.lat, userLocation.lng, event.lat, event.lng)} km away
+                          </p>
+                        )}
 
                       <button
                         onClick={() => onBookEvent({
@@ -249,9 +248,8 @@ export default function EventMap({ onBookEvent = () => {}, searchQuery = "", sel
                     </div>
                   </Popup>
                 </Marker>
-                )
-              ))
-            })()}
+              )
+            ))}
           </MapContainer>
         </div>
       </div>

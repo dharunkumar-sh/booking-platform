@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { GeolocationProvider } from "@/context/GeolocationContext";
+import { FavouritesProvider } from "@/context/FavouritesContext";
 import GeolocationBanner from "../components/GeolocationBanner";
 
 const inter = Inter({
@@ -23,12 +24,14 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.className} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-neutral-950 text-white">
-        <GeolocationProvider>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <GeolocationBanner />
-        </GeolocationProvider>
+        <FavouritesProvider>
+          <GeolocationProvider>
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <GeolocationBanner />
+          </GeolocationProvider>
+        </FavouritesProvider>
       </body>
     </html>
   );
