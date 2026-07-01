@@ -41,3 +41,12 @@ export const bookings = pgTable("bookings", {
   status: varchar("status", { length: 50 }).default("pending").notNull(),
   bookingDate: timestamp("booking_date").defaultNow().notNull(),
 });
+
+export const userform = pgTable("userform", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+

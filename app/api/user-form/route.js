@@ -19,21 +19,25 @@ export async function POST(request) {
 
     const sql = neon(DATABASE_URL);
 
-    // Ensure phone column exists (if not already there)
+    // Ensure userform table exists (if not already there, though we pushed the schema)
     try {
-      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone varchar(50)`;
+      await sql`
+        CREATE TABLE IF NOT EXISTS userform (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          phone VARCHAR(50),
+          created_at TIMESTAMP DEFAULT NOW() NOT NULL
+        )
+      `;
     } catch (e) {
-      console.log("Column phone might already exist or could not be created:", e.message);
+      console.log("Table userform might already exist or could not be created:", e.message);
     }
 
-    // Upsert the user into Neon database
+    // Insert the details into the userform table in Neon database
     const result = await sql`
-      INSERT INTO users (name, email, phone)
+      INSERT INTO userform (name, email, phone)
       VALUES (${name.trim()}, ${email.trim().toLowerCase()}, ${phone?.trim() || null})
-      ON CONFLICT (email)
-      DO UPDATE SET
-        name = EXCLUDED.name,
-        phone = EXCLUDED.phone
       RETURNING id, name, email, phone
     `;
 
@@ -49,7 +53,7 @@ export async function POST(request) {
           email: user.email,
           phone: user.phone,
         },
-        message: "User details saved in Neon DB.",
+        message: "User details saved in userform table in Neon DB.",
       },
       { status: 200 }
     );
