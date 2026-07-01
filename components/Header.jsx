@@ -13,6 +13,7 @@ import {
   Check,
   X,
   Tv,
+  LogOut,
 } from "lucide-react";
 import { useGeolocationContext } from "@/context/GeolocationContext";
 
@@ -37,6 +38,7 @@ const Header = () => {
   const [isOttOpen, setIsOttOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const placeholders = [
     "Search Movies...",
@@ -47,6 +49,7 @@ const Header = () => {
 
   // Refs
   const ottRef = useRef(null);
+  const profileRef = useRef(null);
 
   // Cycling placeholder text
   useEffect(() => {
@@ -61,6 +64,8 @@ const Header = () => {
     const handleClickOutside = (e) => {
       if (ottRef.current && !ottRef.current.contains(e.target))
         setIsOttOpen(false);
+      if (profileRef.current && !profileRef.current.contains(e.target))
+        setIsProfileOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -318,18 +323,62 @@ const Header = () => {
               </button>
             </div>
 
-            {/* 10. User Sign In Button */}
+            {/* 10. User Profile & Dropdown */}
             {user ? (
-              <div className="flex items-center gap-3">
-                <span className="hidden sm:inline text-xs font-semibold text-neutral-400">
-                  Hi, <span className="text-white">{user.name || user.email || user.phone}</span>
-                </span>
+              <div 
+                ref={profileRef}
+                className="relative flex items-center"
+                onMouseEnter={() => setIsProfileOpen(true)}
+                onMouseLeave={() => setIsProfileOpen(false)}
+              >
+                {/* Profile Trigger */}
                 <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 text-xs font-semibold rounded-xl bg-neutral-900 border border-neutral-800 hover:border-rose-500/40 text-neutral-300 hover:text-white transition-all cursor-pointer shrink-0"
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-neutral-900 border border-transparent hover:border-neutral-800 transition-all cursor-pointer select-none"
                 >
-                  Logout
+                  <img
+                    src={user.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.email || "User")}&background=ea580c&color=fff`}
+                    alt={user.name || "User Avatar"}
+                    className="w-7 h-7 rounded-full border border-orange-500/30 object-cover shadow-sm shadow-orange-500/10"
+                    referrerPolicy="no-referrer"
+                  />
+                  <span className="hidden sm:inline text-xs font-semibold text-neutral-300">
+                    <span className="text-white">{user.name || user.email?.split('@')[0] || user.phone}</span>
+                  </span>
+                  <ChevronDown size={12} className={`text-neutral-400 transition-transform duration-200 ${isProfileOpen ? "rotate-180" : ""}`} />
                 </button>
+
+                {/* Dropdown Menu */}
+                {isProfileOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-neutral-950/95 border border-neutral-800 shadow-2xl p-3.5 z-50 backdrop-blur-xl animate-in fade-in slide-in-from-top-3 duration-200">
+                    {/* User Profile Header inside dropdown */}
+                    <div className="flex items-center gap-3 pb-3.5 mb-3 border-b border-neutral-800/80">
+                      <img
+                        src={user.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.email || "User")}&background=ea580c&color=fff`}
+                        alt={user.name || "User Avatar"}
+                        className="w-10 h-10 rounded-full border border-orange-500/30 object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-bold text-white truncate">
+                          {user.name || "VibePass User"}
+                        </span>
+                        <span className="text-[10px] text-neutral-500 truncate">
+                          {user.email || user.phone || "No contact info"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 hover:border-rose-600 transition-all cursor-pointer group"
+                    >
+                      <span>Sign Out</span>
+                      <LogOut size={13} className="text-rose-500 group-hover:text-white transition-colors" />
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <button

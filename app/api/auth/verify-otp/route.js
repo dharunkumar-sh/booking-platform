@@ -74,24 +74,32 @@ export async function POST(request) {
 
     // ── Step 7: Check if user already exists ──────────────────────────────
     const existing = await sql`
-      SELECT id, name, email FROM users WHERE email = ${emailLower} LIMIT 1
+      SELECT id, name, email, auth_method, avatar_url FROM users WHERE email = ${emailLower} LIMIT 1
     `;
 
     let user = existing[0];
     let isNewUser = false;
 
-    // ── Step 8: Create user if not found ──────────────────────────────────
+    // ── Step 8: Create or update user ─────────────────────────────────────
     if (!user) {
       const derivedName = emailLower.split("@")[0];
       const inserted = await sql`
-        INSERT INTO users (name, email)
-        VALUES (${derivedName}, ${emailLower})
-        RETURNING id, name, email
+        INSERT INTO users (name, email, auth_method)
+        VALUES (${derivedName}, ${emailLower}, 'otp')
+        RETURNING id, name, email, auth_method, avatar_url
       `;
       user = inserted[0];
       isNewUser = true;
       console.log(`[AUTH] 🆕 New user registered: ${emailLower} (id: ${user.id})`);
     } else {
+      // Update existing user's auth method to otp
+      const updated = await sql`
+        UPDATE users
+        SET auth_method = 'otp'
+        WHERE id = ${user.id}
+        RETURNING id, name, email, auth_method, avatar_url
+      `;
+      user = updated[0];
       console.log(`[AUTH] 👤 Existing user signed in: ${emailLower} (id: ${user.id})`);
     }
 
@@ -103,6 +111,8 @@ export async function POST(request) {
         id: user.id,
         name: user.name,
         email: user.email,
+        picture: user.avatar_url || null,
+        authMethod: user.auth_method,
       },
     });
 

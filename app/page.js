@@ -1,10 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import Hero from "@/components/Hero";
 import FeaturedEvents from "@/components/FeaturedEvents";
 import TrendingEvents from "@/components/TrendingEvents";
 import EventMapWrapper from "@/components/EventMapWrapper";
 import { useRouter } from "next/navigation";
+
+// Maps Hero mood keys → event category values stored in DB
+const MOOD_TO_CATEGORY = {
+  relaxed: ["comedy", "food"],
+  adventure: ["sports"],
+  romantic: ["drama"],
+  productive: ["games"],
+  luxury: ["music"],
+};
 
 const isTheatreEvent = (event) => {
   if (!event) return false;
@@ -30,6 +40,25 @@ const isTheatreEvent = (event) => {
 export default function Home() {
   const router = useRouter();
 
+  // ── Lifted search / filter state ─────────────────────────────────────────
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState([]);
+
+  const handleSearchChange = (query) => {
+    setSearchQuery(query);
+  };
+
+  // Mood key → DB categories mapping; toggling same mood clears the filter
+  const handleMoodChange = (moodKey) => {
+    if (!moodKey) {
+      setSelectedCategories([]);
+      return;
+    }
+    const cats = MOOD_TO_CATEGORY[moodKey] || [];
+    setSelectedCategories(cats);
+  };
+
+  // ── Booking handler ───────────────────────────────────────────────────────
   const handleBookEvent = (event) => {
     const query = new URLSearchParams({
       venue: event.venue || event.location || "",
@@ -40,11 +69,24 @@ export default function Home() {
 
   return (
     <div>
-      <Hero />
-      
-      <FeaturedEvents onBookEvent={handleBookEvent} />
-      <TrendingEvents onBookEvent={handleBookEvent} />
-      <EventMapWrapper onBookEvent={handleBookEvent} /> 
+      <Hero
+        onSearchChange={handleSearchChange}
+        onMoodChange={handleMoodChange}
+      />
+
+      <FeaturedEvents
+        onBookEvent={handleBookEvent}
+        searchQuery={searchQuery}
+        selectedCategories={selectedCategories}
+      />
+
+      <TrendingEvents
+        onBookEvent={handleBookEvent}
+        searchQuery={searchQuery}
+        selectedCategories={selectedCategories}
+      />
+
+      <EventMapWrapper onBookEvent={handleBookEvent} />
     </div>
   );
 }
