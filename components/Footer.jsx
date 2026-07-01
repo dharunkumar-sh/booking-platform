@@ -11,45 +11,25 @@ import {
 
 const footerLinks = [
   {
-    title: "Discover",
-    links: [
-      { label: "Movies", href: "/movies" },
-      { label: "Live Events", href: "/events" },
-      { label: "Concerts", href: "/concerts" },
-      { label: "Comedy Shows", href: "/comedy" },
-      { label: "Sports", href: "/sports" },
-      { label: "Travel Experiences", href: "/travel" },
-    ],
-  },
-  {
-    title: "OTT & Entertainment",
-    links: [
-      { label: "Browse OTT Platforms", href: "/ott" },
-      { label: "New Releases", href: "/ott/new-releases" },
-      { label: "Trending Now", href: "/trending" },
-      { label: "Mood Based Picks", href: "/moods" },
-      { label: "Watchlists", href: "/watchlist" },
-      { label: "Cross-OTT Search", href: "/ott/search" },
-    ],
-  },
-  {
     title: "Support",
     links: [
       { label: "Help Center", href: "/support" },
-      { label: "Booking Status", href: "/bookings" },
       { label: "Cancellations", href: "/support/cancellations" },
       { label: "Refunds", href: "/support/refunds" },
       { label: "Payment Issues", href: "/support/payments" },
       { label: "Safety Guidelines", href: "/support/safety" },
     ],
   },
+  {
+    title: "Legal",
+    links: [
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" },
+      { label: "Cookie Policy", href: "/cookies" },
+    ],
+  },
 ];
 
-
-const appLinks = [
-  { label: "iPhone", href: "/download/ios" },
-  { label: "Android", href: "/download/android" },
-];
 
 const Footer = () => {
   const [email, setEmail] = useState("");
@@ -72,7 +52,7 @@ const Footer = () => {
       <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-orange-500/70 to-transparent" />
 
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr_1fr_1fr]">
+        <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr_1fr]">
           <div className="lg:col-span-1">
             <a href="/" className="group flex items-center gap-2">
               <Image

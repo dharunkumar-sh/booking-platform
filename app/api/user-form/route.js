@@ -31,7 +31,7 @@ export async function POST(request) {
         )
       `;
     } catch (e) {
-      console.log("Table userform might already exist or could not be created:", e.message);
+      // ignore
     }
 
     // Insert the details into the userform table in Neon database

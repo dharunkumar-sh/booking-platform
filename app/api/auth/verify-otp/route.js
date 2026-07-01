@@ -67,7 +67,6 @@ export async function POST(request) {
 
     // ── Step 5: Consume OTP — prevents replay attacks ─────────────────────
     global.otpStore.delete(cacheKey);
-    console.log(`[AUTH] ✅ OTP verified for: ${emailLower}`);
 
     // ── Step 6: Connect to Neon directly (no drizzle layer) ────────────────
     const sql = neon(DB_URL);
@@ -90,7 +89,6 @@ export async function POST(request) {
       `;
       user = inserted[0];
       isNewUser = true;
-      console.log(`[AUTH] 🆕 New user registered: ${emailLower} (id: ${user.id})`);
     } else {
       // Update existing user's auth method to otp
       const updated = await sql`
@@ -100,7 +98,6 @@ export async function POST(request) {
         RETURNING id, name, email, auth_method, avatar_url
       `;
       user = updated[0];
-      console.log(`[AUTH] 👤 Existing user signed in: ${emailLower} (id: ${user.id})`);
     }
 
     // ── Step 9: Return session data ────────────────────────────────────────

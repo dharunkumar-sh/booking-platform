@@ -80,7 +80,7 @@ export default function EventMap({ onBookEvent = () => {}, searchQuery = "", sel
             lng: position.coords.longitude,
           });
         },
-        (error) => console.log(error)
+        (error) => {}
       );
     }
   }, [location]);

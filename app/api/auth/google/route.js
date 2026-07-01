@@ -64,7 +64,6 @@ export async function POST(request) {
       `;
       user = inserted[0];
       isNewUser = true;
-      console.log(`[AUTH-GOOGLE] Registered new Google user: ${emailLower} (id: ${user.id})`);
     } else {
       // Update existing user with latest Google info
       const updated = await sql`
@@ -74,7 +73,6 @@ export async function POST(request) {
         RETURNING id, name, email, auth_method, avatar_url
       `;
       user = updated[0];
-      console.log(`[AUTH-GOOGLE] Signed in existing Google user: ${emailLower} (id: ${user.id})`);
     }
 
     return NextResponse.json({

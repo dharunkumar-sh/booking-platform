@@ -84,6 +84,9 @@ function OttExplorerPageInner({
         let url;
         if (search.trim()) {
           url = `https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${encodeURIComponent(search.trim())}&language=en-US&page=1`;
+        } else if (selectedMood !== "all") {
+          const genreIds = MOOD_GENRES[selectedMood] || [];
+          url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${genreIds.join(",")}&sort_by=popularity.desc&language=en-US`;
         } else {
           url = `https://api.themoviedb.org/3/trending/all/week?api_key=${apiKey}`;
         }
@@ -95,6 +98,10 @@ function OttExplorerPageInner({
         if (!active) return;
 
         const rawItems = (data.results || [])
+          .map((item) => ({
+            ...item,
+            media_type: item.media_type || "movie"
+          }))
           .filter((item) => item.media_type === "movie" || item.media_type === "tv")
           .slice(0, 12);
 
@@ -180,7 +187,7 @@ function OttExplorerPageInner({
     return () => {
       active = false;
     };
-  }, [search]);
+  }, [search, selectedMood]);
 
   const filtered = titles.filter((item) => {
     const pMatch = activePlatform === "all" || item.platformsList.includes(activePlatform);

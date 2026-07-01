@@ -10,8 +10,6 @@ export async function GET(request) {
     const state = (searchParams.get("state") || "").trim();
     const crossOtt = searchParams.get("crossOtt") !== "false";
     
-    console.log(`[/api/ott/search] q: "${q}", state: "${state}", crossOtt: ${crossOtt} (raw: "${searchParams.get("crossOtt")}")`);
-
     if (!q) {
       return NextResponse.json({ success: true, type: "db", results: [] });
     }

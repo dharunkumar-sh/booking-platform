@@ -233,9 +233,7 @@ export async function POST(request) {
 
       await sendEmailOtp(emailLower, otp);
 
-      // Store in server-side cache after successful delivery
       global.otpStore.set(`otp:email:${emailLower}`, { otp, expiresAt });
-      console.log(`[AUTH] Email OTP sent to ${emailLower}`);
 
       return NextResponse.json({
         success: true,
