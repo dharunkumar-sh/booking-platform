@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Ticket, Heart } from "lucide-react";
 import { useFavourites } from "@/context/FavouritesContext";
 
+import EventCard from "./EventCard";
+
 const CATEGORY_EMOJI = {
   music: "🎵",
   comedy: "😂",
@@ -165,65 +167,13 @@ export default function FeaturedEvents({
           <EmptyState searchQuery={searchQuery} />
         ) : (
           events.map((event, i) => (
-            <div
+            <EventCard
               key={event.id ?? i}
-              onClick={async () => {
-                try {
-                  localStorage.setItem("selectedEvent", JSON.stringify(event));
-                } catch (e) {
-                  console.error(e);
-                }
-                router.push(
-                  `/event-details/${encodeURIComponent(event.title)}`,
-                );
-              }}
-              className="group relative flex flex-col rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-orange-500/20 bg-neutral-900/30 border border-white/5 transition duration-300"
-            >
-              <div className="relative h-64 w-full overflow-hidden">
-                <Image
-                  src={
-                    event.image ||
-                    "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80"
-                  }
-                  alt={event.title}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  className="object-cover group-hover:scale-105 transition duration-500"
-                />
-              </div>
-
-              <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-              <div className="p-5 flex flex-col justify-between grow">
-                <div>
-                  <h3 className="text-lg font-bold text-white line-clamp-1 mb-1 group-hover:text-orange-400 transition-colors">
-                    {event.title}
-                  </h3>
-                  <p className="text-xs text-neutral-400 mb-1 flex items-center gap-1">
-                    📍 {event.location}
-                  </p>
-                  <p className="text-xs text-neutral-400 flex items-center gap-1">
-                    📅 {formatDate(event.date)} • ⏰ {event.time}
-                  </p>
-                  <p className="text-xs text-neutral-400 mt-2.5">
-                    Starts at{" "}
-                    <span className="text-base font-extrabold text-orange-500 block sm:inline mt-0.5 sm:mt-0">
-                      {formatPrice(event.price)}
-                    </span>
-                  </p>
-                </div>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onBookEvent(event);
-                  }}
-                  className="mt-4 w-full bg-linear-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 py-2.5 rounded-xl flex items-center justify-center gap-2 font-bold text-white transition-all duration-300 shadow-md hover:shadow-orange-500/20 cursor-pointer relative z-10 text-sm"
-                >
-                  <Ticket size={16} /> Book Now
-                </button>
-              </div>
-            </div>
+              event={event}
+              onBookEvent={onBookEvent}
+              isFavourite={isFavourite}
+              toggleFavourite={toggleFavourite}
+            />
           ))
         )}
       </div>

@@ -30,6 +30,7 @@ export default function GeolocationBanner() {
     status,
     error,
     location,
+    isRestored,
     dismissBanner,
     triggerRequest,
     manualRetry,
@@ -80,7 +81,7 @@ export default function GeolocationBanner() {
     !localDismissed &&
     (showBanner ||
       status === "requesting" ||
-      status === "granted" ||
+      (status === "granted" && !isRestored) ||
       status === "denied" ||
       status === "timeout" ||
       status === "unavailable" ||
@@ -192,9 +193,9 @@ export default function GeolocationBanner() {
         )}
 
         {/* ─── SUCCESS STATE ──────────────────────────────────── */}
-        {status === "granted" && location && (
+        {status === "granted" && location && !isRestored && (
           <div className="relative flex items-center gap-3 px-5 py-4 rounded-2xl border border-green-500/30 bg-neutral-900/95 shadow-xl shadow-green-500/10 backdrop-blur-xl overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-green-500 to-emerald-400" />
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-green-500 to-emerald-400" />
             <div className="w-9 h-9 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center justify-center shrink-0">
               <MapPin size={18} className="text-green-400" />
             </div>

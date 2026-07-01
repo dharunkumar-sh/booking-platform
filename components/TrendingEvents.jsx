@@ -3,8 +3,10 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Ticket, Heart } from "lucide-react";
 import { useFavourites } from "@/context/FavouritesContext";
+import EventCard from "./EventCard";
 
 // ── Category emoji helpers ────────────────────────────────────────────────────
 const CATEGORY_EMOJI = {
@@ -188,57 +190,6 @@ export default function TrendingEvents({
         Trending Events
       </h1>
 
-      {/* ── Arrow buttons ── */}
-      {!loading && events.length > 0 && (
-        <>
-          <button
-            onClick={scrollLeft}
-            style={{
-              position: "absolute",
-              left: "10px",
-              top: "55%",
-              transform: "translateY(-50%)",
-              width: "60px",
-              height: "60px",
-              borderRadius: "50%",
-              border: "none",
-              background: "#1E293B",
-              color: "white",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              zIndex: 10,
-            }}
-          >
-            <FaChevronLeft size={20} />
-          </button>
-
-          <button
-            onClick={scrollRight}
-            style={{
-              position: "absolute",
-              right: "10px",
-              top: "55%",
-              transform: "translateY(-50%)",
-              width: "60px",
-              height: "60px",
-              borderRadius: "50%",
-              border: "none",
-              background: "#1E293B",
-              color: "white",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              zIndex: 10,
-            }}
-          >
-            <FaChevronRight size={20} />
-          </button>
-        </>
-      )}
-
       {/* ── Slider ── */}
       <div
         ref={sliderRef}
@@ -256,159 +207,15 @@ export default function TrendingEvents({
           <EmptyState searchQuery={searchQuery} />
         ) : (
           events.map((event, index) => (
-            <div
+            <EventCard
               key={event.id ?? index}
-              onClick={async () => {
-                try {
-                  localStorage.setItem("selectedEvent", JSON.stringify(event));
-                } catch (e) {
-                  console.error(e);
-                }
-                router.push(`/event-details/${encodeURIComponent(event.title)}`);
-              }}
-              style={{
-                minWidth: "330px",
-                background: "rgba(255,255,255,0.08)",
-                backdropFilter: "blur(12px)",
-                borderRadius: "24px",
-                overflow: "hidden",
-                border: "1px solid rgba(255,255,255,0.1)",
-                boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
-                position: "relative",
-                transition: "all 0.3s ease",
-                cursor: "pointer",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-10px) scale(1.03)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0) scale(1)";
-              }}
-            >
-              {/* Trending badge for first 2 */}
-              {index < 2 && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "15px",
-                    left: "15px",
-                    background: "linear-gradient(90deg, #f97316, #ff5862)",
-                    color: "white",
-                    padding: "6px 12px",
-                    borderRadius: "20px",
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                    zIndex: 2,
-                  }}
-                >
-                  🔥 Trending
-                </div>
-              )}
-
-              {/* Heart button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleFavourite(event);
-                }}
-                style={{
-                  position: "absolute",
-                  top: "15px",
-                  right: "15px",
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  border: "none",
-                  background: isFavourite(event.id) ? "rgba(244,63,94,0.95)" : "rgba(255,255,255,0.92)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  zIndex: 2,
-                  transition: "background 0.2s",
-                  boxShadow: "0 2px 12px rgba(0,0,0,0.25)",
-                }}
-                title={isFavourite(event.id) ? "Remove from favourites" : "Add to favourites"}
-              >
-                <Heart
-                  size={17}
-                  style={{
-                    color: isFavourite(event.id) ? "white" : "#f43f5e",
-                    fill: isFavourite(event.id) ? "white" : "none",
-                    transition: "all 0.2s",
-                  }}
-                />
-              </button>
-
-              <img
-                src={
-                  event.image ||
-                  "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80"
-                }
-                alt={event.title}
-                style={{ width: "100%", height: "220px", objectFit: "cover" }}
-              />
-
-              <div style={{ padding: "20px", color: "white" }}>
-                {/* Category pill */}
-                <div style={{ marginBottom: "8px" }}>
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      padding: "3px 10px",
-                      borderRadius: "12px",
-                      background: "rgba(249,115,22,0.2)",
-                      border: "1px solid rgba(249,115,22,0.4)",
-                      color: "#f97316",
-                      fontWeight: 600,
-                    }}
-                  >
-                    {getCategoryEmoji(event.category)} {event.category}
-                  </span>
-                </div>
-
-                <h2 style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "12px" }}>
-                  {event.title}
-                </h2>
-
-                <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)", marginBottom: "4px" }}>
-                  📅 {formatDate(event.date)}
-                </p>
-                <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)", marginBottom: "4px" }}>
-                  📍 {event.location}
-                </p>
-                <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)", marginBottom: "4px" }}>
-                  ⭐ {event.rating}/5
-                </p>
-                <p style={{ fontSize: "14px", color: "#f97316", fontWeight: 700, marginTop: "6px" }}>
-                  {formatPrice(event.price)}
-                </p>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onBookEvent(event);
-                  }}
-                  style={{
-                    width: "100%",
-                    marginTop: "15px",
-                    padding: "12px",
-                    border: "none",
-                    borderRadius: "10px",
-                    background: "linear-gradient(90deg, #f97316, #ff5862)",
-                    color: "white",
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                  }}
-                >
-                  <Ticket size={16} /> Book Now
-                </button>
-              </div>
-            </div>
+              event={event}
+              onBookEvent={onBookEvent}
+              isFavourite={isFavourite}
+              toggleFavourite={toggleFavourite}
+              showTrendingBadge={index < 2}
+              style={{ minWidth: "330px" }}
+            />
           ))
         )}
       </div>

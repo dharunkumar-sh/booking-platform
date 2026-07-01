@@ -19,7 +19,7 @@ const GeolocationContext = createContext(null);
  * Consumed via useGeolocationContext() anywhere in the tree.
  */
 export function GeolocationProvider({ children }) {
-  const { location, status, error, requestLocation, clearLocation } =
+  const { location, status, error, isRestored, requestLocation, clearLocation } =
     useGeolocation();
 
   const [showBanner, setShowBanner] = useState(false);
@@ -64,6 +64,7 @@ export function GeolocationProvider({ children }) {
     location,
     status,
     error,
+    isRestored,
     showBanner,
     // Actions
     triggerRequest: requestLocation,

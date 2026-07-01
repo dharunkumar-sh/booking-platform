@@ -44,7 +44,7 @@ async function reverseGeocode(latitude, longitude) {
     }
     const data = await res.json();
     const addr = data.address || {};
-    const city =
+    let city =
       addr.city ||
       addr.town ||
       addr.village ||
@@ -52,6 +52,9 @@ async function reverseGeocode(latitude, longitude) {
       addr.state_district ||
       addr.state ||
       null;
+    if (city && typeof city === "string") {
+      city = city.split(",")[0].trim();
+    }
     const region = addr.state || null;
     const country = addr.country || null;
     return { city, region, country };
@@ -74,6 +77,7 @@ export function useGeolocation() {
   const [status, setStatus] = useState("idle");
   const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
+  const [isRestored, setIsRestored] = useState(false);
   const requestedRef = useRef(false);
 
   // Restore saved location from localStorage on mount
@@ -85,6 +89,7 @@ export function useGeolocation() {
         if (savedStatus && savedLocation) {
           setStatus(savedStatus);
           setLocation(savedLocation);
+          setIsRestored(true);
           requestedRef.current = savedStatus === "granted" || savedStatus === "requesting";
         }
       }
@@ -105,6 +110,7 @@ export function useGeolocation() {
 
     setStatus("requesting");
     setError(null);
+    setIsRestored(false);
     requestedRef.current = true;
 
     navigator.geolocation.getCurrentPosition(
@@ -166,8 +172,9 @@ export function useGeolocation() {
     setStatus("idle");
     setLocation(null);
     setError(null);
+    setIsRestored(false);
     requestedRef.current = false;
   }, []);
 
-  return { location, status, error, requestLocation, clearLocation };
+  return { location, status, error, isRestored, requestLocation, clearLocation };
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { Ticket } from "lucide-react";
 import L from "leaflet";
+import { useGeolocationContext } from "@/context/GeolocationContext";
 
 const customMarkerIcon = typeof window !== "undefined" ? new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -16,6 +17,7 @@ const customMarkerIcon = typeof window !== "undefined" ? new L.Icon({
 }) : null;
 
 export default function EventMap({ onBookEvent = () => {}, searchQuery = "", selectedCategories = [] }) {
+  const { location } = useGeolocationContext();
   const [userLocation, setUserLocation] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,16 +51,39 @@ export default function EventMap({ onBookEvent = () => {}, searchQuery = "", sel
   }, []);
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-      },
-      (error) => console.log(error)
-    );
-  }, []);
+    if (location?.latitude && location?.longitude) {
+      setUserLocation({
+        lat: location.latitude,
+        lng: location.longitude,
+      });
+    } else {
+      try {
+        const saved = localStorage.getItem("vibepass_geo_location");
+        if (saved) {
+          const { location: savedLocation } = JSON.parse(saved);
+          if (savedLocation?.latitude && savedLocation?.longitude) {
+            setUserLocation({
+              lat: savedLocation.latitude,
+              lng: savedLocation.longitude,
+            });
+            return;
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => console.log(error)
+      );
+    }
+  }, [location]);
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371;
