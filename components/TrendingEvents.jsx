@@ -5,9 +5,6 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { Ticket } from "lucide-react";
 
-<<<<<<< HEAD
-export default function TrendingEvents({ searchQuery = "", onBookEvent = () => {} }) {
-=======
 // ── Category emoji helpers ────────────────────────────────────────────────────
 const CATEGORY_EMOJI = {
   music: "🎵",
@@ -108,7 +105,6 @@ export default function TrendingEvents({
   searchQuery = "",
   selectedCategories = [],
 }) {
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
   const sliderRef = useRef(null);
   const [likedEvents, setLikedEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -169,17 +165,6 @@ export default function TrendingEvents({
     const timer = setTimeout(fetchEvents, 300);
     return () => clearTimeout(timer);
   }, [fetchEvents]);
-
-  const filteredEvents = events.filter((e) => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      e.title.toLowerCase().includes(q) ||
-      e.category.toLowerCase().includes(q) ||
-      (e.location && e.location.toLowerCase().includes(q)) ||
-      (e.organizer && e.organizer.toLowerCase().includes(q))
-    );
-  });
 
   return (
     <section
@@ -263,67 +248,6 @@ export default function TrendingEvents({
           scrollbarWidth: "none",
         }}
       >
-<<<<<<< HEAD
-        {filteredEvents.map((event, index) => (
-          <div
-            key={event.id}
-            onClick={async () => {
-              try {
-                await fetch("/api/redis", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ key: "selectedEvent", value: event }),
-                });
-              } catch (e) {
-                console.error(e);
-              }
-              router.push(`/event-details/${encodeURIComponent(event.title)}`);
-            }}
-            style={{
-              minWidth: "330px",
-              background: "rgba(255,255,255,0.08)",
-              backdropFilter: "blur(12px)",
-              borderRadius: "24px",
-              overflow: "hidden",
-              border: "1px solid rgba(255,255,255,0.1)",
-              boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
-              position: "relative",
-              transition: "all 0.3s ease",
-              cursor: "pointer",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform =
-                "translateY(-10px) scale(1.03)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform =
-                "translateY(0) scale(1)";
-            }}
-          >
-            {index < 2 && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "15px",
-                  left: "15px",
-                  background: "linear-gradient(90deg, #f97316, #ff5862)",
-                  color: "white",
-                  padding: "6px 12px",
-                  borderRadius: "20px",
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                }}
-              >
-                🔥 Trending
-              </div>
-            )}
-
-            {/* Heart */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleLike(event.id);
-=======
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
         ) : events.length === 0 ? (
@@ -339,7 +263,6 @@ export default function TrendingEvents({
                   console.error(e);
                 }
                 router.push(`/event-details/${encodeURIComponent(event.title)}`);
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
               }}
               style={{
                 minWidth: "330px",

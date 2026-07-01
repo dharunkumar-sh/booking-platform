@@ -1,11 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-<<<<<<< HEAD
-import { Search, MapPin, Sparkles, Loader2 } from "lucide-react";
-=======
 import { Search, MapPin, X } from "lucide-react";
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
 import { useGeolocationContext } from "@/context/GeolocationContext";
 import { useRouter } from "next/navigation";
 
@@ -116,12 +112,6 @@ const getTimeLeft = (targetDate) => {
 
 const pad = (n) => String(n).padStart(2, "0");
 
-<<<<<<< HEAD
-const Hero = ({ searchQuery = "", setSearchQuery = () => {} }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedMood, setSelectedMood] = useState("");
-  const [selectedMoodKey, setSelectedMoodKey] = useState("");
-=======
 // ── Category emoji map ────────────────────────────────────────────────────
 const CATEGORY_EMOJI = {
   music: "🎵", comedy: "😂", drama: "🎭", dance: "💃",
@@ -161,7 +151,6 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
 
   // ── Background slideshow ─────────────────────────────────────────────────
   const [currentIndex, setCurrentIndex] = useState(0);
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
   const [images, setImages] = useState(HIGH_RES_IMAGES.default);
   const [loadedImages, setLoadedImages] = useState({});
   const [errorImages, setErrorImages] = useState({});
@@ -176,26 +165,12 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
     UPCOMING_EVENTS.map(() => ({ d: 0, h: 0, m: 0, s: 0 }))
   );
 
-<<<<<<< HEAD
-  // AI Search state
-  const [aiSuggestions, setAiSuggestions] = useState([]);
-  const [isAiLoading, setIsAiLoading] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const [aiSource, setAiSource] = useState("");
-  const searchContainerRef = useRef(null);
-  const debounceTimerRef = useRef(null);
-
-  // Geolocation context
-  const { location } = useGeolocationContext();
-=======
   // ── Search & autocomplete ────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1); // keyboard nav
   const [searchLoading, setSearchLoading] = useState(false);
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
 
   const searchWrapperRef = useRef(null);
   const inputRef = useRef(null);
@@ -236,89 +211,6 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
     return () => clearInterval(tick);
   }, []);
 
-<<<<<<< HEAD
-  // Fetch AI suggestions with debounce
-  const fetchAiSuggestions = useCallback(async (query) => {
-    if (!query || query.trim().length < 2) {
-      setAiSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-    setIsAiLoading(true);
-    setShowSuggestions(true);
-    try {
-      const res = await fetch("/api/ai-search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: query.trim(), location: locationCity }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAiSuggestions(data.suggestions || []);
-        setAiSource(data.source || "local");
-        setHighlightedIndex(-1);
-      }
-    } catch (err) {
-      console.error("AI search error:", err);
-    } finally {
-      setIsAiLoading(false);
-    }
-  }, [locationCity]);
-
-  const handleSearchChange = (e) => {
-    const val = e.target.value;
-    setSearchQuery(val);
-    // Debounce: wait 400ms after user stops typing
-    clearTimeout(debounceTimerRef.current);
-    if (val.trim().length >= 2) {
-      debounceTimerRef.current = setTimeout(() => {
-        fetchAiSuggestions(val);
-      }, 400);
-    } else {
-      setAiSuggestions([]);
-      setShowSuggestions(false);
-    }
-  };
-
-  const handleSuggestionClick = (suggestion) => {
-    // Strip the leading emoji + space from suggestion for the input
-    const cleaned = suggestion.replace(/^[\p{Emoji}\s]+/u, "").trim();
-    setSearchQuery(cleaned);
-    setShowSuggestions(false);
-    setAiSuggestions([]);
-    setHighlightedIndex(-1);
-  };
-
-  const handleSearchKeyDown = (e) => {
-    if (!showSuggestions || aiSuggestions.length === 0) return;
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setHighlightedIndex((prev) => Math.min(prev + 1, aiSuggestions.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setHighlightedIndex((prev) => Math.max(prev - 1, -1));
-    } else if (e.key === "Enter" && highlightedIndex >= 0) {
-      e.preventDefault();
-      handleSuggestionClick(aiSuggestions[highlightedIndex]);
-    } else if (e.key === "Escape") {
-      setShowSuggestions(false);
-      setHighlightedIndex(-1);
-    }
-  };
-
-  // Close suggestions when clicking outside
-  useEffect(() => {
-    const handleOutsideClick = (e) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
-        setShowSuggestions(false);
-        setHighlightedIndex(-1);
-      }
-    };
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, []);
-
-=======
   // ── Close dropdown on outside click ─────────────────────────────────────
   useEffect(() => {
     const handler = (e) => {
@@ -420,7 +312,6 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
   };
 
   // ── Mood selection ───────────────────────────────────────────────────────
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
   const handleMoodSelect = (mood) => {
     if (selectedMoodKey === mood.key) {
       // Toggle off
@@ -594,11 +485,7 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
 
         {/* ── Search bar with autocomplete ── */}
         <div
-<<<<<<< HEAD
-          ref={searchContainerRef}
-=======
           ref={searchWrapperRef}
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
           className="max-w-xl mb-5"
           style={{ position: "relative" }}
         >
@@ -744,76 +631,6 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
             </div>
           </div>
 
-<<<<<<< HEAD
-           
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              onKeyDown={handleSearchKeyDown}
-              placeholder={
-                locationCity
-                  ? `Search events near ${locationCity}…`
-                  : "Search events, artists, venues or ask AI…"
-              }
-              style={{
-                flex: 1,
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                color: "#f1f5f9",
-                fontSize: "13px",
-                letterSpacing: "0.2px",
-              }}
-              onFocus={(e) => {
-                e.target.parentElement.parentElement.style.boxShadow =
-                  "0 0 0 3px rgba(249,115,22,0.4), 0 8px 32px rgba(249,115,22,0.3)";
-                if (searchQuery.trim().length >= 2 && aiSuggestions.length > 0) {
-                  setShowSuggestions(true);
-                }
-              }}
-              onBlur={(e) => {
-                e.target.parentElement.parentElement.style.boxShadow =
-                  "0 8px 32px rgba(249,115,22,0.25), 0 2px 8px rgba(168,85,247,0.15)";
-              }}
-            />
-
-           
-            <button
-              type="button"
-              style={{
-                flexShrink: 0,
-                padding: "7px 18px",
-                borderRadius: "9px",
-                border: "none",
-                cursor: "pointer",
-                fontWeight: 700,
-                fontSize: "13px",
-                letterSpacing: "0.4px",
-                color: "#fff",
-                background:
-                  "linear-gradient(135deg, #f97316 0%, #a855f7 60%, #06b6d4 100%)",
-                boxShadow: "0 2px 12px rgba(249,115,22,0.4)",
-                transition: "transform 0.15s ease, box-shadow 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.05)";
-                e.currentTarget.style.boxShadow =
-                  "0 4px 20px rgba(249,115,22,0.6)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow =
-                  "0 2px 12px rgba(249,115,22,0.4)";
-              }}
-            >
-              Search ✦
-            </button>
-          </div>
-
-          {/* AI Search Suggestions Dropdown */}
-          {showSuggestions && (
-=======
           {/* ── Autocomplete dropdown ── */}
           {showDropdown && suggestions.length > 0 && (
             <div
@@ -989,140 +806,12 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
 
           {/* No results state */}
           {showDropdown && !searchLoading && suggestions.length === 0 && searchQuery.trim() && (
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
             <div
               style={{
                 position: "absolute",
                 top: "calc(100% + 8px)",
                 left: 0,
                 right: 0,
-<<<<<<< HEAD
-                background: "rgba(10, 8, 25, 0.97)",
-                border: "1px solid rgba(249,115,22,0.3)",
-                borderRadius: "14px",
-                backdropFilter: "blur(20px)",
-                boxShadow: "0 16px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(249,115,22,0.15)",
-                zIndex: 50,
-                overflow: "hidden",
-                animation: "dropdownFadeIn 0.18s ease-out forwards",
-              }}
-            >
-              {/* Header */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "10px 14px 6px",
-                  borderBottom: "1px solid rgba(255,255,255,0.06)",
-                }}
-              >
-                {isAiLoading ? (
-                  <>
-                    <Loader2
-                      size={12}
-                      color="#a855f7"
-                      style={{ animation: "spin 1s linear infinite" }}
-                    />
-                    <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", letterSpacing: "0.5px" }}>
-                      AI is thinking…
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={12} color="#a855f7" />
-                    <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", letterSpacing: "0.5px" }}>
-                      {aiSource === "gemini" ? "AI Suggestions" : "Smart Suggestions"}
-                    </span>
-                  </>
-                )}
-              </div>
-
-              {/* Suggestions List */}
-              {isAiLoading ? (
-                <div style={{ padding: "14px" }}>
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div
-                      key={i}
-                      style={{
-                        height: "14px",
-                        borderRadius: "6px",
-                        background: "rgba(255,255,255,0.06)",
-                        marginBottom: i < 5 ? "10px" : "0",
-                        width: `${70 + i * 5}%`,
-                        animation: "shimmer 1.5s ease-in-out infinite",
-                      }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <ul style={{ listStyle: "none", margin: 0, padding: "6px 0" }}>
-                  {aiSuggestions.map((suggestion, idx) => (
-                    <li
-                      key={idx}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        handleSuggestionClick(suggestion);
-                      }}
-                      onMouseEnter={() => setHighlightedIndex(idx)}
-                      onMouseLeave={() => setHighlightedIndex(-1)}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        padding: "9px 14px",
-                        cursor: "pointer",
-                        transition: "background 0.12s ease",
-                        background: highlightedIndex === idx
-                          ? "rgba(249,115,22,0.12)"
-                          : "transparent",
-                        borderLeft: highlightedIndex === idx
-                          ? "2px solid #f97316"
-                          : "2px solid transparent",
-                      }}
-                    >
-                      <Search
-                        size={12}
-                        color={highlightedIndex === idx ? "#f97316" : "rgba(255,255,255,0.25)"}
-                        style={{ flexShrink: 0 }}
-                      />
-                      <span
-                        style={{
-                          fontSize: "13px",
-                          color: highlightedIndex === idx ? "#f1f5f9" : "rgba(255,255,255,0.75)",
-                          flex: 1,
-                          letterSpacing: "0.2px",
-                        }}
-                      >
-                        {suggestion}
-                      </span>
-                      {highlightedIndex === idx && (
-                        <span style={{ fontSize: "10px", color: "rgba(249,115,22,0.7)", flexShrink: 0 }}>
-                          ↵
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {/* Footer branding */}
-              <div
-                style={{
-                  padding: "6px 14px 8px",
-                  borderTop: "1px solid rgba(255,255,255,0.05)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  justifyContent: "flex-end",
-                }}
-              >
-                <Sparkles size={9} color="rgba(168,85,247,0.6)" />
-                <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.2)", letterSpacing: "0.4px" }}>
-                  Powered by AI
-                </span>
-              </div>
-=======
                 zIndex: 50,
                 borderRadius: "14px",
                 background: "rgba(10, 8, 24, 0.96)",
@@ -1136,7 +825,6 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
               }}
             >
               🔍 No events found for "{searchQuery}"
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
             </div>
           )}
         </div>
@@ -1257,30 +945,8 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
           to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes dropdownFadeIn {
-<<<<<<< HEAD
-          from {
-            opacity: 0;
-            transform: translateY(-6px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes shimmer {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 0.8; }
-        }
-        .scrollbar-none::-webkit-scrollbar {
-          display: none;
-=======
           from { opacity: 0; transform: translateY(-6px); }
           to   { opacity: 1; transform: translateY(0); }
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
         }
         @keyframes spin {
           from { transform: rotate(0deg); }

@@ -4,10 +4,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Ticket } from "lucide-react";
 
-<<<<<<< HEAD
-export default function FeaturedEvents({ searchQuery = "", onBookEvent = () => {} }) {
-  const [selectedCategory, setSelectedCategory] = useState(null);
-=======
 // ── Category emoji helpers ────────────────────────────────────────────────────
 const CATEGORY_EMOJI = {
   music: "🎵",
@@ -91,7 +87,6 @@ export default function FeaturedEvents({
   searchQuery = "",
   selectedCategories = [],
 }) {
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
   const router = useRouter();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -138,32 +133,11 @@ export default function FeaturedEvents({
     }
   }, [searchQuery, selectedCategories]);
 
-<<<<<<< HEAD
-  const filteredEvents = events.filter((e) => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      e.title.toLowerCase().includes(q) ||
-      e.category.toLowerCase().includes(q) ||
-      (e.venue && e.venue.toLowerCase().includes(q)) ||
-      (e.organizer && e.organizer.toLowerCase().includes(q))
-    );
-  });
-
-  const categoryData = {
-    music: ["Concert Night", "DJ Party", "Live Band"],
-    comedy: ["Standup Special", "Improv Night"],
-    drama: ["Stage Play", "Classic Theatre"],
-    dance: ["Hip Hop Battle", "Dance Fest"],
-    games: ["Esports Tournament", "Arcade Challenge"],
-  };
-=======
   // Debounce re-fetch on search/category changes
   useEffect(() => {
     const timer = setTimeout(fetchEvents, 300);
     return () => clearTimeout(timer);
   }, [fetchEvents]);
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
 
   return (
     <div className="px-6 py-10 bg-neutral-950 text-white" style={{ minHeight: events.length === 0 && !loading ? "50vh" : undefined }}>
@@ -210,89 +184,11 @@ export default function FeaturedEvents({
 
       {/* ── Grid ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-<<<<<<< HEAD
-        {filteredEvents.map((event, i) => (
-          <div
-            key={i}
-            onClick={async () => {
-              try {
-                await fetch("/api/redis", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ key: "selectedEvent", value: event }),
-                });
-              } catch (e) {
-                console.error(e);
-              }
-              router.push(`/event-details/${encodeURIComponent(event.title)}`);
-            }}
-            className="group relative rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-orange-500/40 transition duration-300"
-          >
-            {/* IMAGE */}
-            <div className="relative h-72 w-full">
-              <Image
-                src={event.image}
-                alt={event.title}
-                fill
-                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className="object-cover group-hover:scale-110 transition duration-500"
-              />
-            </div>
-
-            {/* GRADIENT */}
-            <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-            {/* CONTENT */}
-            <div className="absolute bottom-0 p-4 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              {/* Rating */}
-              <div className="flex justify-between items-center mb-1">
-                <span className="bg-gradient-to-r from-orange-500 to-rose-500 text-xs px-2 py-1 rounded">
-                  ⭐ {event.rating}
-                </span>
-                <span className="text-xs bg-white/20 px-2 py-1 rounded backdrop-blur">
-                  {event.category}
-                </span>
-              </div>
-
-              <h3 className="text-lg font-semibold">{event.title}</h3>
-
-              <p className="text-xs text-gray-300">📍 {event.venue}</p>
-
-              <p className="text-xs text-gray-300">
-                📅 {event.date} • ⏰ {event.time}
-              </p>
-
-              {/* BOOK BUTTON */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onBookEvent(event);
-                }}
-                className="mt-3 w-full bg-gradient-to-r from-orange-500 to-rose-500 py-2 rounded-lg flex items-center justify-center gap-2 font-semibold text-white cursor-pointer relative z-10"
-              >
-                <Ticket size={16} /> Book Now
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* CATEGORY SECTION */}
-      {selectedCategory && (
-        <div className="mt-14">
-          <h2 className="text-2xl font-bold mb-6 capitalize">
-            {selectedCategory} Shows
-          </h2>
-
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {categoryData[selectedCategory].map((show, i) => (
-=======
         {loading
           ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
           : events.length === 0
           ? <EmptyState searchQuery={searchQuery} />
           : events.map((event, i) => (
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
               <div
                 key={event.id ?? i}
                 onClick={async () => {
