@@ -34,7 +34,7 @@ export async function POST(request) {
     }
 
     const userInfo = await response.json();
-    const { email, name } = userInfo;
+    const { email, name, picture } = userInfo;
 
     if (!email) {
       return NextResponse.json(
@@ -48,24 +48,32 @@ export async function POST(request) {
     // ── Step 2: Query database with raw Neon SQL ───────────────────────────
     const sql = neon(DB_URL);
     const existing = await sql`
-      SELECT id, name, email FROM users WHERE email = ${emailLower} LIMIT 1
+      SELECT id, name, email, auth_method, avatar_url FROM users WHERE email = ${emailLower} LIMIT 1
     `;
 
     let user = existing[0];
     let isNewUser = false;
 
-    // ── Step 3: Register new user if not already in DB ─────────────────────
+    // ── Step 3: Register or update user in DB ──────────────────────────────
     if (!user) {
       const derivedName = name || emailLower.split("@")[0];
       const inserted = await sql`
-        INSERT INTO users (name, email)
-        VALUES (${derivedName}, ${emailLower})
-        RETURNING id, name, email
+        INSERT INTO users (name, email, auth_method, avatar_url)
+        VALUES (${derivedName}, ${emailLower}, 'google', ${picture || null})
+        RETURNING id, name, email, auth_method, avatar_url
       `;
       user = inserted[0];
       isNewUser = true;
       console.log(`[AUTH-GOOGLE] Registered new Google user: ${emailLower} (id: ${user.id})`);
     } else {
+      // Update existing user with latest Google info
+      const updated = await sql`
+        UPDATE users
+        SET avatar_url = ${picture || user.avatar_url || null}, auth_method = 'google'
+        WHERE id = ${user.id}
+        RETURNING id, name, email, auth_method, avatar_url
+      `;
+      user = updated[0];
       console.log(`[AUTH-GOOGLE] Signed in existing Google user: ${emailLower} (id: ${user.id})`);
     }
 
@@ -76,6 +84,8 @@ export async function POST(request) {
         id: user.id,
         name: user.name,
         email: user.email,
+        picture: user.avatar_url || null,
+        authMethod: user.auth_method,
       },
     });
 

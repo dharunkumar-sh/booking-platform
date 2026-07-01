@@ -2,44 +2,49 @@
 import "leaflet/dist/leaflet.css";
 import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
 import { Ticket } from "lucide-react";
+import L from "leaflet";
+
+const customMarkerIcon = typeof window !== "undefined" ? new L.Icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+}) : null;
 
 export default function EventMap({ searchQuery = "", onBookEvent = () => {} }) {
   const [userLocation, setUserLocation] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const events = [
-    {
-      id: 1,
-      title: "Vijay Antony Concert",
-      venue: "YMCA Stadium Chennai",
-      price: "₹499",
-      image:
-        "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800",
-      lat: 13.042,
-      lng: 80.233,
-    },
-    {
-      id: 2,
-      title: "AR Rahman Live",
-      venue: "Nehru Indoor Arena Chennai",
-      price: "₹999",
-      image:
-        "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800",
-      lat: 13.065,
-      lng: 80.248,
-    },
-    {
-      id: 3,
-      title: "Coolie",
-      venue: "PVR Palazzo Theatre Chennai",
-      price: "₹190",
-      image:
-        "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800",
-      lat: 13.087,
-      lng: 80.278,
-    },
-  ];
+  useEffect(() => {
+    async function loadEvents() {
+      try {
+        const res = await fetch("/api/events");
+        const data = await res.json();
+        if (data.success && data.events) {
+          const mapped = data.events.map((e) => ({
+            id: e.id,
+            title: e.title,
+            venue: e.location,
+            price: e.price != null ? `₹${Math.round(e.price / 100)}` : "₹0",
+            image: e.image || "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800",
+            lat: e.latitude || 13.0827,
+            lng: e.longitude || 80.2707,
+          }));
+          setEvents(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to load events for map:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadEvents();
+  }, []);
 
   const filteredEvents = events.filter((e) => {
     if (!searchQuery) return true;
@@ -84,182 +89,62 @@ export default function EventMap({ searchQuery = "", onBookEvent = () => {} }) {
         color: "white",
       }}
     >
-      <h1
-        style={{
-          fontSize: "32px",
-          fontWeight: 700,
-          marginBottom: "32px",
-          background: "linear-gradient(90deg, #f97316, #ff5862)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-        }}
-      >
-        Nearby Events
-      </h1>
-
-      <div className="flex flex-col lg:flex-row gap-6 w-full overflow-hidden">
-        {/* Sidebar */}
-        <div
-          className="w-full lg:w-1/3 shrink-0 no-scrollbar"
+      <div className="max-w-7xl mx-auto w-full">
+        <h1
           style={{
-            background: "rgba(255,255,255,0.05)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            padding: "20px",
-            borderRadius: "16px",
-            maxHeight: "640px",
-            overflowY: "auto",
+            fontSize: "32px",
+            fontWeight: 700,
+            marginBottom: "32px",
+            background: "linear-gradient(90deg, #f97316, #ff5862)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
           }}
         >
-          <h2
+          Nearby Events
+        </h1>
+
+        <div className="w-full flex justify-center">
+          {/* Map */}
+          <div
             style={{
-              fontSize: "18px",
-              fontWeight: 600,
-              marginBottom: "20px",
-              color: "white",
+              background: "rgba(255,255,255,0.05)",
+              backdropFilter: "blur(12px)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: "16px",
+              padding: "20px",
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
             }}
           >
+<<<<<<< HEAD
             Events
           </h2>
 
           {filteredEvents.map((event) => (
             <div
               key={event.id}
+=======
+            <MapContainer
+              center={[13.0827, 80.2707]}
+              zoom={11}
+              attributionControl={false}
+>>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
               style={{
-                background: "rgba(255,255,255,0.06)",
-                backdropFilter: "blur(8px)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                padding: "16px",
+                height: "600px",
+                width: "100%",
                 borderRadius: "12px",
-                marginBottom: "12px",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "rgba(249,115,22,0.3)";
-                e.currentTarget.style.boxShadow =
-                  "0 8px 32px rgba(249,115,22,0.15)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-                e.currentTarget.style.boxShadow = "none";
+                margin: "0 auto",
               }}
             >
-              <h3
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
-                  marginBottom: "8px",
-                  color: "white",
-                }}
-              >
-                {event.title}
-              </h3>
-
-              <p
-                style={{
-                  fontSize: "13px",
-                  color: "#a1a1aa",
-                  marginBottom: "4px",
-                }}
-              >
-                📍 {event.venue}
-              </p>
-
-              <p
-                style={{
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  color: "#fb923c",
-                  marginBottom: "8px",
-                }}
-              >
-                🎟 {event.price}
-              </p>
-
-              {userLocation && (
-                <p
-                  style={{
-                    fontSize: "13px",
-                    color: "#a1a1aa",
-                    marginBottom: "12px",
-                  }}
-                >
-                  📏 {calculateDistance(userLocation.lat, userLocation.lng, event.lat, event.lng)} km
-                </p>
-              )}
-
-              <button
-                onClick={() => onBookEvent({
-                  title: event.title,
-                  venue: event.venue,
-                  priceVal: parseInt(event.price.replace("₹", ""))
-                })}
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  background: "linear-gradient(90deg, #f97316, #ff5862)",
-                  border: "none",
-                  borderRadius: "10px",
-                  color: "white",
-                  fontSize: "14px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  boxShadow: "0 4px 15px rgba(249,115,22,0.3)",
-                  transition: "all 0.2s ease",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = "0.9";
-                  e.currentTarget.style.transform = "scale(1.02)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = "1";
-                  e.currentTarget.style.transform = "scale(1)";
-                }}
-                onMouseDown={(e) => {
-                  e.currentTarget.style.transform = "scale(0.98)";
-                }}
-                onMouseUp={(e) => {
-                  e.currentTarget.style.transform = "scale(1)";
-                }}
-              >
-                <Ticket size={16} /> Book Now
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {/* Map */}
-        <div
-          className="w-full lg:w-2/3 grow"
-          style={{
-            background: "rgba(255,255,255,0.05)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: "16px",
-            padding: "20px",
-          }}
-        >
-          <MapContainer
-            center={[13.0827, 80.2707]}
-            zoom={11}
-            attributionControl={false}
-            style={{
-              height: "600px",
-              width: "100%",
-              borderRadius: "12px",
-            }}
-          >
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
               attribution='&copy; <a href="https://carto.com/">CARTO</a>'
             />
 
-            {userLocation && (
-              <Marker position={[userLocation.lat, userLocation.lng]}>
+            {userLocation && customMarkerIcon && (
+              <Marker position={[userLocation.lat, userLocation.lng]} icon={customMarkerIcon}>
                 <Popup>
                   <div style={{ fontWeight: 600 }}>
                     📍 Your Current Location
@@ -268,6 +153,7 @@ export default function EventMap({ searchQuery = "", onBookEvent = () => {} }) {
               </Marker>
             )}
 
+<<<<<<< HEAD
             {filteredEvents.map((event) => (
               <Marker key={event.id} position={[event.lat, event.lng]}>
                 <Popup>
@@ -281,91 +167,109 @@ export default function EventMap({ searchQuery = "", onBookEvent = () => {} }) {
                     <img
                       src={event.image}
                       alt={event.title}
+=======
+            {events.map((event) => (
+              customMarkerIcon && (
+                <Marker key={event.id} position={[event.lat, event.lng]} icon={customMarkerIcon}>
+                  <Popup>
+                    <div
+>>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
                       style={{
-                        width: "100%",
-                        height: "120px",
-                        objectFit: "cover",
-                        borderRadius: "10px",
-                        marginBottom: "10px",
-                      }}
-                    />
-
-                    <h3
-                      style={{
-                        fontSize: "15px",
-                        fontWeight: 700,
-                        margin: "0 0 6px",
-                        color: "#1a1a2e",
+                        width: "220px",
+                        textAlign: "center",
+                        fontFamily: "Inter, sans-serif",
                       }}
                     >
-                      {event.title}
-                    </h3>
+                      <img
+                        src={event.image}
+                        alt={event.title}
+                        style={{
+                          width: "100%",
+                          height: "120px",
+                          objectFit: "cover",
+                          borderRadius: "10px",
+                          marginBottom: "10px",
+                        }}
+                      />
 
-                    <p
-                      style={{
-                        fontSize: "12px",
-                        color: "#64748b",
-                        margin: "0 0 4px",
-                      }}
-                    >
-                      📍 {event.venue}
-                    </p>
+                      <h3
+                        style={{
+                          fontSize: "15px",
+                          fontWeight: 700,
+                          margin: "0 0 6px",
+                          color: "#1a1a2e",
+                        }}
+                      >
+                        {event.title}
+                      </h3>
 
-                    <p
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: 700,
-                        color: "#f97316",
-                        margin: "0 0 6px",
-                      }}
-                    >
-                      🎟 {event.price}
-                    </p>
-
-                    {userLocation && (
                       <p
                         style={{
                           fontSize: "12px",
                           color: "#64748b",
-                          margin: "0 0 10px",
+                          margin: "0 0 4px",
                         }}
                       >
-                        📏 {calculateDistance(userLocation.lat, userLocation.lng, event.lat, event.lng)} km away
+                        📍 {event.venue}
                       </p>
-                    )}
 
-                    <button
-                      onClick={() => onBookEvent({
-                        title: event.title,
-                        venue: event.venue,
-                        priceVal: parseInt(event.price.replace("₹", ""))
-                      })}
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        background: "linear-gradient(90deg, #f97316, #ff5862)",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "8px",
-                        fontSize: "13px",
-                        fontWeight: 600,
-                        cursor: "pointer",
-                        boxShadow: "0 4px 12px rgba(249,115,22,0.3)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "6px",
-                      }}
-                    >
-                      <Ticket size={15} /> Book Tickets
-                    </button>
-                  </div>
-                </Popup>
-              </Marker>
+                      <p
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: 700,
+                          color: "#f97316",
+                          margin: "0 0 6px",
+                        }}
+                      >
+                        🎟 {event.price}
+                      </p>
+
+                      {userLocation && (
+                        <p
+                          style={{
+                            fontSize: "12px",
+                            color: "#64748b",
+                            margin: "0 0 10px",
+                          }}
+                        >
+                          📏 {calculateDistance(userLocation.lat, userLocation.lng, event.lat, event.lng)} km away
+                        </p>
+                      )}
+
+                      <button
+                        onClick={() => onBookEvent({
+                          title: event.title,
+                          venue: event.venue,
+                          priceVal: parseInt(event.price.replace("₹", ""))
+                        })}
+                        style={{
+                          width: "100%",
+                          padding: "10px",
+                          background: "linear-gradient(90deg, #f97316, #ff5862)",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "8px",
+                          fontSize: "13px",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          boxShadow: "0 4px 12px rgba(249,115,22,0.3)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "6px",
+                        }}
+                      >
+                        <Ticket size={15} /> Book Tickets
+                      </button>
+                    </div>
+                  </Popup>
+                </Marker>
+              )
             ))}
           </MapContainer>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
   );
 }

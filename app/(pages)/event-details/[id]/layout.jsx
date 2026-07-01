@@ -6,14 +6,17 @@ const EventDetailsLayout = ({ children }) => {
   const params = useParams();
 
   useEffect(() => {
-    fetch(`/api/redis?key=selectedEvent`)
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.data?.title) {
-          document.title = `${res.data.title} - VibePass`;
+    try {
+      const data = localStorage.getItem("selectedEvent");
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (parsed?.title) {
+          document.title = `${parsed.title} - VibePass`;
         }
-      })
-      .catch((e) => console.error(e));
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }, [params.id]);
 
   return <>{children}</>;

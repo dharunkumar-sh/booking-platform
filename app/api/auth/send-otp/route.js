@@ -4,7 +4,7 @@ import nodemailer from "nodemailer";
 
 // ---------------------------------------------------------------------------
 // In-memory OTP store (persists across hot-reloads in dev via global)
-// In production, replace this with Redis + TTL keys.
+// In production, replace this with a distributed store + TTL keys.
 // ---------------------------------------------------------------------------
 if (!global.otpStore) {
   global.otpStore = new Map();

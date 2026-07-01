@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import MovieSeatMap from "@/app/seat-booking/components/MovieSeatMap";
-import ArenaSeatMap from "@/app/seat-booking/components/ArenaSeatMap";
-import OpenSpaceSeatMap from "@/app/seat-booking/components/OpenSpaceSeatMap";
-import StadiumSeatMap from "@/app/seat-booking/components/StadiumSeatMap";
-import "@/app/seat-booking/seat-booking.css";
+import MovieSeatMap from "@/app/(pages)/seat-booking/components/MovieSeatMap";
+import ArenaSeatMap from "@/app/(pages)/seat-booking/components/ArenaSeatMap";
+import OpenSpaceSeatMap from "@/app/(pages)/seat-booking/components/OpenSpaceSeatMap";
+import StadiumSeatMap from "@/app/(pages)/seat-booking/components/StadiumSeatMap";
+import "@/app/(pages)/seat-booking/seat-booking.css";
 
 const LEGENDS = {
   theatre: [

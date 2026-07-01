@@ -15,14 +15,14 @@ export default function UserForm() {
 
   useEffect(() => {
     // Load pending booking details to show summary
-    fetch("/api/redis?key=pendingBooking")
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.data) {
-          setBookingDetails(res.data);
-        }
-      })
-      .catch((e) => console.error(e));
+    try {
+      const data = localStorage.getItem("pendingBooking");
+      if (data) {
+        setBookingDetails(JSON.parse(data));
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }, []);
 
   const handleChange = (e) => {
@@ -75,20 +75,15 @@ export default function UserForm() {
           finalUserPayload.userId = dbData.userId;
         }
 
-        // 2. Sync to Redis/fallback store
-        await fetch("/api/redis", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key: "bookingUser", value: finalUserPayload }),
-        });
-        
-        if (bookingDetails) {
-          const updatedBooking = { ...bookingDetails, user: finalUserPayload };
-          await fetch("/api/redis", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ key: "pendingBooking", value: updatedBooking }),
-          });
+        // 2. Sync to store
+        try {
+          localStorage.setItem("bookingUser", JSON.stringify(finalUserPayload));
+          if (bookingDetails) {
+            const updatedBooking = { ...bookingDetails, user: finalUserPayload };
+            localStorage.setItem("pendingBooking", JSON.stringify(updatedBooking));
+          }
+        } catch (e) {
+          console.error("Error storing booking details locally:", e);
         }
       } catch (e) {
         console.error("Error storing booking details:", e);

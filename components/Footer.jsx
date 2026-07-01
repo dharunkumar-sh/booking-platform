@@ -4,15 +4,8 @@ import React, { useState } from "react";
 import Image from "next/image";
 import {
   MapPin,
-  Gift,
-  Users,
   Mail,
   Phone,
-  Smartphone,
-  Globe,
-  Share2,
-  Radio,
-  X,
   Sparkles,
 } from "lucide-react";
 
@@ -52,12 +45,6 @@ const footerLinks = [
   },
 ];
 
-const socialLinks = [
-  { label: "Instagram", href: "https://instagram.com", icon: Share2 },
-  { label: "Facebook", href: "https://facebook.com", icon: Globe },
-  { label: "X", href: "https://x.com", icon: X },
-  { label: "YouTube", href: "https://youtube.com", icon: Radio },
-];
 
 const appLinks = [
   { label: "iPhone", href: "/download/ios" },
@@ -129,22 +116,6 @@ const Footer = () => {
                 <MapPin size={16} className="text-orange-500" />
                 Chennai, India
               </div>
-            </div>
-
-            <div className="mt-7 flex flex-wrap gap-3">
-              {socialLinks.map((social) => {
-                const Icon = social.icon;
-                return (
-                  <a
-                    key={social.label}
-                    href={social.href}
-                    aria-label={social.label}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-300 transition hover:-translate-y-0.5 hover:border-orange-500/50 hover:bg-neutral-800 hover:text-orange-400"
-                  >
-                    <Icon size={18} />
-                  </a>
-                );
-              })}
             </div>
           </div>
 
@@ -220,45 +191,12 @@ const Footer = () => {
           </form>
         </div>
 
-        <div className="mt-10 grid gap-6 border-t border-neutral-800 pt-6 text-sm text-neutral-400 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
-          <div className="flex flex-wrap gap-x-4 gap-y-2">
-            <a href="/privacy" className="transition hover:text-white">
-              Privacy Policy
-            </a>
-            <a href="/terms" className="transition hover:text-white">
-              Terms of Service
-            </a>
-            <a href="/cookies" className="transition hover:text-white">
-              Cookie Policy
-            </a>
-          </div>
-
-          <p className="text-center">
-            © {new Date().getFullYear()} VibePass. All rights reserved.
-          </p>
-
-          <div className="flex flex-wrap justify-end gap-x-4 gap-y-2">
-            <a
-              href="/download"
-              className="inline-flex items-center gap-2 transition hover:text-white"
-            >
-              <Smartphone size={16} />
-              App
-            </a>
-            <a
-              href="/gift-cards"
-              className="inline-flex items-center gap-2 transition hover:text-white"
-            >
-              <Gift size={16} />
-              Gift Cards
-            </a>
-            <a
-              href="/loyalty"
-              className="inline-flex items-center gap-2 transition hover:text-white"
-            >
-              <Users size={16} />
-              Loyalty
-            </a>
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-neutral-800/80 pt-8 text-xs text-neutral-500 sm:flex-row">
+          <p>© {new Date().getFullYear()} VibePass Technologies Inc. All rights reserved.</p>
+          <div className="flex flex-wrap gap-6">
+            <a href="/privacy" className="transition hover:text-neutral-300">Privacy Policy</a>
+            <a href="/terms" className="transition hover:text-neutral-300">Terms of Service</a>
+            <a href="/cookies" className="transition hover:text-neutral-300">Cookie Policy</a>
           </div>
         </div>
       </div>

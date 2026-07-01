@@ -10,27 +10,20 @@ export default function TicketsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/redis?key=confirmedBookings")
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.data) {
-          setConfirmedBookings(res.data);
-        }
-        setIsLoading(false);
-      })
-      .catch((e) => {
-        console.error(e);
-        setIsLoading(false);
-      });
+    try {
+      const data = localStorage.getItem("confirmedBookings");
+      if (data) {
+        setConfirmedBookings(JSON.parse(data));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setIsLoading(false);
   }, []);
 
   const handleBookNew = async (ticketDetails) => {
     try {
-      await fetch("/api/redis", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: "pendingBooking", value: ticketDetails }),
-      });
+      localStorage.setItem("pendingBooking", JSON.stringify(ticketDetails));
     } catch (e) {
       console.error(e);
     }

@@ -1,163 +1,174 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { Ticket } from "lucide-react";
 
+<<<<<<< HEAD
 export default function TrendingEvents({ searchQuery = "", onBookEvent = () => {} }) {
+=======
+// ── Category emoji helpers ────────────────────────────────────────────────────
+const CATEGORY_EMOJI = {
+  music: "🎵",
+  comedy: "😂",
+  drama: "🎭",
+  dance: "💃",
+  games: "🎮",
+  sports: "🏆",
+  food: "🍔",
+  movie: "🎬",
+  default: "✨",
+};
+
+function getCategoryEmoji(cat) {
+  return CATEGORY_EMOJI[(cat || "").toLowerCase()] || CATEGORY_EMOJI.default;
+}
+
+// ── Format price from integer paise (e.g. 149900 → ₹1499.00) ────────────────
+function formatPrice(price) {
+  if (price == null) return "";
+  if (typeof price === "string" && price.startsWith("₹")) return price;
+  const num = Number(price);
+  if (isNaN(num)) return String(price);
+  return `₹${(num / 100).toFixed(2)}`;
+}
+
+// ── Format date ───────────────────────────────────────────────────────────────
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  try {
+    return new Date(dateStr).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
+// ── Skeleton card for the slider ──────────────────────────────────────────────
+function SkeletonCard() {
+  return (
+    <div
+      style={{
+        minWidth: "330px",
+        borderRadius: "24px",
+        overflow: "hidden",
+        background: "rgba(255,255,255,0.05)",
+        border: "1px solid rgba(255,255,255,0.08)",
+      }}
+    >
+      <div
+        style={{ height: "220px", background: "rgba(255,255,255,0.09)" }}
+        className="animate-pulse"
+      />
+      <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div className="animate-pulse" style={{ height: "14px", width: "70%", borderRadius: "6px", background: "rgba(255,255,255,0.1)" }} />
+        <div className="animate-pulse" style={{ height: "10px", width: "50%", borderRadius: "6px", background: "rgba(255,255,255,0.07)" }} />
+        <div className="animate-pulse" style={{ height: "10px", width: "60%", borderRadius: "6px", background: "rgba(255,255,255,0.07)" }} />
+        <div className="animate-pulse" style={{ height: "40px", borderRadius: "10px", background: "rgba(249,115,22,0.25)", marginTop: "6px" }} />
+      </div>
+    </div>
+  );
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+function EmptyState({ searchQuery }) {
+  return (
+    <div
+      style={{
+        minWidth: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "60px 20px",
+        textAlign: "center",
+        gap: "12px",
+        color: "white",
+      }}
+    >
+      <span style={{ fontSize: "52px" }}>🔍</span>
+      <h3 style={{ fontSize: "20px", fontWeight: "bold" }}>No trending events found</h3>
+      <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)", maxWidth: "300px" }}>
+        {searchQuery
+          ? `No results for "${searchQuery}". Try a different search.`
+          : "Stay tuned — trending events will appear here soon!"}
+      </p>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function TrendingEvents({
+  onBookEvent = () => {},
+  searchQuery = "",
+  selectedCategories = [],
+}) {
+>>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
   const sliderRef = useRef(null);
   const [likedEvents, setLikedEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   const toggleLike = (id) => {
-    if (likedEvents.includes(id)) {
-      setLikedEvents(likedEvents.filter((item) => item !== id));
-    } else {
-      setLikedEvents([...likedEvents, id]);
+    setLikedEvents((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const scrollLeft = () => sliderRef.current?.scrollBy({ left: -350, behavior: "smooth" });
+  const scrollRight = () => sliderRef.current?.scrollBy({ left: 350, behavior: "smooth" });
+
+  // ── Fetch events from /api/events ─────────────────────────────────────────
+  const fetchEvents = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ type: "trending" });
+      if (selectedCategories.length === 1) {
+        params.set("category", selectedCategories[0]);
+      }
+
+      const res = await fetch(`/api/events?${params.toString()}`);
+      const data = await res.json();
+      if (data.success) {
+        let rows = data.events || [];
+
+        if (selectedCategories.length > 1) {
+          rows = rows.filter((e) =>
+            selectedCategories.includes((e.category || "").toLowerCase())
+          );
+        }
+
+        if (searchQuery.trim()) {
+          const q = searchQuery.trim().toLowerCase();
+          rows = rows.filter(
+            (e) =>
+              (e.title || "").toLowerCase().includes(q) ||
+              (e.category || "").toLowerCase().includes(q) ||
+              (e.location || "").toLowerCase().includes(q) ||
+              (e.organizer || "").toLowerCase().includes(q)
+          );
+        }
+
+        setEvents(rows);
+      }
+    } catch (err) {
+      console.error("[TrendingEvents] fetch error:", err);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [searchQuery, selectedCategories]);
 
-  const scrollLeft = () => {
-    sliderRef.current?.scrollBy({
-      left: -350,
-      behavior: "smooth",
-    });
-  };
-
-  const scrollRight = () => {
-    sliderRef.current?.scrollBy({
-      left: 350,
-      behavior: "smooth",
-    });
-  };
-
-  const events = [
-    {
-      id: 1,
-      title: "Coolie",
-      category: "movie",
-      image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800",
-      date: "Now Showing",
-      time: "Various Timings",
-      location: "PVR Palazzo Theatre Chennai",
-      rating: "4.9",
-      description: "An action-packed blockbuster featuring stunning visuals, intense drama, and a gripping storyline that will keep you on the edge of your seat.",
-      price: "₹350.00",
-      organizer: "Sun Pictures",
-      features: ["Dolby Atmos", "Recliner Seats", "Free Popcorn Combo"],
-      crew: [
-        { name: "Lokesh Kanagaraj", role: "Director", img: "https://ui-avatars.com/api/?name=Lokesh+Kanagaraj&background=random&size=200" },
-        { name: "Rajinikanth", role: "Lead Actor", img: "https://ui-avatars.com/api/?name=Rajinikanth&background=random&size=200" }
-      ],
-      reviews: [
-        { name: "Ashwin", rating: 5, comment: "Pure mass! The BGM is lit." }
-      ]
-    },
-    {
-      id: 2,
-      title: "Vijay Antony Live Concert",
-      category: "music",
-      image: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800",
-      date: "20 Jun 2026",
-      time: "6:30 PM",
-      location: "YMCA Stadium Chennai",
-      rating: "4.8",
-      description: "Experience the musical genius of Vijay Antony in a spectacular live show featuring all his greatest hits.",
-      price: "₹1499.00",
-      organizer: "Fatima Vijay Antony",
-      features: ["VIP Seating", "Food Stalls", "Merchandise"],
-      crew: [
-        { name: "Vijay Antony", role: "Artist", img: "https://ui-avatars.com/api/?name=Vijay+Antony&background=random&size=200" }
-      ],
-      reviews: [
-        { name: "Ram", rating: 5, comment: "Amazing vibes. Loved the classical fusion." }
-      ]
-    },
-    {
-      id: 3,
-      title: "AR Rahman Live",
-      category: "music",
-      image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800",
-      date: "22 Jun 2026",
-      time: "7:00 PM",
-      location: "Nehru Indoor Arena Chennai",
-      rating: "4.9",
-      description: "The Mozart of Madras returns with a magical symphony of his most iconic soundtracks, accompanied by a 50-piece orchestra.",
-      price: "₹3499.00",
-      organizer: "KM Music",
-      features: ["Premium Acoustics", "Meet & Greet (VIP)", "Signed Merch"],
-      crew: [
-        { name: "A.R. Rahman", role: "Composer", img: "https://ui-avatars.com/api/?name=A+R+Rahman&background=random&size=200" },
-        { name: "Shreya Ghoshal", role: "Singer", img: "https://ui-avatars.com/api/?name=Shreya+Ghoshal&background=random&size=200" }
-      ],
-      reviews: [
-        { name: "Nisha", rating: 5, comment: "It felt heavenly! Literal goosebumps." }
-      ]
-    },
-    {
-      id: 4,
-      title: "CSK Fan Festival",
-      category: "sports",
-      image: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800",
-      date: "25 Jun 2026",
-      time: "4:00 PM",
-      location: "Chepauk Stadium Chennai",
-      rating: "4.8",
-      description: "Join the yellow army for an exclusive fan festival! Meet the players, enjoy live music, and get access to exclusive merchandise.",
-      price: "₹999.00",
-      organizer: "Chennai Super Kings",
-      features: ["Player Autographs", "Fan Zone Access", "Jersey Giveaway"],
-      crew: [
-        { name: "MS Dhoni", role: "Captain", img: "https://ui-avatars.com/api/?name=MS+Dhoni&background=random&size=200" },
-        { name: "Ruturaj Gaikwad", role: "Player", img: "https://ui-avatars.com/api/?name=Ruturaj+Gaikwad&background=random&size=200" }
-      ],
-      reviews: [
-        { name: "Kiran", rating: 5, comment: "Whistle Podu! Best day ever." }
-      ]
-    },
-    {
-      id: 5,
-      title: "Comedy Night Chennai",
-      category: "comedy",
-      image: "https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800",
-      date: "28 Jun 2026",
-      time: "8:00 PM",
-      location: "Kodambakkam Hall Chennai",
-      rating: "4.7",
-      description: "An evening of endless laughter featuring the city's best local comics and a surprise guest performer.",
-      price: "₹599.00",
-      organizer: "Madras Comedy Club",
-      features: ["Free Drink", "VIP Sofa Seating", "After-party"],
-      crew: [
-        { name: "Aravind SA", role: "Comedian", img: "https://ui-avatars.com/api/?name=Aravind+SA&background=random&size=200" }
-      ],
-      reviews: [
-        { name: "Sneha", rating: 4, comment: "Really funny, great crowd work!" }
-      ]
-    },
-    {
-      id: 6,
-      title: "Food Festival",
-      category: "food",
-      image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800",
-      date: "30 Jun 2026",
-      time: "11:00 AM",
-      location: "Island Grounds Arena Chennai",
-      rating: "4.8",
-      description: "A culinary journey exploring street food and gourmet cuisines from all over the world. Taste the best dishes from top chefs.",
-      price: "₹299.00",
-      organizer: "Foodie Nation",
-      features: ["Tasting Sessions", "Live Cooking Demos", "Chef Meet & Greet"],
-      crew: [
-        { name: "Chef Damu", role: "Head Chef", img: "https://ui-avatars.com/api/?name=Chef+Damu&background=random&size=200" }
-      ],
-      reviews: [
-        { name: "Ravi", rating: 5, comment: "The biryani stall was amazing." }
-      ]
-    }
-  ];
+  useEffect(() => {
+    const timer = setTimeout(fetchEvents, 300);
+    return () => clearTimeout(timer);
+  }, [fetchEvents]);
 
   const filteredEvents = events.filter((e) => {
     if (!searchQuery) return true;
@@ -173,11 +184,9 @@ export default function TrendingEvents({ searchQuery = "", onBookEvent = () => {
   return (
     <section
       className="bg-neutral-950"
-      style={{
-        padding: "60px 40px",
-        position: "relative",
-      }}
+      style={{ padding: "60px 40px", position: "relative" }}
     >
+      {/* ── Title ── */}
       <h1
         style={{
           fontSize: "36px",
@@ -192,54 +201,58 @@ export default function TrendingEvents({ searchQuery = "", onBookEvent = () => {
         Trending Events
       </h1>
 
-      {/* Left Arrow */}
-      <button
-        onClick={scrollLeft}
-        style={{
-          position: "absolute",
-          left: "10px",
-          top: "55%",
-          transform: "translateY(-50%)",
-          width: "60px",
-          height: "60px",
-          borderRadius: "50%",
-          border: "none",
-          background: "#1E293B",
-          color: "white",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          zIndex: 10,
-        }}
-      >
-        <FaChevronLeft size={20} />
-      </button>
+      {/* ── Arrow buttons ── */}
+      {!loading && events.length > 0 && (
+        <>
+          <button
+            onClick={scrollLeft}
+            style={{
+              position: "absolute",
+              left: "10px",
+              top: "55%",
+              transform: "translateY(-50%)",
+              width: "60px",
+              height: "60px",
+              borderRadius: "50%",
+              border: "none",
+              background: "#1E293B",
+              color: "white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              zIndex: 10,
+            }}
+          >
+            <FaChevronLeft size={20} />
+          </button>
 
-      {/* Right Arrow */}
-      <button
-        onClick={scrollRight}
-        style={{
-          position: "absolute",
-          right: "10px",
-          top: "55%",
-          transform: "translateY(-50%)",
-          width: "60px",
-          height: "60px",
-          borderRadius: "50%",
-          border: "none",
-          background: "#1E293B",
-          color: "white",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          zIndex: 10,
-        }}
-      >
-        <FaChevronRight size={20} />
-      </button>
+          <button
+            onClick={scrollRight}
+            style={{
+              position: "absolute",
+              right: "10px",
+              top: "55%",
+              transform: "translateY(-50%)",
+              width: "60px",
+              height: "60px",
+              borderRadius: "50%",
+              border: "none",
+              background: "#1E293B",
+              color: "white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              zIndex: 10,
+            }}
+          >
+            <FaChevronRight size={20} />
+          </button>
+        </>
+      )}
 
+      {/* ── Slider ── */}
       <div
         ref={sliderRef}
         style={{
@@ -250,6 +263,7 @@ export default function TrendingEvents({ searchQuery = "", onBookEvent = () => {
           scrollbarWidth: "none",
         }}
       >
+<<<<<<< HEAD
         {filteredEvents.map((event, index) => (
           <div
             key={event.id}
@@ -309,209 +323,228 @@ export default function TrendingEvents({ searchQuery = "", onBookEvent = () => {
               onClick={(e) => {
                 e.stopPropagation();
                 toggleLike(event.id);
+=======
+        {loading ? (
+          Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
+        ) : events.length === 0 ? (
+          <EmptyState searchQuery={searchQuery} />
+        ) : (
+          events.map((event, index) => (
+            <div
+              key={event.id ?? index}
+              onClick={async () => {
+                try {
+                  localStorage.setItem("selectedEvent", JSON.stringify(event));
+                } catch (e) {
+                  console.error(e);
+                }
+                router.push(`/event-details/${encodeURIComponent(event.title)}`);
+>>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
               }}
               style={{
-                position: "absolute",
-                top: "15px",
-                right: "15px",
-                width: "45px",
-                height: "45px",
-                borderRadius: "50%",
-                border: "none",
-                background: "rgba(255,255,255,0.95)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "20px",
+                minWidth: "330px",
+                background: "rgba(255,255,255,0.08)",
+                backdropFilter: "blur(12px)",
+                borderRadius: "24px",
+                overflow: "hidden",
+                border: "1px solid rgba(255,255,255,0.1)",
+                boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
+                position: "relative",
+                transition: "all 0.3s ease",
                 cursor: "pointer",
               }}
-            >
-              {likedEvents.includes(event.id) ? "❤️" : "🤍"}
-
-              
-            </button>
-
-            <img
-              src={event.image}
-              alt={event.title}
-              style={{
-                width: "100%",
-                height: "220px",
-                objectFit: "cover",
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-10px) scale(1.03)";
               }}
-            />
-
-            <div
-              style={{
-                padding: "20px",
-                color: "white",
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0) scale(1)";
               }}
             >
-              <h2
-                style={{
-                  fontSize: "22px",
-                  fontWeight: "bold",
-                  marginBottom: "15px",
-                }}
-              >
-                {event.title}
-              </h2>
+              {/* Trending badge for first 2 */}
+              {index < 2 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "15px",
+                    left: "15px",
+                    background: "linear-gradient(90deg, #f97316, #ff5862)",
+                    color: "white",
+                    padding: "6px 12px",
+                    borderRadius: "20px",
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                    zIndex: 2,
+                  }}
+                >
+                  🔥 Trending
+                </div>
+              )}
 
-              <p>📅 {event.date}</p>
-              <p>📍 {event.location}</p>
-              <p>⭐ {event.rating}/5</p>
-
+              {/* Heart button */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onBookEvent(event);
+                  toggleLike(event.id);
                 }}
                 style={{
-                  width: "100%",
-                  marginTop: "15px",
-                  padding: "12px",
+                  position: "absolute",
+                  top: "15px",
+                  right: "15px",
+                  width: "45px",
+                  height: "45px",
+                  borderRadius: "50%",
                   border: "none",
-                  borderRadius: "10px",
-                  background: "linear-gradient(90deg, #f97316, #ff5862)",
-                  color: "white",
-                  fontWeight: "bold",
-                  cursor: "pointer",
+                  background: "rgba(255,255,255,0.95)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: "8px",
+                  fontSize: "20px",
+                  cursor: "pointer",
+                  zIndex: 2,
                 }}
               >
-                <Ticket size={16} /> Book Now
+                {likedEvents.includes(event.id) ? "❤️" : "🤍"}
               </button>
+
+              <img
+                src={
+                  event.image ||
+                  "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80"
+                }
+                alt={event.title}
+                style={{ width: "100%", height: "220px", objectFit: "cover" }}
+              />
+
+              <div style={{ padding: "20px", color: "white" }}>
+                {/* Category pill */}
+                <div style={{ marginBottom: "8px" }}>
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      padding: "3px 10px",
+                      borderRadius: "12px",
+                      background: "rgba(249,115,22,0.2)",
+                      border: "1px solid rgba(249,115,22,0.4)",
+                      color: "#f97316",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {getCategoryEmoji(event.category)} {event.category}
+                  </span>
+                </div>
+
+                <h2 style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "12px" }}>
+                  {event.title}
+                </h2>
+
+                <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)", marginBottom: "4px" }}>
+                  📅 {formatDate(event.date)}
+                </p>
+                <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)", marginBottom: "4px" }}>
+                  📍 {event.location}
+                </p>
+                <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)", marginBottom: "4px" }}>
+                  ⭐ {event.rating}/5
+                </p>
+                <p style={{ fontSize: "14px", color: "#f97316", fontWeight: 700, marginTop: "6px" }}>
+                  {formatPrice(event.price)}
+                </p>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onBookEvent(event);
+                  }}
+                  style={{
+                    width: "100%",
+                    marginTop: "15px",
+                    padding: "12px",
+                    border: "none",
+                    borderRadius: "10px",
+                    background: "linear-gradient(90deg, #f97316, #ff5862)",
+                    color: "white",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <Ticket size={16} /> Book Now
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* ── Legacy detail modal (preserved) ── */}
+      {selectedEvent && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0, left: 0,
+            width: "100%", height: "100%",
+            background: "rgba(0,0,0,0.8)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 999,
+          }}
+        >
+          <div
+            style={{
+              width: "800px",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              background: "#fff",
+              borderRadius: "20px",
+              overflow: "hidden",
+            }}
+          >
+            <img
+              src={selectedEvent.image}
+              alt={selectedEvent.title}
+              style={{ width: "100%", height: "350px", objectFit: "cover" }}
+            />
+            <div style={{ padding: "25px" }}>
+              <h1>{selectedEvent.title}</h1>
+              <p><strong>📅 Event Date:</strong> {formatDate(selectedEvent.date)}</p>
+              <p><strong>📍 Venue:</strong> {selectedEvent.location}</p>
+              <p><strong>⭐ Rating:</strong> {selectedEvent.rating}/5</p>
+              <p><strong>🎟 Ticket Price:</strong> {formatPrice(selectedEvent.price)}</p>
+              <p><strong>🕒 Time:</strong> {selectedEvent.time}</p>
+              <p><strong>🎤 About Event:</strong><br />{selectedEvent.description}</p>
+              <div style={{ display: "flex", gap: "15px", marginTop: "25px" }}>
+                <button
+                  onClick={() => {
+                    onBookEvent(selectedEvent);
+                    setSelectedEvent(null);
+                  }}
+                  style={{
+                    flex: 1, padding: "14px", border: "none",
+                    borderRadius: "10px",
+                    background: "linear-gradient(90deg, #f97316, #ff5862)",
+                    color: "white", fontWeight: "bold", cursor: "pointer",
+                  }}
+                >
+                  Select Seats
+                </button>
+                <button
+                  onClick={() => setSelectedEvent(null)}
+                  style={{
+                    flex: 1, padding: "14px", border: "none",
+                    borderRadius: "10px", background: "#E5E7EB", cursor: "pointer",
+                  }}
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
-        ))}
-      </div>
-
-
-
-      {selectedEvent && (
-  <div
-    style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100%",
-      height: "100%",
-      background: "rgba(0,0,0,0.8)",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      zIndex: 999,
-    }}
-  >
-    <div
-      style={{
-        width: "800px",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        background: "#fff",
-        borderRadius: "20px",
-        overflow: "hidden",
-      }}
-    >
-      <img
-        src={selectedEvent.image}
-        alt={selectedEvent.title}
-        style={{
-          width: "100%",
-          height: "350px",
-          objectFit: "cover",
-        }}
-      />
-
-      <div style={{ padding: "25px" }}>
-        <h1>{selectedEvent.title}</h1>
-
-        <p>
-          <strong>📅 Event Date:</strong> {selectedEvent.date}
-        </p>
-
-        <p>
-          <strong>📍 Venue:</strong> {selectedEvent.location}
-        </p>
-
-        <p>
-          <strong>⭐ Rating:</strong> {selectedEvent.rating}/5
-        </p>
-
-        <p>
-          <strong>🎟 Ticket Price:</strong> ₹499 onwards
-        </p>
-
-        <p>
-          <strong>🕒 Time:</strong> 7:00 PM
-        </p>
-
-        <p>
-          <strong>🎤 About Event:</strong>
-          <br />
-          Experience an unforgettable evening filled with music,
-          entertainment, and live performances.
-        </p>
-
-        <h3 style={{ marginTop: "20px" }}>
-          Available Show Timings
-        </h3>
-
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            marginTop: "10px",
-          }}
-        >
-          <button>11:00 AM</button>
-          <button>3:00 PM</button>
-          <button>7:00 PM</button>
         </div>
-
-        <div
-          style={{
-            display: "flex",
-            gap: "15px",
-            marginTop: "25px",
-          }}
-        >
-          <button
-            style={{
-              flex: 1,
-              padding: "14px",
-              border: "none",
-              borderRadius: "10px",
-              background: "linear-gradient(90deg, #f97316, #ff5862)",
-              color: "white",
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
-          >
-            Select Seats
-          </button>
-
-          <button
-            onClick={() => setSelectedEvent(null)}
-            style={{
-              flex: 1,
-              padding: "14px",
-              border: "none",
-              borderRadius: "10px",
-              background: "#E5E7EB",
-              cursor: "pointer",
-            }}
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
     </section>
   );
 }
