@@ -73,6 +73,22 @@ export default function EventMap({ onBookEvent = () => {}, searchQuery = "", sel
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return (R * c).toFixed(1);
   };
+  const filteredEvents = events.filter((e) => {
+    if (selectedCategories && selectedCategories.length > 0) {
+      if (!selectedCategories.includes((e.category || "").toLowerCase())) {
+        return false;
+      }
+    }
+    if (searchQuery && searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      return (
+        (e.title || "").toLowerCase().includes(q) ||
+        (e.venue || "").toLowerCase().includes(q) ||
+        (e.category || "").toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
 
   return (
     <section
@@ -137,27 +153,11 @@ export default function EventMap({ onBookEvent = () => {}, searchQuery = "", sel
                 </Marker>
               )}
 
-<<<<<<< HEAD
             {filteredEvents.map((event) => (
-              <Marker key={event.id} position={[event.lat, event.lng]}>
-                <Popup>
-                  <div
-                    style={{
-                      width: "220px",
-                      textAlign: "center",
-                      fontFamily: "Inter, sans-serif",
-                    }}
-                  >
-                    <img
-                      src={event.image}
-                      alt={event.title}
-=======
-            {events.map((event) => (
               customMarkerIcon && (
                 <Marker key={event.id} position={[event.lat, event.lng]} icon={customMarkerIcon}>
                   <Popup>
                     <div
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
                       style={{
                         width: "220px",
                         textAlign: "center",

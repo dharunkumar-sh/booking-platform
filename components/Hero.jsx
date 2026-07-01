@@ -1,11 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-<<<<<<< HEAD
-import { Search, MapPin, Sparkles, Loader2 } from "lucide-react";
-=======
-import { Search, MapPin, X } from "lucide-react";
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
+import { Search, MapPin, X, Sparkles, Loader2 } from "lucide-react";
 import { useGeolocationContext } from "@/context/GeolocationContext";
 import { useRouter } from "next/navigation";
 
@@ -162,6 +158,7 @@ const Hero = ({
   const [internalSearchQuery, setInternalSearchQuery] = useState("");
   const isControlledSearch = externalSearchQuery !== undefined && externalSetSearchQuery !== undefined;
   const searchQuery = isControlledSearch ? externalSearchQuery : internalSearchQuery;
+  const [isFocused, setIsFocused] = useState(false);
 
   // Background slideshow
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -179,7 +176,6 @@ const Hero = ({
     UPCOMING_EVENTS.map(() => ({ d: 0, h: 0, m: 0, s: 0 }))
   );
 
-<<<<<<< HEAD
   // AI Search state
   const [aiSuggestions, setAiSuggestions] = useState([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -189,16 +185,11 @@ const Hero = ({
   const searchContainerRef = useRef(null);
   const debounceTimerRef = useRef(null);
 
-  // Geolocation context
-  const { location } = useGeolocationContext();
-=======
   // ── Search & autocomplete ────────────────────────────────────────────────
-  const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1); // keyboard nav
   const [searchLoading, setSearchLoading] = useState(false);
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
 
   const searchWrapperRef = useRef(null);
   const inputRef = useRef(null);
@@ -239,7 +230,18 @@ const Hero = ({
     return () => clearInterval(tick);
   }, []);
 
-<<<<<<< HEAD
+  // Unified search state setter
+  const setSearchQuery = (val) => {
+    if (isControlledSearch) {
+      externalSetSearchQuery(val);
+    } else {
+      setInternalSearchQuery(val);
+    }
+    if (onSearchChange) {
+      onSearchChange(val);
+    }
+  };
+
   // Fetch AI suggestions with debounce
   const fetchAiSuggestions = useCallback(async (query) => {
     if (!query || query.trim().length < 2) {
@@ -268,73 +270,7 @@ const Hero = ({
     }
   }, [locationCity]);
 
-  const handleSearchChange = (e) => {
-    const val = e.target.value;
-    setSearchQuery(val);
-    // Debounce: wait 400ms after user stops typing
-    clearTimeout(debounceTimerRef.current);
-    if (val.trim().length >= 2) {
-      debounceTimerRef.current = setTimeout(() => {
-        fetchAiSuggestions(val);
-      }, 400);
-    } else {
-      setAiSuggestions([]);
-      setShowSuggestions(false);
-    }
-  };
-
-  const handleSuggestionClick = (suggestion) => {
-    // Strip the leading emoji + space from suggestion for the input
-    const cleaned = suggestion.replace(/^[\p{Emoji}\s]+/u, "").trim();
-    setSearchQuery(cleaned);
-    setShowSuggestions(false);
-    setAiSuggestions([]);
-    setHighlightedIndex(-1);
-  };
-
-  const handleSearchKeyDown = (e) => {
-    if (!showSuggestions || aiSuggestions.length === 0) return;
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setHighlightedIndex((prev) => Math.min(prev + 1, aiSuggestions.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setHighlightedIndex((prev) => Math.max(prev - 1, -1));
-    } else if (e.key === "Enter" && highlightedIndex >= 0) {
-      e.preventDefault();
-      handleSuggestionClick(aiSuggestions[highlightedIndex]);
-    } else if (e.key === "Escape") {
-      setShowSuggestions(false);
-      setHighlightedIndex(-1);
-    }
-  };
-
-  // Close suggestions when clicking outside
-  useEffect(() => {
-    const handleOutsideClick = (e) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
-        setShowSuggestions(false);
-        setHighlightedIndex(-1);
-      }
-    };
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, []);
-
-=======
-  // ── Close dropdown on outside click ─────────────────────────────────────
-  useEffect(() => {
-    const handler = (e) => {
-      if (searchWrapperRef.current && !searchWrapperRef.current.contains(e.target)) {
-        setShowDropdown(false);
-        setActiveIndex(-1);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  // ── Fetch autocomplete suggestions ──────────────────────────────────────
+  // Fetch autocomplete suggestions
   const fetchSuggestions = useCallback(async (q) => {
     if (!q.trim()) {
       setSuggestions([]);
@@ -366,20 +302,26 @@ const Hero = ({
   // Debounced input change
   const handleInputChange = (e) => {
     const val = e.target.value;
-    if (isControlledSearch) {
-      externalSetSearchQuery(val);
-    } else {
-      setInternalSearchQuery(val);
-    }
-    if (onSearchChange) {
-      onSearchChange(val); // propagate to parent if applicable
-    }
+    setSearchQuery(val);
 
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       fetchSuggestions(val);
       fetchAiSuggestions(val);
     }, 300);
+  };
+
+  // Click handler for AI suggestions
+  const handleSuggestionClick = (suggestion) => {
+    const cleaned = suggestion.replace(/^[\p{Emoji}\s]+/u, "").trim();
+    setSearchQuery(cleaned);
+    setShowDropdown(false);
+    setShowSuggestions(false);
+    setAiSuggestions([]);
+    setHighlightedIndex(-1);
+
+    // Fetch database suggestions for the clicked query phrase
+    fetchSuggestions(cleaned);
   };
 
   // Keyboard navigation
@@ -423,14 +365,7 @@ const Hero = ({
 
   // Navigate to event detail from suggestion selection
   const handleSuggestionSelect = async (event) => {
-    if (isControlledSearch) {
-      externalSetSearchQuery(event.title);
-    } else {
-      setInternalSearchQuery(event.title);
-    }
-    if (onSearchChange) {
-      onSearchChange(event.title);
-    }
+    setSearchQuery(event.title);
     setShowDropdown(false);
     setShowSuggestions(false);
     setActiveIndex(-1);
@@ -440,26 +375,6 @@ const Hero = ({
       console.error("[Hero] localStorage write error:", err);
     }
     router.push(`/event-details/${encodeURIComponent(event.title)}`);
-  };
-
-  // Click handler for AI suggestions
-  const handleSuggestionClick = (suggestion) => {
-    const cleaned = suggestion.replace(/^[\p{Emoji}\s]+/u, "").trim();
-    if (isControlledSearch) {
-      externalSetSearchQuery(cleaned);
-    } else {
-      setInternalSearchQuery(cleaned);
-    }
-    if (onSearchChange) {
-      onSearchChange(cleaned);
-    }
-    setShowDropdown(false);
-    setShowSuggestions(false);
-    setAiSuggestions([]);
-    setHighlightedIndex(-1);
-
-    // Fetch database suggestions for the clicked query phrase
-    fetchSuggestions(cleaned);
   };
 
   // Submit plain text search — propagate to parent
@@ -473,23 +388,29 @@ const Hero = ({
 
   // Clear search
   const handleClearSearch = () => {
-    if (isControlledSearch) {
-      externalSetSearchQuery("");
-    } else {
-      setInternalSearchQuery("");
-    }
+    setSearchQuery("");
     setSuggestions([]);
     setAiSuggestions([]);
     setShowDropdown(false);
     setShowSuggestions(false);
-    if (onSearchChange) {
-      onSearchChange("");
-    }
     inputRef.current?.focus();
   };
 
-  // ── Mood selection ───────────────────────────────────────────────────────
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (searchWrapperRef.current && !searchWrapperRef.current.contains(e.target)) {
+        setShowDropdown(false);
+        setActiveIndex(-1);
+      }
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+        setHighlightedIndex(-1);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
   const handleMoodSelect = (mood) => {
     if (selectedMoodKey === mood.key) {
       setSelectedMood("");
@@ -783,111 +704,10 @@ const Hero = ({
                   <X size={12} />
                 </button>
               )}
-
-              {/* Search submit button */}
-              <button
-                type="button"
-                onClick={handleSearchSubmit}
-                style={{
-                  flexShrink: 0,
-                  padding: "7px 18px",
-                  borderRadius: "9px",
-                  border: "none",
-                  cursor: "pointer",
-                  fontWeight: 700,
-                  fontSize: "13px",
-                  letterSpacing: "0.4px",
-                  color: "#fff",
-                  background:
-                    "linear-gradient(135deg, #f97316 0%, #a855f7 60%, #06b6d4 100%)",
-                  boxShadow: "0 2px 12px rgba(249,115,22,0.4)",
-                  transition: "transform 0.15s ease, box-shadow 0.15s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "scale(1.05)";
-                  e.currentTarget.style.boxShadow = "0 4px 20px rgba(249,115,22,0.6)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "scale(1)";
-                  e.currentTarget.style.boxShadow = "0 2px 12px rgba(249,115,22,0.4)";
-                }}
-              >
-                Search ✦
-              </button>
             </div>
           </div>
 
-<<<<<<< HEAD
-           
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              onKeyDown={handleSearchKeyDown}
-              placeholder={
-                locationCity
-                  ? `Search events near ${locationCity}…`
-                  : "Search events, artists, venues or ask AI…"
-              }
-              style={{
-                flex: 1,
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                color: "#f1f5f9",
-                fontSize: "13px",
-                letterSpacing: "0.2px",
-              }}
-              onFocus={(e) => {
-                e.target.parentElement.parentElement.style.boxShadow =
-                  "0 0 0 3px rgba(249,115,22,0.4), 0 8px 32px rgba(249,115,22,0.3)";
-                if (searchQuery.trim().length >= 2 && aiSuggestions.length > 0) {
-                  setShowSuggestions(true);
-                }
-              }}
-              onBlur={(e) => {
-                e.target.parentElement.parentElement.style.boxShadow =
-                  "0 8px 32px rgba(249,115,22,0.25), 0 2px 8px rgba(168,85,247,0.15)";
-              }}
-            />
-
-           
-            <button
-              type="button"
-              style={{
-                flexShrink: 0,
-                padding: "7px 18px",
-                borderRadius: "9px",
-                border: "none",
-                cursor: "pointer",
-                fontWeight: 700,
-                fontSize: "13px",
-                letterSpacing: "0.4px",
-                color: "#fff",
-                background:
-                  "linear-gradient(135deg, #f97316 0%, #a855f7 60%, #06b6d4 100%)",
-                boxShadow: "0 2px 12px rgba(249,115,22,0.4)",
-                transition: "transform 0.15s ease, box-shadow 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.05)";
-                e.currentTarget.style.boxShadow =
-                  "0 4px 20px rgba(249,115,22,0.6)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow =
-                  "0 2px 12px rgba(249,115,22,0.4)";
-              }}
-            >
-              Search ✦
-            </button>
-          </div>
-
-          {/* AI Search Suggestions Dropdown */}
-          {showSuggestions && (
-=======
-          {/* ── Autocomplete dropdown ── */}
+          {/* Autocomplete dropdown */}
           {showDropdown && suggestions.length > 0 && (
             <div
               style={{
@@ -906,152 +726,190 @@ const Hero = ({
                 animation: "dropdownFadeIn 0.18s ease-out",
               }}
             >
-              {/* Direct Matches Section */}
-              {showDropdown && suggestions.length > 0 && (
-                <div>
-                  <div
-                    style={{
-                      padding: "8px 14px 6px",
-                      fontSize: "10px",
-                      fontWeight: 700,
-                      color: "rgba(255,255,255,0.35)",
-                      textTransform: "uppercase",
-                      letterSpacing: "1px",
-                      borderBottom: "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
-                    ✦ Direct Matches
-                  </div>
+              <div
+                style={{
+                  padding: "8px 14px 6px",
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  color: "rgba(255,255,255,0.35)",
+                  textTransform: "uppercase",
+                  letterSpacing: "1px",
+                  borderBottom: "1px solid rgba(255,255,255,0.06)",
+                }}
+              >
+                ✦ Direct Matches
+              </div>
 
-                  {suggestions.map((event, idx) => (
-                    <div
-                      key={event.id ?? idx}
-                      role="option"
-                      aria-selected={idx === activeIndex}
-                      onClick={() => handleSuggestionSelect(event)}
-                      onMouseEnter={() => setActiveIndex(idx)}
+              {suggestions.map((event, idx) => (
+                <div
+                  key={event.id ?? idx}
+                  role="option"
+                  aria-selected={idx === activeIndex}
+                  onClick={() => handleSuggestionSelect(event)}
+                  onMouseEnter={() => setActiveIndex(idx)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    padding: "10px 14px",
+                    cursor: "pointer",
+                    borderBottom:
+                      idx < suggestions.length - 1
+                        ? "1px solid rgba(255,255,255,0.05)"
+                        : "none",
+                    background:
+                      idx === activeIndex
+                        ? "rgba(249,115,22,0.12)"
+                        : "transparent",
+                    transition: "background 0.12s ease",
+                  }}
+                >
+                  {/* Event thumbnail */}
+                  {event.image ? (
+                    <img
+                      src={event.image}
+                      alt={event.title}
                       style={{
+                        width: "38px",
+                        height: "38px",
+                        borderRadius: "8px",
+                        objectFit: "cover",
+                        flexShrink: 0,
+                        border: "1px solid rgba(255,255,255,0.1)",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: "38px",
+                        height: "38px",
+                        borderRadius: "8px",
+                        background: "rgba(249,115,22,0.2)",
                         display: "flex",
                         alignItems: "center",
-                        gap: "12px",
-                        padding: "10px 14px",
-                        cursor: "pointer",
-                        borderBottom: "1px solid rgba(255,255,255,0.05)",
-                        background:
-                          idx === activeIndex
-                            ? "rgba(249,115,22,0.12)"
-                            : "transparent",
-                        transition: "background 0.12s ease",
+                        justifyContent: "center",
+                        fontSize: "18px",
+                        flexShrink: 0,
                       }}
                     >
-                      {/* Event thumbnail */}
-                      {event.image ? (
-                        <img
-                          src={event.image}
-                          alt={event.title}
-                          style={{
-                            width: "38px",
-                            height: "38px",
-                            borderRadius: "8px",
-                            objectFit: "cover",
-                            flexShrink: 0,
-                            border: "1px solid rgba(255,255,255,0.1)",
-                          }}
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            width: "38px",
-                            height: "38px",
-                            borderRadius: "8px",
-                            background: "rgba(249,115,22,0.2)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "18px",
-                            flexShrink: 0,
-                          }}
-                        >
-                          {getCategoryEmoji(event.category)}
-                        </div>
-                      )}
+                      {getCategoryEmoji(event.category)}
+                    </div>
+                  )}
 
-                      {/* Text content */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div
-                          style={{
-                            fontSize: "13px",
-                            fontWeight: 600,
-                            color: "#f1f5f9",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          <HighlightText text={event.title} query={searchQuery} />
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "11px",
-                            color: "rgba(255,255,255,0.45)",
-                            marginTop: "2px",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                          }}
-                        >
-                          <span>{getCategoryEmoji(event.category)} {event.category}</span>
-                          {event.location && (
-                            <>
-                              <span style={{ opacity: 0.4 }}>·</span>
-                              <MapPin size={9} style={{ flexShrink: 0 }} />
-                              <span
-                                style={{
-                                  whiteSpace: "nowrap",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  maxWidth: "160px",
-                                }}
-                              >
-                                {event.location}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Price badge */}
-                      {event.price != null && (
-                        <span
-                          style={{
-                            fontSize: "11px",
-                            fontWeight: 700,
-                            color: "#f97316",
-                            flexShrink: 0,
-                            background: "rgba(249,115,22,0.12)",
-                            padding: "2px 8px",
-                            borderRadius: "8px",
-                            border: "1px solid rgba(249,115,22,0.25)",
-                          }}
-                        >
-                          {formatPrice(event.price)}
-                        </span>
+                  {/* Text content */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 600,
+                        color: "#f1f5f9",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      <HighlightText text={event.title} query={searchQuery} />
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "11px",
+                        color: "rgba(255,255,255,0.45)",
+                        marginTop: "2px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                    >
+                      <span>{getCategoryEmoji(event.category)} {event.category}</span>
+                      {event.location && (
+                        <>
+                          <span style={{ opacity: 0.4 }}>·</span>
+                          <MapPin size={9} style={{ flexShrink: 0 }} />
+                          <span
+                            style={{
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              maxWidth: "160px",
+                            }}
+                          >
+                            {event.location}
+                          </span>
+                        </>
                       )}
                     </div>
-                  ))}
+                  </div>
+
+                  {/* Price badge */}
+                  {event.price != null && (
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        color: "#f97316",
+                        flexShrink: 0,
+                        background: "rgba(249,115,22,0.12)",
+                        padding: "2px 8px",
+                        borderRadius: "8px",
+                        border: "1px solid rgba(249,115,22,0.25)",
+                      }}
+                    >
+                      {formatPrice(event.price)}
+                    </span>
+                  )}
                 </div>
-              )}
+              ))}
+
+              {/* Footer hint */}
+              <div
+                style={{
+                  padding: "7px 14px",
+                  fontSize: "10px",
+                  color: "rgba(255,255,255,0.25)",
+                  borderTop: "1px solid rgba(255,255,255,0.05)",
+                  display: "flex",
+                  gap: "12px",
+                }}
+              >
+                <span>↑↓ navigate</span>
+                <span>↵ select</span>
+                <span>Esc close</span>
+              </div>
+            </div>
+          )}
 
           {/* No results state */}
           {showDropdown && !searchLoading && suggestions.length === 0 && searchQuery.trim() && (
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
             <div
               style={{
                 position: "absolute",
                 top: "calc(100% + 8px)",
                 left: 0,
                 right: 0,
-<<<<<<< HEAD
+                zIndex: 50,
+                borderRadius: "14px",
+                background: "rgba(10, 8, 24, 0.96)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                backdropFilter: "blur(24px)",
+                padding: "20px",
+                textAlign: "center",
+                color: "rgba(255,255,255,0.4)",
+                fontSize: "13px",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+              }}
+            >
+              🔍 No events found for "{searchQuery}"
+            </div>
+          )}
+
+          {/* AI Search Suggestions Dropdown */}
+          {showSuggestions && (aiSuggestions.length > 0 || isAiLoading) && (
+            <div
+              style={{
+                position: "absolute",
+                top: "calc(100% + 8px)",
+                left: 0,
+                right: 0,
                 background: "rgba(10, 8, 25, 0.97)",
                 border: "1px solid rgba(249,115,22,0.3)",
                 borderRadius: "14px",
@@ -1177,23 +1035,9 @@ const Hero = ({
                   Powered by AI
                 </span>
               </div>
-=======
-                zIndex: 50,
-                borderRadius: "14px",
-                background: "rgba(10, 8, 24, 0.96)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                backdropFilter: "blur(24px)",
-                padding: "20px",
-                textAlign: "center",
-                color: "rgba(255,255,255,0.4)",
-                fontSize: "13px",
-                boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
-              }}
-            >
-              🔍 No events found for "{searchQuery}"
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
             </div>
           )}
+
         </div>
 
         {/* ── Mood filter pills ── */}
@@ -1228,57 +1072,6 @@ const Hero = ({
           </div>
         </div>
 
-        {/* ── Mood destination suggestions ── */}
-        {selectedMoodKey && MOOD_PLACES[selectedMoodKey] && (
-          <div
-            className="mb-5"
-            style={{ animation: "slideUp 0.4s ease-out forwards" }}
-          >
-            <h4 className="text-white text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-              <span>📍</span> Suggested Destinations for {selectedMood}
-            </h4>
-            <div
-              className="flex gap-3 overflow-x-auto pb-2"
-              style={{ msOverflowStyle: "none", scrollbarWidth: "none" }}
-            >
-              {MOOD_PLACES[selectedMoodKey].map((place) => (
-                <div
-                  key={place.name}
-                  onClick={() => {
-                    setSearchQuery(place.name);
-                    onSearchChange(place.name);
-                    clearTimeout(debounceRef.current);
-                    debounceRef.current = setTimeout(
-                      () => fetchSuggestions(place.name),
-                      280
-                    );
-                  }}
-                  className="flex items-center gap-3 p-2 rounded-xl backdrop-blur-md transition-all duration-300 hover:scale-105 cursor-pointer"
-                  style={{
-                    background: "rgba(255, 255, 255, 0.08)",
-                    border: "1px solid rgba(255, 255, 255, 0.12)",
-                    minWidth: "240px",
-                    flex: "0 0 auto",
-                  }}
-                >
-                  <img
-                    src={place.image}
-                    alt={place.name}
-                    className="w-10 h-10 rounded-lg object-cover"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h5 className="text-white text-xs font-bold truncate" style={{ margin: 0 }}>
-                      {place.name}
-                    </h5>
-                    <p className="text-gray-300 text-[10px] truncate" style={{ margin: 0 }}>
-                      {place.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* ── Slide indicator dots ── */}
         <div className="flex gap-2">
@@ -1312,34 +1105,16 @@ const Hero = ({
           to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes dropdownFadeIn {
-<<<<<<< HEAD
-          from {
-            opacity: 0;
-            transform: translateY(-6px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes shimmer {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 0.8; }
-        }
-        .scrollbar-none::-webkit-scrollbar {
-          display: none;
-=======
           from { opacity: 0; transform: translateY(-6px); }
           to   { opacity: 1; transform: translateY(0); }
->>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
         }
         @keyframes spin {
           from { transform: rotate(0deg); }
           to   { transform: rotate(360deg); }
+        }
+        @keyframes shimmer {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 0.8; }
         }
         .scrollbar-none::-webkit-scrollbar { display: none; }
       `}</style>

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import eventsData from '@/data.json';
+import { seedEvents } from '@/db/seed-data.js';
+
+const eventsData = { events: seedEvents };
 
 export async function POST(request) {
   try {
