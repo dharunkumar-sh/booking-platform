@@ -15,7 +15,7 @@ const customMarkerIcon = typeof window !== "undefined" ? new L.Icon({
   shadowSize: [41, 41]
 }) : null;
 
-export default function EventMap({ onBookEvent = () => {} }) {
+export default function EventMap({ searchQuery = "", onBookEvent = () => {} }) {
   const [userLocation, setUserLocation] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +45,15 @@ export default function EventMap({ onBookEvent = () => {} }) {
     }
     loadEvents();
   }, []);
+
+  const filteredEvents = events.filter((e) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      e.title.toLowerCase().includes(q) ||
+      e.venue.toLowerCase().includes(q)
+    );
+  });
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -109,10 +118,19 @@ export default function EventMap({ onBookEvent = () => {} }) {
               alignItems: "center",
             }}
           >
+<<<<<<< HEAD
+            Events
+          </h2>
+
+          {filteredEvents.map((event) => (
+            <div
+              key={event.id}
+=======
             <MapContainer
               center={[13.0827, 80.2707]}
               zoom={11}
               attributionControl={false}
+>>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
               style={{
                 height: "600px",
                 width: "100%",
@@ -135,11 +153,27 @@ export default function EventMap({ onBookEvent = () => {} }) {
               </Marker>
             )}
 
+<<<<<<< HEAD
+            {filteredEvents.map((event) => (
+              <Marker key={event.id} position={[event.lat, event.lng]}>
+                <Popup>
+                  <div
+                    style={{
+                      width: "220px",
+                      textAlign: "center",
+                      fontFamily: "Inter, sans-serif",
+                    }}
+                  >
+                    <img
+                      src={event.image}
+                      alt={event.title}
+=======
             {events.map((event) => (
               customMarkerIcon && (
                 <Marker key={event.id} position={[event.lat, event.lng]} icon={customMarkerIcon}>
                   <Popup>
                     <div
+>>>>>>> 37eeb60fc61dceefc394ddf1d6f34c84b9b9d7f1
                       style={{
                         width: "220px",
                         textAlign: "center",
