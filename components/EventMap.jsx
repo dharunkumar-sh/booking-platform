@@ -34,6 +34,7 @@ export default function EventMap({ searchQuery = "", onBookEvent = () => {} }) {
             image: e.image || "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800",
             lat: e.latitude || 13.0827,
             lng: e.longitude || 80.2707,
+            originalEvent: e,
           }));
           setEvents(mapped);
         }
@@ -212,11 +213,7 @@ export default function EventMap({ searchQuery = "", onBookEvent = () => {} }) {
                         )}
 
                         <button
-                          onClick={() => onBookEvent({
-                            title: event.title,
-                            venue: event.venue,
-                            priceVal: parseInt(event.price.replace("₹", ""))
-                          })}
+                          onClick={() => onBookEvent(event.originalEvent)}
                           style={{
                             width: "100%",
                             padding: "10px",

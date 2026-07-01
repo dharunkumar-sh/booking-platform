@@ -146,7 +146,22 @@ export default function DiscoverCategoryPage({
                     <div className="flex items-center gap-2"><Calendar size={14} className="text-orange-500" /> {item.date || "Next Weekend"}</div>
                     <div className="flex items-center gap-2"><MapPin size={14} className="text-orange-500" /> {item.venue || "Major City Venue"}</div>
                   </div>
-                  <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-800 py-2.5 text-xs font-bold text-white transition group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-rose-500">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      try {
+                        localStorage.setItem("selectedEvent", JSON.stringify(item));
+                      } catch (err) {
+                        console.error(err);
+                      }
+                      const query = new URLSearchParams({
+                        venue: item.venue || item.location || "",
+                        category: item.category || "",
+                      }).toString();
+                      router.push(`/seat-selection/${encodeURIComponent(item.title)}?${query}`);
+                    }}
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-800 py-2.5 text-xs font-bold text-white transition group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-rose-500"
+                  >
                     <Ticket size={14} /> Book Pass <ArrowRight size={14} />
                   </button>
                 </div>
