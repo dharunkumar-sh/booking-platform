@@ -34,18 +34,8 @@ export function GeolocationProvider({ children }) {
     if (!saved) {
       // If first load (no saved location), show the themed prompt banner
       setShowBanner(true);
-    } else {
-      try {
-        const { status: savedStatus } = JSON.parse(saved);
-        if (savedStatus === "granted") {
-          // If already granted in the past, refresh silently in the background
-          requestLocation();
-        }
-      } catch {
-        // ignore
-      }
     }
-  }, [requestLocation]);
+  }, []);
 
   // Persist location and status to localStorage whenever they change
   useEffect(() => {
