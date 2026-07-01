@@ -3,7 +3,8 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import { Ticket } from "lucide-react";
+import { Ticket, Heart } from "lucide-react";
+import { useFavourites } from "@/context/FavouritesContext";
 
 // ── Category emoji helpers ────────────────────────────────────────────────────
 const CATEGORY_EMOJI = {
@@ -106,17 +107,11 @@ export default function TrendingEvents({
   selectedCategories = [],
 }) {
   const sliderRef = useRef(null);
-  const [likedEvents, setLikedEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-
-  const toggleLike = (id) => {
-    setLikedEvents((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
+  const { isFavourite, toggleFavourite } = useFavourites();
 
   const scrollLeft = () => sliderRef.current?.scrollBy({ left: -350, behavior: "smooth" });
   const scrollRight = () => sliderRef.current?.scrollBy({ left: 350, behavior: "smooth" });
@@ -307,26 +302,35 @@ export default function TrendingEvents({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  toggleLike(event.id);
+                  toggleFavourite(event);
                 }}
                 style={{
                   position: "absolute",
                   top: "15px",
                   right: "15px",
-                  width: "45px",
-                  height: "45px",
+                  width: "40px",
+                  height: "40px",
                   borderRadius: "50%",
                   border: "none",
-                  background: "rgba(255,255,255,0.95)",
+                  background: isFavourite(event.id) ? "rgba(244,63,94,0.95)" : "rgba(255,255,255,0.92)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "20px",
                   cursor: "pointer",
                   zIndex: 2,
+                  transition: "background 0.2s",
+                  boxShadow: "0 2px 12px rgba(0,0,0,0.25)",
                 }}
+                title={isFavourite(event.id) ? "Remove from favourites" : "Add to favourites"}
               >
-                {likedEvents.includes(event.id) ? "❤️" : "🤍"}
+                <Heart
+                  size={17}
+                  style={{
+                    color: isFavourite(event.id) ? "white" : "#f43f5e",
+                    fill: isFavourite(event.id) ? "white" : "none",
+                    transition: "all 0.2s",
+                  }}
+                />
               </button>
 
               <img

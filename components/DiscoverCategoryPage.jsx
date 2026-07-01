@@ -120,7 +120,14 @@ export default function DiscoverCategoryPage({
             {displayed.map((item, idx) => (
               <div
                 key={item.id || idx}
-                onClick={() => router.push(`/event-details?id=${item.id || 1}`)}
+                onClick={async () => {
+                  try {
+                    localStorage.setItem("selectedEvent", JSON.stringify(item));
+                  } catch (e) {
+                    console.error(e);
+                  }
+                  router.push(`/event-details/${encodeURIComponent(item.title)}`);
+                }}
                 className="group cursor-pointer overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900/40 transition hover:-translate-y-1 hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10"
               >
                 <div className="relative h-48 w-full overflow-hidden bg-neutral-800">

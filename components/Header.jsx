@@ -7,15 +7,24 @@ import {
   Search,
   Mic,
   Bell,
+  BellOff,
   Heart,
   MapPin,
   ChevronDown,
   Check,
+  CheckCheck,
   X,
   Tv,
   LogOut,
+  Trash2,
+  Ticket,
+  CreditCard,
+  Car,
+  Clock,
+  Tag,
 } from "lucide-react";
 import { useGeolocationContext } from "@/context/GeolocationContext";
+import { useFavourites } from "@/context/FavouritesContext";
 
 const OTT_PLATFORMS = [
   "Netflix",
@@ -29,6 +38,7 @@ const OTT_PLATFORMS = [
 const Header = () => {
   const router = useRouter();
   const { triggerRequest, location, status } = useGeolocationContext();
+  const { count: favCount } = useFavourites();
   // Input and selectors
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOtt, setSelectedOtt] = useState("All");
@@ -50,6 +60,97 @@ const Header = () => {
   // Refs
   const ottRef = useRef(null);
   const profileRef = useRef(null);
+  const notifRef = useRef(null);
+
+  // ── Notifications ──────────────────────────────────────────────────────────
+  const DEFAULT_NOTIFICATIONS = [
+    {
+      id: 1,
+      type: "booking",
+      title: "Booking Confirmed! 🎉",
+      message: "Your booking for AR Rahman Live on Jun 22 at Nehru Indoor Arena has been confirmed.",
+      date: "2026-06-28 · 10:14 AM",
+      read: false,
+    },
+    {
+      id: 2,
+      type: "payment",
+      title: "Payment Successful ✅",
+      message: "₹3,499 was successfully charged for your Vijay Antony Concert ticket. Receipt sent to your email.",
+      date: "2026-06-27 · 7:02 PM",
+      read: false,
+    },
+    {
+      id: 3,
+      type: "vehicle",
+      title: "Vehicle Assigned 🚗",
+      message: "Your cab to Chepauk Stadium has been assigned. Driver: Ravi Kumar | MH 12 AB 3456.",
+      date: "2026-06-26 · 5:30 PM",
+      read: false,
+    },
+    {
+      id: 4,
+      type: "reminder",
+      title: "Trip Reminder ⏰",
+      message: "Your event 'Coolie' at PVR Palazzo Theatre starts in 2 hours. Don't forget your e-ticket!",
+      date: "2026-06-25 · 4:00 PM",
+      read: true,
+    },
+    {
+      id: 5,
+      type: "offer",
+      title: "Special Offer Just for You 🎁",
+      message: "Get 20% off on your next booking with code VIBE20. Valid till July 10, 2026.",
+      date: "2026-06-24 · 11:00 AM",
+      read: true,
+    },
+  ];
+
+  const NOTIF_KEY = "vibepass_notifications";
+
+  const [notifications, setNotifications] = useState([]);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(NOTIF_KEY);
+      setNotifications(saved ? JSON.parse(saved) : DEFAULT_NOTIFICATIONS);
+    } catch {
+      setNotifications(DEFAULT_NOTIFICATIONS);
+    }
+  }, []);
+
+  const saveNotifications = (updated) => {
+    setNotifications(updated);
+    try { localStorage.setItem(NOTIF_KEY, JSON.stringify(updated)); } catch {}
+  };
+
+  const markAsRead = (id) =>
+    saveNotifications(notifications.map((n) => n.id === id ? { ...n, read: true } : n));
+
+  const deleteNotification = (id) =>
+    saveNotifications(notifications.filter((n) => n.id !== id));
+
+  const markAllAsRead = () =>
+    saveNotifications(notifications.map((n) => ({ ...n, read: true })));
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const NOTIF_ICON = {
+    booking:  <Ticket  size={15} className="text-orange-400" />,
+    payment:  <CreditCard size={15} className="text-emerald-400" />,
+    vehicle:  <Car     size={15} className="text-sky-400" />,
+    reminder: <Clock   size={15} className="text-amber-400" />,
+    offer:    <Tag     size={15} className="text-purple-400" />,
+  };
+
+  const NOTIF_RING = {
+    booking:  "border-orange-500/30 bg-orange-500/5",
+    payment:  "border-emerald-500/30 bg-emerald-500/5",
+    vehicle:  "border-sky-500/30 bg-sky-500/5",
+    reminder: "border-amber-500/30 bg-amber-500/5",
+    offer:    "border-purple-500/30 bg-purple-500/5",
+  };
 
   // Cycling placeholder text
   useEffect(() => {
@@ -66,6 +167,8 @@ const Header = () => {
         setIsOttOpen(false);
       if (profileRef.current && !profileRef.current.contains(e.target))
         setIsProfileOpen(false);
+      if (notifRef.current && !notifRef.current.contains(e.target))
+        setIsNotifOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -299,28 +402,162 @@ const Header = () => {
               <Search size={20} />
             </button>
 
-            {/* 12. Wishlist/Favorites (Heart Icon - Shows no dropdown when clicked) */}
+            {/* 12. Wishlist/Favorites (Heart Icon → navigates to /favourites) */}
             <div className="relative">
               <button
+                onClick={() => router.push("/favourites")}
                 className="relative p-2.5 rounded-xl hover:bg-neutral-900 text-neutral-300 hover:text-rose-500 transition-all active:scale-95 cursor-pointer"
-                title="Favorites"
+                title="My Favourites"
+                aria-label="Favourites"
               >
                 <Heart size={20} className="fill-rose-500 text-rose-500" />
-                <span className="absolute top-1 right-1 w-5 h-5 rounded-full bg-rose-600 text-[10px] font-black text-white flex items-center justify-center border-2 border-neutral-950 scale-100 transition-transform">
-                  2
-                </span>
+                {favCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 text-[10px] font-black text-white flex items-center justify-center border-2 border-neutral-950 shadow-lg">
+                    {favCount > 9 ? "9+" : favCount}
+                  </span>
+                )}
               </button>
             </div>
 
-            {/* 9. Notifications (Bell Icon - Shows no dropdown when clicked) */}
-            <div className="relative">
+            {/* 9. Notifications Bell with Dropdown */}
+            <div className="relative" ref={notifRef}>
               <button
-                className="relative p-2.5 rounded-xl hover:bg-neutral-900 text-neutral-300 hover:text-orange-400 transition-all active:scale-95 cursor-pointer"
+                onClick={() => setIsNotifOpen((prev) => !prev)}
+                className={`relative p-2.5 rounded-xl transition-all active:scale-95 cursor-pointer ${
+                  isNotifOpen
+                    ? "bg-orange-500/15 text-orange-400 border border-orange-500/30"
+                    : "hover:bg-neutral-900 text-neutral-300 hover:text-orange-400"
+                }`}
                 title="Notifications"
+                aria-label="Toggle Notifications"
               >
-                <Bell size={20} className="text-orange-400" />
-                <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-orange-500 border border-neutral-950" />
+                <Bell size={20} className={isNotifOpen ? "text-orange-400" : "text-orange-400"} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-gradient-to-br from-orange-500 to-rose-500 text-[10px] font-black text-white flex items-center justify-center border-2 border-neutral-950 shadow-lg">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
               </button>
+
+              {/* ── Notifications Dropdown ── */}
+              {isNotifOpen && (
+                <div className="absolute right-0 top-full mt-3 w-[380px] max-w-[calc(100vw-32px)] rounded-2xl bg-neutral-950/98 border border-neutral-800 shadow-2xl shadow-black/50 z-50 backdrop-blur-xl overflow-hidden">
+                  {/* Gradient accent bar */}
+                  <div className="h-[2px] w-full bg-gradient-to-r from-orange-500 via-rose-500 to-purple-500" />
+
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-4 py-3.5 border-b border-neutral-800/80">
+                    <div className="flex items-center gap-2">
+                      <Bell size={15} className="text-orange-400" />
+                      <span className="text-sm font-bold text-white">Notifications</span>
+                      {unreadCount > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-[10px] font-bold text-orange-400">
+                          {unreadCount} new
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={markAllAsRead}
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-neutral-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all cursor-pointer"
+                          title="Mark all as read"
+                        >
+                          <CheckCheck size={13} />
+                          All read
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setIsNotifOpen(false)}
+                        className="p-1.5 rounded-lg text-neutral-500 hover:text-white hover:bg-neutral-800 transition-all cursor-pointer"
+                        aria-label="Close"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Notification list */}
+                  <div className="max-h-[420px] overflow-y-auto divide-y divide-neutral-800/50 scrollbar-none" style={{ scrollbarWidth: 'none' }}>
+                    {notifications.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-14 px-6 text-center">
+                        <div className="w-14 h-14 rounded-2xl bg-neutral-900 border border-neutral-800 flex items-center justify-center mb-4">
+                          <BellOff size={24} className="text-neutral-600" />
+                        </div>
+                        <p className="text-sm font-semibold text-neutral-400">All caught up!</p>
+                        <p className="text-xs text-neutral-600 mt-1">No notifications right now. Check back later.</p>
+                      </div>
+                    ) : (
+                      notifications.map((notif) => (
+                        <div
+                          key={notif.id}
+                          className={`group relative flex items-start gap-3 px-4 py-3.5 transition-all duration-200 ${
+                            notif.read ? "bg-transparent hover:bg-neutral-900/40" : "bg-orange-500/5 hover:bg-orange-500/10"
+                          }`}
+                        >
+                          {/* Unread dot */}
+                          {!notif.read && (
+                            <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
+                          )}
+
+                          {/* Icon */}
+                          <div className={`mt-0.5 shrink-0 w-8 h-8 rounded-xl border flex items-center justify-center ${
+                            NOTIF_RING[notif.type] || "border-neutral-700 bg-neutral-800"
+                          }`}>
+                            {NOTIF_ICON[notif.type] || <Bell size={15} className="text-neutral-400" />}
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-xs font-bold leading-snug ${ notif.read ? "text-neutral-300" : "text-white" }`}>
+                              {notif.title}
+                            </p>
+                            <p className="text-[11px] text-neutral-500 mt-0.5 leading-relaxed line-clamp-2">
+                              {notif.message}
+                            </p>
+                            <p className="text-[10px] text-neutral-600 mt-1.5 font-medium">{notif.date}</p>
+                          </div>
+
+                          {/* Action buttons — appear on hover */}
+                          <div className="shrink-0 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {!notif.read && (
+                              <button
+                                onClick={() => markAsRead(notif.id)}
+                                className="p-1.5 rounded-lg text-neutral-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all cursor-pointer"
+                                title="Mark as read"
+                              >
+                                <Check size={13} />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => deleteNotification(notif.id)}
+                              className="p-1.5 rounded-lg text-neutral-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer"
+                              title="Delete"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  {notifications.length > 0 && (
+                    <div className="px-4 py-3 border-t border-neutral-800/80 flex items-center justify-between">
+                      <span className="text-[11px] text-neutral-600">
+                        {notifications.length} notification{notifications.length !== 1 ? "s" : ""}
+                      </span>
+                      <button
+                        onClick={() => saveNotifications([])}
+                        className="flex items-center gap-1.5 text-[11px] font-semibold text-neutral-500 hover:text-rose-400 transition-colors cursor-pointer"
+                      >
+                        <Trash2 size={12} /> Clear all
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* 10. User Profile & Dropdown */}

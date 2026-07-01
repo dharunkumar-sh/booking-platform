@@ -2,7 +2,8 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Ticket } from "lucide-react";
+import { Ticket, Heart } from "lucide-react";
+import { useFavourites } from "@/context/FavouritesContext";
 
 // ── Category emoji helpers ────────────────────────────────────────────────────
 const CATEGORY_EMOJI = {
@@ -88,6 +89,7 @@ export default function FeaturedEvents({
   selectedCategories = [],
 }) {
   const router = useRouter();
+  const { isFavourite, toggleFavourite } = useFavourites();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -214,6 +216,25 @@ export default function FeaturedEvents({
 
                 {/* GRADIENT */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                {/* HEART BUTTON */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavourite(event);
+                  }}
+                  className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg"
+                  style={{
+                    background: isFavourite(event.id) ? "rgba(244,63,94,0.95)" : "rgba(255,255,255,0.9)",
+                  }}
+                  title={isFavourite(event.id) ? "Remove from favourites" : "Add to favourites"}
+                >
+                  <Heart
+                    size={16}
+                    className={isFavourite(event.id) ? "text-white fill-white" : "text-rose-500"}
+                    style={{ fill: isFavourite(event.id) ? "white" : "none" }}
+                  />
+                </button>
 
                 {/* CONTENT */}
                 <div className="absolute bottom-0 p-4 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
