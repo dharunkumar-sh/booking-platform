@@ -31,8 +31,9 @@ const { neon } = await import("@neondatabase/serverless");
 
 const sql = neon(DATABASE_URL);
 
-// Import seed data from our JS module instead of data.json
-const { seedEvents: eventsList } = await import("../db/seed-data.js");
+// Read events from data.json (primary source)
+const dataJsonPath = resolve(__dirname, "../data.json");
+const eventsList = JSON.parse(readFileSync(dataJsonPath, "utf-8"));
 
 async function seed() {
   console.log(`📦 Seeding ${eventsList.length} events into the database...`);

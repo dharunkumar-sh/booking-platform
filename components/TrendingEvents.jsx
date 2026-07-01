@@ -107,6 +107,7 @@ export default function TrendingEvents({
   onBookEvent = () => {},
   searchQuery = "",
   selectedCategories = [],
+  selectedState = null,
 }) {
   const sliderRef = useRef(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -128,6 +129,9 @@ export default function TrendingEvents({
       const params = new URLSearchParams({ type: "trending" });
       if (activeCats.length === 1) {
         params.set("category", activeCats[0]);
+      }
+      if (selectedState) {
+        params.set("state", selectedState);
       }
 
       const res = await fetch(`/api/events?${params.toString()}`);
@@ -163,7 +167,7 @@ export default function TrendingEvents({
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedCategories]);
+  }, [searchQuery, selectedCategories, selectedState]);
 
   useEffect(() => {
     const timer = setTimeout(fetchEvents, 300);

@@ -82,11 +82,19 @@ export default function FeaturedEvents({
   onBookEvent = () => {},
   searchQuery = "",
   selectedCategories = [],
+  selectedState = null,
 }) {
   const router = useRouter();
   const { isFavourite, toggleFavourite } = useFavourites();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategories, selectedState]);
 
   const categoriesJoined = (selectedCategories || []).join(",");
 
@@ -97,6 +105,9 @@ export default function FeaturedEvents({
       const params = new URLSearchParams({ type: "featured" });
       if (activeCats.length === 1) {
         params.set("category", activeCats[0]);
+      }
+      if (selectedState) {
+        params.set("state", selectedState);
       }
 
       const res = await fetch(`/api/events?${params.toString()}`);
@@ -132,7 +143,7 @@ export default function FeaturedEvents({
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedCategories]);
+  }, [searchQuery, selectedCategories, selectedState]);
 
   useEffect(() => {
     const timer = setTimeout(fetchEvents, 300);
@@ -166,17 +177,72 @@ export default function FeaturedEvents({
         ) : events.length === 0 ? (
           <EmptyState searchQuery={searchQuery} />
         ) : (
-          events.map((event, i) => (
-            <EventCard
-              key={event.id ?? i}
-              event={event}
-              onBookEvent={onBookEvent}
-              isFavourite={isFavourite}
-              toggleFavourite={toggleFavourite}
-            />
-          ))
+          events
+            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+            .map((event, i) => (
+              <EventCard
+                key={event.id ?? i}
+                event={event}
+                onBookEvent={onBookEvent}
+                isFavourite={isFavourite}
+                toggleFavourite={toggleFavourite}
+              />
+            ))
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {!loading && events.length > itemsPerPage && (
+        <div className="flex justify-center items-center gap-4 mt-12">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold border border-neutral-800 transition-all ${
+              currentPage === 1
+                ? "text-neutral-600 bg-neutral-900/50 cursor-not-allowed"
+                : "text-neutral-200 bg-neutral-900 hover:border-orange-500/50 hover:text-white cursor-pointer"
+            }`}
+          >
+            Previous
+          </button>
+          
+          <div className="flex gap-2">
+            {Array.from({ length: Math.ceil(events.length / itemsPerPage) }).map((_, idx) => {
+              const pageNum = idx + 1;
+              const isActive = currentPage === pageNum;
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`w-9 h-9 rounded-xl text-sm font-bold border transition-all cursor-pointer ${
+                    isActive
+                      ? "border-orange-500 bg-orange-500/10 text-orange-400"
+                      : "border-neutral-800 bg-neutral-900 text-neutral-400 hover:border-orange-500/30 hover:text-white"
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={() =>
+              setCurrentPage((prev) =>
+                Math.min(prev + 1, Math.ceil(events.length / itemsPerPage))
+              )
+            }
+            disabled={currentPage === Math.ceil(events.length / itemsPerPage)}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold border border-neutral-800 transition-all ${
+              currentPage === Math.ceil(events.length / itemsPerPage)
+                ? "text-neutral-600 bg-neutral-900/50 cursor-not-allowed"
+                : "text-neutral-200 bg-neutral-900 hover:border-orange-500/50 hover:text-white cursor-pointer"
+            }`}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -37,7 +37,7 @@ const OTT_PLATFORMS = [
 
 const Header = () => {
   const router = useRouter();
-  const { triggerRequest, location, status } = useGeolocationContext();
+  const { triggerRequest, location, status, selectedState, setSelectedState } = useGeolocationContext();
   const { count: favCount } = useFavourites();
   // Input and selectors
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,6 +49,7 @@ const Header = () => {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false);
 
   const placeholders = [
     "Search Movies...",
@@ -61,6 +62,7 @@ const Header = () => {
   const ottRef = useRef(null);
   const profileRef = useRef(null);
   const notifRef = useRef(null);
+  const stateDropdownRef = useRef(null);
 
   // ── Notifications ──────────────────────────────────────────────────────────
   const DEFAULT_NOTIFICATIONS = [
@@ -169,6 +171,8 @@ const Header = () => {
         setIsProfileOpen(false);
       if (notifRef.current && !notifRef.current.contains(e.target))
         setIsNotifOpen(false);
+      if (stateDropdownRef.current && !stateDropdownRef.current.contains(e.target))
+        setIsStateDropdownOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -253,21 +257,68 @@ const Header = () => {
               </span>
             </a>
 
-            {/* 11. Location Selector (Desktop) */}
-            <div className="hidden md:block">
+            {/* 11. Unified Location & State Selector (Desktop) */}
+            <div className="hidden md:block relative" ref={stateDropdownRef}>
               <button
-                onClick={handleLocationClick}
-                disabled={status === "requesting" || status === "granted"}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 text-sm font-medium text-neutral-300 transition-all duration-200 ${
-                  status !== "requesting" && status !== "granted"
-                    ? "hover:border-orange-500/40 hover:text-white cursor-pointer"
-                    : "cursor-default"
-                }`}
-                title={status === "granted" && location ? `Lat: ${location.latitude.toFixed(4)}, Lng: ${location.longitude.toFixed(4)}` : "Click to detect location"}
+                onClick={() => setIsStateDropdownOpen(!isStateDropdownOpen)}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-neutral-900 border border-neutral-800 text-sm font-semibold text-neutral-300 hover:border-orange-500/40 hover:text-white transition-all duration-200 cursor-pointer"
               >
                 <MapPin className="text-orange-500 shrink-0" size={15} />
-                <span>{getCurrentLocationText()}</span>
+                <span>
+                  {selectedState || 
+                   (status === "granted" && location?.region) ||
+                   (status === "requesting" ? "Detecting…" : "Select Location")}
+                </span>
+                <ChevronDown size={14} className="text-neutral-500" />
               </button>
+
+              {isStateDropdownOpen && (
+                <div className="absolute left-0 mt-2 w-56 rounded-xl bg-neutral-900 border border-neutral-800 shadow-2xl p-2 z-50">
+                  {/* Automatic Location Fetcher Option */}
+                  <button
+                    onClick={() => {
+                      if (status !== "requesting") {
+                        handleLocationClick();
+                      }
+                    }}
+                    className={`w-full text-left flex items-center justify-between px-3 py-2 text-xs rounded-lg transition-colors cursor-pointer mb-1 ${
+                      status === "granted" 
+                        ? "bg-orange-500/10 text-orange-400 font-semibold border border-orange-500/20" 
+                        : "text-neutral-300 hover:bg-neutral-800"
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <MapPin size={13} className={status === "granted" ? "text-orange-400" : "text-neutral-400"} />
+                      {status === "requesting" ? "Detecting location..." : 
+                       status === "granted" ? `Auto Detected: ${location?.region || "Active"}` : "Use GPS / Auto Detect"}
+                    </span>
+                    {status === "granted" && <Check size={12} className="text-orange-400" />}
+                  </button>
+
+                  <div className="h-px bg-neutral-800 my-1.5" />
+
+                  <div className="px-2.5 py-1 text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                    Select State
+                  </div>
+                  
+
+                  {["Tamil Nadu", "Andhra Pradesh", "Kerala", "Karnataka", "Rajasthan"].map((st) => (
+                    <button
+                      key={st}
+                      onClick={() => {
+                        setSelectedState(st);
+                        setIsStateDropdownOpen(false);
+                      }}
+                      className={`w-full text-left flex items-center justify-between px-3 py-1.5 text-xs rounded-lg hover:bg-neutral-800 transition-colors cursor-pointer ${
+                        selectedState === st ? "text-orange-400 font-semibold" : "text-neutral-300"
+                      }`}
+                    >
+                      <span>{st}</span>
+                      {selectedState === st && <Check size={12} className="text-orange-400" />}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

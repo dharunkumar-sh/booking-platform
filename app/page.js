@@ -8,27 +8,6 @@ import { useRouter } from "next/navigation";
 
 import { useState } from "react";
 
-const isTheatreEvent = (event) => {
-  if (!event) return false;
-  const title = (event.title || "").toLowerCase();
-  const venue = (event.venue || event.location || "").toLowerCase();
-  const category = (event.category || "").toLowerCase();
-  return (
-    category === "drama" ||
-    category === "movie" ||
-    category === "theatre" ||
-    title.includes("theatre") ||
-    title.includes("movie") ||
-    title.includes("cinema") ||
-    title.includes("play") ||
-    title.includes("coolie") ||
-    venue.includes("theatre") ||
-    venue.includes("cinema") ||
-    venue.includes("pvr") ||
-    venue.includes("palazzo")
-  );
-};
-
 // Maps Hero mood keys → event category values stored in DB
 const MOOD_TO_CATEGORY = {
   relaxed: ["comedy", "food"],
@@ -38,10 +17,13 @@ const MOOD_TO_CATEGORY = {
   luxury: ["music"],
 };
 
+import { useGeolocationContext } from "@/context/GeolocationContext";
+
 export default function Home() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const { selectedState, setSelectedState } = useGeolocationContext();
 
   const handleSearchChange = (query) => {
     setSearchQuery(query);
@@ -75,22 +57,24 @@ export default function Home() {
         onSearchChange={handleSearchChange}
         onMoodChange={handleMoodChange}
       />
-      
+
       <FeaturedEvents
         searchQuery={searchQuery}
         selectedCategories={selectedCategories}
+        selectedState={selectedState}
         onBookEvent={handleBookEvent}
       />
       <TrendingEvents
         searchQuery={searchQuery}
         selectedCategories={selectedCategories}
+        selectedState={selectedState}
         onBookEvent={handleBookEvent}
       />
       <EventMapWrapper
         searchQuery={searchQuery}
         selectedCategories={selectedCategories}
         onBookEvent={handleBookEvent}
-      /> 
+      />
     </div>
   );
 }

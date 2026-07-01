@@ -1,9 +1,4 @@
-// This file is kept in sync with /data.json.
-// It is used as a fallback if data.json is unavailable.
-// To re-seed the database run: node scripts/seed.mjs
-
-export const seedEvents = [
-  // ─── MOVIES (10) ──────────────────────────────────────────────────────────
+[
   {
     "title": "Coolie",
     "type": "featured",
@@ -76,13 +71,14 @@ export const seedEvents = [
     "time": "Various Timings",
     "location": "Kochi Cinemas, Kochi, Kerala",
     "rating": "4.9",
-    "description": "A director's cut re-release of the global blockbuster RRR with 20 minutes of never-before-seen footage.",
+    "description": "A director's cut re-release of the global blockbuster RRR with 20 minutes of never-before-seen footage. Experience the epic saga of Raju and Bheem in a new light.",
     "price": 32000,
     "organizer": "DVV Entertainment",
     "features": ["Director's Cut", "Special Booklet", "Dolby Vision"],
     "crew": [
       { "name": "S.S. Rajamouli", "role": "Director", "img": "https://ui-avatars.com/api/?name=SS+Rajamouli&background=random&size=200" },
-      { "name": "Ram Charan", "role": "Lead Actor", "img": "https://ui-avatars.com/api/?name=Ram+Charan&background=random&size=200" }
+      { "name": "Ram Charan", "role": "Lead Actor", "img": "https://ui-avatars.com/api/?name=Ram+Charan&background=random&size=200" },
+      { "name": "Jr NTR", "role": "Lead Actor", "img": "https://ui-avatars.com/api/?name=Jr+NTR&background=random&size=200" }
     ],
     "reviews": [
       { "name": "Priya", "rating": 5, "comment": "Best Indian film ever made. Naatu Naatu forever!" }
@@ -97,7 +93,7 @@ export const seedEvents = [
     "time": "Various Timings",
     "location": "PVR Phoenix Mall, Bengaluru, Karnataka",
     "rating": "4.8",
-    "description": "Rocky's legacy continues in this explosive third installment of the Kolar Gold Fields saga.",
+    "description": "Rocky's legacy continues in this explosive third installment. The saga of the Kolar Gold Fields and the rise of an empire reaches its ultimate conclusion.",
     "price": 45000,
     "organizer": "Hombale Films",
     "features": ["IMAX Large Format", "D-BOX Motion Seats", "Collector's Ticket"],
@@ -118,7 +114,7 @@ export const seedEvents = [
     "time": "Various Timings",
     "location": "Raj Mandir Theatre, Jaipur, Rajasthan",
     "rating": "4.7",
-    "description": "Shah Rukh Khan's blockbuster returns in a remastered version with enhanced visuals and sound.",
+    "description": "Shah Rukh Khan's blockbuster returns in a remastered version with enhanced visuals and sound. Relive the action-thriller that broke box-office records across India.",
     "price": 36000,
     "organizer": "Red Chillies Entertainment",
     "features": ["Remastered 4K Print", "Surround Sound", "Limited Edition Poster"],
@@ -139,7 +135,7 @@ export const seedEvents = [
     "time": "Various Timings",
     "location": "SPI Cinemas, Madurai, Tamil Nadu",
     "rating": "4.5",
-    "description": "A heartwarming sequel to Dunki where Hardy and his friends navigate new adventures.",
+    "description": "A heartwarming sequel to Dunki where Hardy and his friends navigate new adventures in their quest for a better life. Laughter, drama, and emotion in equal measure.",
     "price": 30000,
     "organizer": "Jio Studios",
     "features": ["Premium Seats", "Couples Zone", "Family Package Available"],
@@ -160,7 +156,7 @@ export const seedEvents = [
     "time": "Various Timings",
     "location": "Cinemax, Jodhpur, Rajasthan",
     "rating": "4.6",
-    "description": "The Rohit Shetty cop universe expands in this explosive sequel with Singham leading elite officers.",
+    "description": "The Rohit Shetty cop universe expands in this explosive sequel with Singham leading a team of elite officers to take down a massive crime syndicate.",
     "price": 33000,
     "organizer": "Rohit Shetty Pictures",
     "features": ["Action-Packed Screening", "Cop Universe Collectible", "VIP Section"],
@@ -181,7 +177,7 @@ export const seedEvents = [
     "time": "Various Timings",
     "location": "AGS Cinemas, Coimbatore, Tamil Nadu",
     "rating": "4.8",
-    "description": "Thalapathy Vijay is back in the sequel to Leo, continuing the dark and intense narrative.",
+    "description": "Thalapathy Vijay is back in the sequel to Leo, continuing the dark and intense narrative of a man running from his past while protecting those he loves.",
     "price": 42000,
     "organizer": "7 Screen Studio",
     "features": ["Dolby Atmos", "Premium Lounge", "Fan Merchandise"],
@@ -202,7 +198,7 @@ export const seedEvents = [
     "time": "Various Timings",
     "location": "Muthoot Cinemas, Thiruvananthapuram, Kerala",
     "rating": "4.4",
-    "description": "The epic mythological drama Adipurush returns in an extended director's cut with reimagined VFX.",
+    "description": "The epic mythological drama Adipurush returns in an extended director's cut with reimagined VFX sequences and 30 minutes of additional footage.",
     "price": 28000,
     "organizer": "T-Series Films",
     "features": ["Extended Cut", "Enhanced VFX Version", "Special Screening Package"],
@@ -215,7 +211,6 @@ export const seedEvents = [
     ]
   },
 
-  // ─── SHOWS (10) ───────────────────────────────────────────────────────────
   {
     "title": "Bigg Boss OTT Live Grand Finale",
     "type": "featured",
@@ -225,7 +220,7 @@ export const seedEvents = [
     "time": "7:00 PM",
     "location": "Nehru Indoor Stadium, Chennai, Tamil Nadu",
     "rating": "4.7",
-    "description": "Watch the live grand finale of Bigg Boss OTT with celebrity guests, surprise acts, and the crowning of the winner.",
+    "description": "Watch the live grand finale of Bigg Boss OTT with celebrity guests, surprise acts, and the crowning of the winner. An unforgettable evening of drama and entertainment.",
     "price": 150000,
     "organizer": "Colors TV & Endemol Shine",
     "features": ["Live Studio Audience", "Celebrity Appearances", "After-show Party"],
@@ -245,7 +240,7 @@ export const seedEvents = [
     "time": "7:30 PM",
     "location": "HITEX Exhibition Centre, Hyderabad, Andhra Pradesh",
     "rating": "4.8",
-    "description": "The grand finale of India's biggest talent hunt show with extraordinary acts competing for the coveted title.",
+    "description": "The grand finale of India's biggest talent hunt show. Watch extraordinary acts compete for the coveted title and a life-changing prize money.",
     "price": 120000,
     "organizer": "Sony Entertainment Television",
     "features": ["Front Row Seats", "VIP Lounge Access", "Meet the Judges"],
@@ -266,7 +261,7 @@ export const seedEvents = [
     "time": "7:00 PM",
     "location": "Lulu Mall Amphitheatre, Kochi, Kerala",
     "rating": "4.6",
-    "description": "The most celebrated dance reality show comes to its final showdown with India's top dancers.",
+    "description": "The most celebrated dance reality show comes to its final showdown. Watch India's top dancers battle it out in spectacular choreographic performances.",
     "price": 100000,
     "organizer": "Zee Entertainment",
     "features": ["Dance Workshop Pre-show", "Photo Opportunity", "Fan Meet"],
@@ -286,7 +281,7 @@ export const seedEvents = [
     "time": "8:00 PM",
     "location": "Kannada Rajyotsava Grounds, Bengaluru, Karnataka",
     "rating": "4.9",
-    "description": "A special live stage adaptation of KBC hosted by the legendary Amitabh Bachchan with audience participation.",
+    "description": "A special live stage adaptation of KBC hosted by the legendary Amitabh Bachchan. Audience members can participate and win exciting prizes.",
     "price": 200000,
     "organizer": "Sony Entertainment Television",
     "features": ["Audience Participation Slots", "Autograph Session", "Special Quiz Rounds"],
@@ -306,7 +301,7 @@ export const seedEvents = [
     "time": "7:30 PM",
     "location": "Birla Auditorium, Jaipur, Rajasthan",
     "rating": "4.7",
-    "description": "An exclusive live taping of The Kapil Sharma Show with celebrity guests and unpredictable comedy sketches.",
+    "description": "An exclusive live taping of The Kapil Sharma Show with celebrity guests and unpredictable comedy sketches. Experience the magic of India's favourite comedy talk show.",
     "price": 175000,
     "organizer": "SK Productions",
     "features": ["Live Studio Taping", "Celebrity Selfie Opportunity", "Exclusive Merch"],
@@ -327,7 +322,7 @@ export const seedEvents = [
     "time": "7:00 PM",
     "location": "Music Academy, Chennai, Tamil Nadu",
     "rating": "4.6",
-    "description": "India's legendary musical reality show reaches its grand finale with breathtaking vocal performances.",
+    "description": "India's legendary musical reality show reaches its grand finale. Witness breathtaking vocal performances as talented singers compete for the ultimate title.",
     "price": 90000,
     "organizer": "Zee TV",
     "features": ["Premium Seating", "Classical Music Pre-show", "Artist Interaction"],
@@ -348,7 +343,7 @@ export const seedEvents = [
     "time": "7:30 PM",
     "location": "Shilpakala Vedika, Hyderabad, Andhra Pradesh",
     "rating": "4.5",
-    "description": "Child prodigies take the center stage in the grand finale of Superstar Singer.",
+    "description": "Child prodigies take the center stage in the grand finale of Superstar Singer. Witness the extraordinary talent of young musical geniuses that will leave you in awe.",
     "price": 80000,
     "organizer": "Sony Entertainment Television",
     "features": ["Kids Special Activities", "Interaction with Finalists", "Refreshments Included"],
@@ -368,7 +363,7 @@ export const seedEvents = [
     "time": "6:00 PM",
     "location": "Lalit Ashok, Bengaluru, Karnataka",
     "rating": "4.6",
-    "description": "A spectacular live culinary event where MasterChef India finalists compete in front of a live audience.",
+    "description": "A spectacular live culinary event where MasterChef India finalists compete in front of a live audience. Watch as gourmet dishes are crafted in real-time.",
     "price": 250000,
     "organizer": "Star India",
     "features": ["Tasting Platter", "Cooking Demo", "Recipe Booklet"],
@@ -388,7 +383,7 @@ export const seedEvents = [
     "time": "10:30 AM",
     "location": "Sawai Man Singh Auditorium, Jaipur, Rajasthan",
     "rating": "4.8",
-    "description": "A live edition of Shark Tank India where entrepreneurs pitch to the Sharks for real funding.",
+    "description": "A live edition of Shark Tank India where entrepreneurs pitch to the Sharks for real funding. Network with startup founders and investors in an inspiring atmosphere.",
     "price": 500000,
     "organizer": "Sony Entertainment Television",
     "features": ["Networking Opportunity", "Startup Stalls", "Q&A with Sharks"],
@@ -409,7 +404,7 @@ export const seedEvents = [
     "time": "8:00 PM",
     "location": "Kalaimamani Arangam, Trichy, Tamil Nadu",
     "rating": "4.5",
-    "description": "A special one-night stand-up comedy showcase featuring 5 of India's top comedians performing exclusive sets.",
+    "description": "A special one-night stand-up comedy showcase featuring 5 of India's top comedians performing exclusive sets. Expect shocking wit, relatable humor, and side-splitting jokes.",
     "price": 75000,
     "organizer": "Only Much Louder",
     "features": ["Cocktail Hour Pre-show", "Comedy Album Giveaway", "Post-show Selfie Session"],
@@ -422,7 +417,6 @@ export const seedEvents = [
     ]
   },
 
-  // ─── CONCERTS (10) ────────────────────────────────────────────────────────
   {
     "title": "AR Rahman Live Symphony Tour",
     "type": "featured",
@@ -432,7 +426,7 @@ export const seedEvents = [
     "time": "7:00 PM",
     "location": "Nehru Indoor Arena, Chennai, Tamil Nadu",
     "rating": "4.9",
-    "description": "The Mozart of Madras returns with a magical symphony featuring a 60-piece orchestra.",
+    "description": "The Mozart of Madras returns with a magical symphony of his most iconic soundtracks, accompanied by a 60-piece orchestra. A night of transcendent music.",
     "price": 349900,
     "organizer": "KM Music Conservatory",
     "features": ["Premium Acoustics", "Meet & Greet (VIP)", "Signed Merch"],
@@ -453,7 +447,7 @@ export const seedEvents = [
     "time": "7:30 PM",
     "location": "GMC Balayogi Athletic Stadium, Hyderabad, Andhra Pradesh",
     "rating": "4.8",
-    "description": "Experience the musical genius of Anirudh Ravichander in a spectacular live performance.",
+    "description": "Experience the musical genius of Anirudh Ravichander in a spectacular live performance featuring all his biggest hits from blockbuster films.",
     "price": 299900,
     "organizer": "Wunderbar Films",
     "features": ["VIP Backstage Pass", "Exclusive Merchandise", "Premium Seating"],
@@ -474,7 +468,7 @@ export const seedEvents = [
     "time": "7:00 PM",
     "location": "Kanteerava Outdoor Stadium, Bengaluru, Karnataka",
     "rating": "4.9",
-    "description": "Diljit Dosanjh brings his spectacular Dil-Luminati Tour with world-class stage production.",
+    "description": "Punjab da puttar Diljit Dosanjh is back with his spectacular Dil-Luminati Tour featuring state-of-the-art stage production, massive LED screens, and incredible energy.",
     "price": 249900,
     "organizer": "Live Nation India",
     "features": ["Golden Circle Pit", "VIP Viewing Platform", "Tour Merchandise"],
@@ -482,7 +476,7 @@ export const seedEvents = [
       { "name": "Diljit Dosanjh", "role": "Lead Artist", "img": "https://ui-avatars.com/api/?name=Diljit+Dosanjh&background=random&size=200" }
     ],
     "reviews": [
-      { "name": "Gurpreet", "rating": 5, "comment": "The production quality was absolutely world-class!" }
+      { "name": "Gurpreet", "rating": 5, "comment": "The production quality was absolutely world-class. Diljit never disappoints!" }
     ]
   },
   {
@@ -494,7 +488,7 @@ export const seedEvents = [
     "time": "7:30 PM",
     "location": "Jawaharlal Nehru Stadium, Kochi, Kerala",
     "rating": "4.9",
-    "description": "India's most beloved voice Arijit Singh performs his heart-touching catalog live.",
+    "description": "India's most beloved voice, Arijit Singh, performs his heart-touching catalog live. An evening of pure emotion and musical brilliance that will stay with you forever.",
     "price": 399900,
     "organizer": "BookMyShow Live",
     "features": ["Couple Premium Package", "VIP Soundcheck Experience", "Signed Poster"],
@@ -514,7 +508,7 @@ export const seedEvents = [
     "time": "4:00 PM",
     "location": "Vagator Beach, North Goa (via Rajasthan leg)",
     "rating": "4.8",
-    "description": "Asia's biggest EDM festival with Martin Garrix, Alesso, and top Indian DJs.",
+    "description": "Asia's biggest Electronic Dance Music festival makes a stop with an exclusive 3-day event featuring Martin Garrix, Alesso, and top Indian DJs.",
     "price": 599900,
     "organizer": "Percept Live",
     "features": ["Multi-Stage Setup", "Unlimited Beverages (VIP)", "Camping Available"],
@@ -535,7 +529,7 @@ export const seedEvents = [
     "time": "6:30 PM",
     "location": "YMCA Ground, Chennai, Tamil Nadu",
     "rating": "4.9",
-    "description": "A grand tribute concert celebrating the legacy of the legendary S.P. Balasubrahmanyam.",
+    "description": "A grand tribute concert celebrating the legacy of the legendary S.P. Balasubrahmanyam, featuring top South Indian playback singers performing his timeless classics.",
     "price": 199900,
     "organizer": "Saregama India",
     "features": ["Classical & Film Music", "Commemorative Booklet", "SPB Memorabilia"],
@@ -556,7 +550,7 @@ export const seedEvents = [
     "time": "7:30 PM",
     "location": "DY Patil Stadium Bengaluru Venue, Karnataka",
     "rating": "5.0",
-    "description": "Coldplay brings their Music of the Spheres World Tour to India for an immersive LED-lit spectacle.",
+    "description": "Coldplay brings their monumental Music of the Spheres World Tour to India. Experience A Sky Full of Stars, Yellow, and all the biggest hits in an immersive LED-lit spectacle.",
     "price": 1499900,
     "organizer": "BookMyShow Live",
     "features": ["LED Wristband Included", "Multi-screen LED Walls", "Xylobands Experience"],
@@ -576,7 +570,7 @@ export const seedEvents = [
     "time": "6:00 PM",
     "location": "Tagore Hall, Thiruvananthapuram, Kerala",
     "rating": "4.7",
-    "description": "A stunning blend of traditional Carnatic classical music with jazz and electronic elements.",
+    "description": "A stunning blend of traditional Carnatic classical music with jazz and electronic elements. Featuring award-winning musicians creating a unique fusion soundscape.",
     "price": 149900,
     "organizer": "Music Kerala Foundation",
     "features": ["Classical Instrument Showcase", "Artist Interaction", "Program Notes"],
@@ -597,7 +591,7 @@ export const seedEvents = [
     "time": "7:00 PM",
     "location": "SMS Convention Centre, Jaipur, Rajasthan",
     "rating": "4.8",
-    "description": "The nightingale of India Shreya Ghoshal performs beloved songs from Bollywood and regional cinema.",
+    "description": "The nightingale of India, Shreya Ghoshal, performs her most beloved songs from Bollywood and regional cinema in an intimate concert setting.",
     "price": 299900,
     "organizer": "Live Nation India",
     "features": ["Premium Reserved Seating", "Flower Petal Moment", "VIP Fan Package"],
@@ -617,7 +611,7 @@ export const seedEvents = [
     "time": "7:30 PM",
     "location": "CIBE Ground, Visakhapatnam, Andhra Pradesh",
     "rating": "4.6",
-    "description": "The iconic Bollywood composer duo Vishal-Shekhar perform their greatest compositions live with a full band.",
+    "description": "The iconic Bollywood composer duo Vishal–Shekhar perform their greatest compositions live with a full band. An evening of foot-tapping numbers and melodious hits.",
     "price": 199900,
     "organizer": "T-Series Live",
     "features": ["Full Band Performance", "Dance Floor Access", "Glow Sticks Included"],
@@ -630,7 +624,6 @@ export const seedEvents = [
     ]
   },
 
-  // ─── EVENTS (10) ──────────────────────────────────────────────────────────
   {
     "title": "Chennai Music Festival Open Stage",
     "type": "featured",
@@ -640,7 +633,7 @@ export const seedEvents = [
     "time": "11:00 AM",
     "location": "Marina Beach Grounds, Chennai, Tamil Nadu",
     "rating": "4.7",
-    "description": "An open-air cultural extravaganza featuring folk music, classical performances, street food, and artisan exhibitions.",
+    "description": "An open-air cultural extravaganza featuring folk music, classical performances, street food, and artisan exhibitions along the iconic Marina Beach promenade.",
     "price": 10000,
     "organizer": "Tamil Nadu Tourism",
     "features": ["Free Entry Zones", "Food Courts", "Kids Zone"],
@@ -660,7 +653,7 @@ export const seedEvents = [
     "time": "10:00 AM",
     "location": "Ramanaidu Studios, Visakhapatnam, Andhra Pradesh",
     "rating": "4.6",
-    "description": "A week-long international film festival showcasing award-winning films from over 50 countries.",
+    "description": "A week-long international film festival showcasing award-winning films from over 50 countries with panel discussions, filmmaker Q&As, and workshops.",
     "price": 50000,
     "organizer": "Vizag Film Festival Society",
     "features": ["All-Access Festival Pass", "Director Masterclasses", "Industry Networking"],
@@ -680,7 +673,7 @@ export const seedEvents = [
     "time": "10:00 AM",
     "location": "Punnamada Lake, Alappuzha, Kerala",
     "rating": "4.9",
-    "description": "Witness the thrilling Nehru Trophy Boat Race, the most prestigious snake boat race in Kerala.",
+    "description": "Witness the thrilling Nehru Trophy Boat Race, the most prestigious snake boat race in Kerala. Experience the roar of thousands of oarsmen and the electric atmosphere of this iconic festival.",
     "price": 20000,
     "organizer": "Kerala Tourism",
     "features": ["Lakeside Premium Stands", "Traditional Kerala Cuisine", "Guided Backwater Tour"],
@@ -700,7 +693,7 @@ export const seedEvents = [
     "time": "10:00 AM",
     "location": "Bangalore International Exhibition Centre, Karnataka",
     "rating": "4.8",
-    "description": "India's premier technology summit bringing together global tech leaders, startups, and investors.",
+    "description": "India's premier technology summit bringing together global tech leaders, startups, and investors. Featuring keynotes, innovation showcases, and networking opportunities.",
     "price": 500000,
     "organizer": "Karnataka Government & IT.in",
     "features": ["Speaker Keynotes", "Startup Expo", "Investor Roundtables"],
@@ -708,7 +701,7 @@ export const seedEvents = [
       { "name": "Nandan Nilekani", "role": "Keynote Speaker", "img": "https://ui-avatars.com/api/?name=Nandan+Nilekani&background=random&size=200" }
     ],
     "reviews": [
-      { "name": "Kiran", "rating": 5, "comment": "The most valuable professional investment of the year!" }
+      { "name": "Kiran", "rating": 5, "comment": "The most valuable professional investment of the year. Invaluable connections made!" }
     ]
   },
   {
@@ -720,7 +713,7 @@ export const seedEvents = [
     "time": "9:30 AM",
     "location": "Diggi Palace, Jaipur, Rajasthan",
     "rating": "4.9",
-    "description": "The world's largest free literary festival returns to the Pink City with global authors and thinkers.",
+    "description": "The world's largest free literary festival returns to the Pink City. Five days of conversations with authors, thinkers, and change-makers from around the globe.",
     "price": 15000,
     "organizer": "Teamwork Arts",
     "features": ["All-Access Literary Pass", "Author Signings", "Special Heritage Walks"],
@@ -741,7 +734,7 @@ export const seedEvents = [
     "time": "10:30 AM",
     "location": "YMCA Grounds, Madurai, Tamil Nadu",
     "rating": "4.5",
-    "description": "Celebrate Pongal with a vibrant cultural expo featuring traditional kolam competitions and folk art.",
+    "description": "Celebrate Pongal with a vibrant cultural expo featuring traditional kolam competitions, Jallikattu demonstrations, organic food markets, and folk art exhibitions.",
     "price": 5000,
     "organizer": "Tamil Nadu Cultural Events Board",
     "features": ["Folk Art Demos", "Organic Market", "Traditional Food Stalls"],
@@ -761,12 +754,12 @@ export const seedEvents = [
     "time": "11:00 AM",
     "location": "Indira Gandhi Municipal Stadium, Vijayawada, Andhra Pradesh",
     "rating": "4.6",
-    "description": "Celebrate the rich culinary and cultural heritage of Andhra Pradesh with authentic cuisine and Kuchipudi dance.",
+    "description": "Celebrate the rich culinary and cultural heritage of Andhra Pradesh with authentic cuisine stalls, Kuchipudi dance performances, and traditional handicraft exhibitions.",
     "price": 8000,
     "organizer": "AP State Tourism Authority",
     "features": ["Authentic Andhra Cuisine", "Kuchipudi Dance Show", "Handicraft Bazaar"],
     "crew": [
-      { "name": "Cultural Ambassador", "role": "Cultural Ambassador", "img": "https://ui-avatars.com/api/?name=Cultural+Ambassador&background=random&size=200" }
+      { "name": "Vyjayanthimala Sridhar", "role": "Cultural Ambassador", "img": "https://ui-avatars.com/api/?name=Cultural+Ambassador&background=random&size=200" }
     ],
     "reviews": [
       { "name": "Padma", "rating": 4, "comment": "The gongura pickle competition alone was worth the trip!" }
@@ -781,7 +774,7 @@ export const seedEvents = [
     "time": "9:00 AM",
     "location": "Sree Balaramapuram Cultural Centre, Palakkad, Kerala",
     "rating": "4.8",
-    "description": "Celebrate Onam with Pookalam competitions, Thiruvathira dance, Onasadya feast, and Pulikali tiger dance.",
+    "description": "Celebrate the grand festival of Onam with Pookalam competitions, Thiruvathira dance, Onasadya feast, and the mesmerising Pulikali tiger dance performance.",
     "price": 12000,
     "organizer": "Kerala Tourism Development Corporation",
     "features": ["Onasadya Feast", "Pookalam Competition", "Traditional Games"],
@@ -789,7 +782,7 @@ export const seedEvents = [
       { "name": "KTDC Coordinator", "role": "Event Head", "img": "https://ui-avatars.com/api/?name=KTDC+Event&background=random&size=200" }
     ],
     "reviews": [
-      { "name": "Anoop", "rating": 5, "comment": "The Onam celebration here is truly spectacular!" }
+      { "name": "Anoop", "rating": 5, "comment": "The Onam celebration here is truly spectacular. Felt the true spirit of Kerala!" }
     ]
   },
   {
@@ -801,12 +794,12 @@ export const seedEvents = [
     "time": "9:00 AM",
     "location": "Mysore Palace Grounds, Mysuru, Karnataka",
     "rating": "4.9",
-    "description": "The grand Mysuru Dasara celebrations with golden elephant procession, light-up palace, and cultural shows.",
+    "description": "The grand Mysuru Dasara celebrations with the famous golden elephant procession, light-up palace, cultural shows, and international trade fair over 10 magnificent days.",
     "price": 25000,
     "organizer": "Karnataka State Government",
     "features": ["Palace Illumination Viewing", "Grand Procession Access", "Cultural Show Tickets"],
     "crew": [
-      { "name": "Event Head", "role": "District Commissioner Mysuru", "img": "https://ui-avatars.com/api/?name=Event+Head&background=random&size=200" }
+      { "name": "District Commissioner Mysuru", "role": "Event Head", "img": "https://ui-avatars.com/api/?name=Event+Head&background=random&size=200" }
     ],
     "reviews": [
       { "name": "Sangeetha", "rating": 5, "comment": "Mysuru Dasara is truly the festival of festivals. Utterly magnificent!" }
@@ -821,9 +814,9 @@ export const seedEvents = [
     "time": "6:00 PM",
     "location": "Mehrangarh Fort, Jodhpur, Rajasthan",
     "rating": "4.9",
-    "description": "RIFF brings together folk artists from across India and the world against the backdrop of Mehrangarh Fort.",
+    "description": "RIFF brings together folk artists from across India and the world to perform against the stunning backdrop of Mehrangarh Fort. A unique confluence of global folk traditions.",
     "price": 50000,
-    "organizer": "Jodhpur RIFF Trust",
+    "organizer": "Jodpur RIFF Trust",
     "features": ["Fort Access", "Global Folk Artists", "Heritage Camping"],
     "crew": [
       { "name": "Divya Bhatia", "role": "Festival Director", "img": "https://ui-avatars.com/api/?name=Divya+Bhatia&background=random&size=200" }
@@ -832,4 +825,4 @@ export const seedEvents = [
       { "name": "Fatima", "rating": 5, "comment": "The most magical musical experience against the world's best backdrop!" }
     ]
   }
-];
+]

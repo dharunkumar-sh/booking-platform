@@ -59,6 +59,20 @@ export function GeolocationProvider({ children }) {
     setTimeout(() => requestLocation(), 100);
   }, [clearLocation, requestLocation]);
 
+  const [selectedState, setSelectedState] = useState("Tamil Nadu");
+
+  // Sync selectedState if geolocation returns one of the 5 target states
+  useEffect(() => {
+    if (status === "granted" && location?.region) {
+      const match = ["Tamil Nadu", "Andhra Pradesh", "Kerala", "Karnataka", "Rajasthan"].find(
+        (st) => location.region.toLowerCase().includes(st.toLowerCase())
+      );
+      if (match) {
+        setSelectedState(match);
+      }
+    }
+  }, [status, location]);
+
   const value = {
     // Core state
     location,
@@ -66,6 +80,8 @@ export function GeolocationProvider({ children }) {
     error,
     isRestored,
     showBanner,
+    selectedState,
+    setSelectedState,
     // Actions
     triggerRequest: requestLocation,
     manualRetry,
