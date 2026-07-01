@@ -289,13 +289,9 @@ const Hero = ({ onSearchChange = () => {}, onMoodChange = () => {} }) => {
     setActiveIndex(-1);
     onSearchChange(event.title);
     try {
-      await fetch("/api/redis", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: "selectedEvent", value: event }),
-      });
+      localStorage.setItem("selectedEvent", JSON.stringify(event));
     } catch (err) {
-      console.error("[Hero] redis write error:", err);
+      console.error("[Hero] localStorage write error:", err);
     }
     router.push(`/event-details/${encodeURIComponent(event.title)}`);
   };

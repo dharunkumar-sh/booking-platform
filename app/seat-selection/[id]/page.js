@@ -18,22 +18,20 @@ function SeatSelectionPageContent() {
   });
 
   useEffect(() => {
-    fetch("/api/redis?key=selectedEvent")
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.data) {
-          const parsed = res.data;
-          setEventDetails({
-            title: parsed.title,
-            venue: parsed.venue || parsed.location || "Main Arena",
-            priceVal: parsed.price ? parseInt(parsed.price.toString().replace(/[^\d]/g, "")) : (parsed.priceVal || 499),
-            category: parsed.category || "",
-          });
-        }
-      })
-      .catch((e) => {
-        console.error(e);
-      });
+    try {
+      const data = localStorage.getItem("selectedEvent");
+      if (data) {
+        const parsed = JSON.parse(data);
+        setEventDetails({
+          title: parsed.title,
+          venue: parsed.venue || parsed.location || "Main Arena",
+          priceVal: parsed.price ? parseInt(parsed.price.toString().replace(/[^\d]/g, "")) : (parsed.priceVal || 499),
+          category: parsed.category || "",
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }, [params.id, searchParams]);
 
   const { title, venue, priceVal, category } = eventDetails;
@@ -66,11 +64,7 @@ function SeatSelectionPageContent() {
           }}
           onConfirmBooking={async (ticketDetails) => {
             try {
-              await fetch("/api/redis", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ key: "pendingBooking", value: ticketDetails }),
-              });
+              localStorage.setItem("pendingBooking", JSON.stringify(ticketDetails));
             } catch (e) {
               console.error(e);
             }

@@ -258,11 +258,7 @@ export default function TrendingEvents({
               key={event.id ?? index}
               onClick={async () => {
                 try {
-                  await fetch("/api/redis", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ key: "selectedEvent", value: event }),
-                  });
+                  localStorage.setItem("selectedEvent", JSON.stringify(event));
                 } catch (e) {
                   console.error(e);
                 }

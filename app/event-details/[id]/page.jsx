@@ -11,29 +11,29 @@ export default function EventDetailsPage() {
   const params = useParams();
 
   useEffect(() => {
-    fetch(`/api/redis?key=selectedEvent`)
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.data) {
-          const parsedEvent = res.data;
-          setEvent({
-            title: parsedEvent.title,
-            category: parsedEvent.category || "Event",
-            date: parsedEvent.date,
-            time: parsedEvent.time || "7:00 PM",
-            venue: parsedEvent.venue || parsedEvent.location || "Venue TBA",
-            rating: parsedEvent.rating,
-            image: parsedEvent.image,
-            description: parsedEvent.description,
-            price: parsedEvent.price,
-            organizer: parsedEvent.organizer,
-            features: parsedEvent.features,
-            crew: parsedEvent.crew,
-            reviews: parsedEvent.reviews,
-          });
-        }
-      })
-      .catch((e) => console.error(e));
+    try {
+      const data = localStorage.getItem("selectedEvent");
+      if (data) {
+        const parsedEvent = JSON.parse(data);
+        setEvent({
+          title: parsedEvent.title,
+          category: parsedEvent.category || "Event",
+          date: parsedEvent.date,
+          time: parsedEvent.time || "7:00 PM",
+          venue: parsedEvent.venue || parsedEvent.location || "Venue TBA",
+          rating: parsedEvent.rating,
+          image: parsedEvent.image,
+          description: parsedEvent.description,
+          price: parsedEvent.price,
+          organizer: parsedEvent.organizer,
+          features: parsedEvent.features,
+          crew: parsedEvent.crew,
+          reviews: parsedEvent.reviews,
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }, [params.id]);
 
   if (!event) {
