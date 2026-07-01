@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter, useParams } from "next/navigation";
 import SeatSelection from "@/components/SeatSelection";
-import TicketSelection from "@/app/tickets/TicketSelection";
+import TicketSelection from "@/app/(pages)/tickets/TicketSelection";
 
 function SeatSelectionPageContent() {
   const searchParams = useSearchParams();
