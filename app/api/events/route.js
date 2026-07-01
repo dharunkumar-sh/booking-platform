@@ -1,6 +1,6 @@
 import { db } from "@/db/index";
 import { events } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 /**
@@ -13,13 +13,17 @@ import { NextResponse } from "next/server";
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const type = searchParams.get("type") || null;
-    const category = searchParams.get("category") || null;
+    const type = searchParams.get("type");
+    const category = searchParams.get("category");
 
     // Build filter conditions
     const conditions = [];
-    if (type) conditions.push(eq(events.type, type));
-    if (category) conditions.push(eq(events.category, category));
+    if (type && type.trim()) {
+      conditions.push(eq(sql`LOWER(${events.type})`, type.trim().toLowerCase()));
+    }
+    if (category && category.trim()) {
+      conditions.push(eq(sql`LOWER(${events.category})`, category.trim().toLowerCase()));
+    }
 
     const rows =
       conditions.length > 0

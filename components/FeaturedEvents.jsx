@@ -93,14 +93,17 @@ export default function FeaturedEvents({
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const categoriesJoined = (selectedCategories || []).join(",");
+
   // ── Fetch events from /api/events ─────────────────────────────────────────
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
+      const activeCats = categoriesJoined ? categoriesJoined.split(",") : [];
       const params = new URLSearchParams({ type: "featured" });
       // If a single category is active from the mood filter, add it
-      if (selectedCategories && selectedCategories.length === 1) {
-        params.set("category", selectedCategories[0]);
+      if (activeCats.length === 1) {
+        params.set("category", activeCats[0]);
       }
 
       const res = await fetch(`/api/events?${params.toString()}`);
@@ -109,9 +112,9 @@ export default function FeaturedEvents({
         let rows = data.events || [];
 
         // Client-side: handle multi-category mood filters & text search
-        if (selectedCategories && selectedCategories.length > 1) {
+        if (activeCats.length > 1) {
           rows = rows.filter((e) =>
-            selectedCategories.includes((e.category || "").toLowerCase())
+            activeCats.includes((e.category || "").toLowerCase())
           );
         }
 
@@ -133,7 +136,7 @@ export default function FeaturedEvents({
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedCategories]);
+  }, [searchQuery, categoriesJoined]);
 
   // Debounce re-fetch on search/category changes
   useEffect(() => {
