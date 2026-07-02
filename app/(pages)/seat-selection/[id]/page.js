@@ -11,6 +11,7 @@ function SeatSelectionPageContent() {
   const params = useParams();
 
   const [eventDetails, setEventDetails] = useState({
+    id: searchParams.get("id") ? parseInt(searchParams.get("id"), 10) : null,
     title: params.id ? decodeURIComponent(params.id) : (searchParams.get("title") || "Special Event Concert"),
     venue: searchParams.get("venue") || "Main Arena",
     priceVal: parseInt(searchParams.get("price") || "499", 10),
@@ -18,11 +19,19 @@ function SeatSelectionPageContent() {
   });
 
   useEffect(() => {
+    const userProfile = localStorage.getItem("vibepass_user");
+    if (!userProfile) {
+      localStorage.setItem("login_redirect", window.location.pathname + window.location.search);
+      router.push("/login");
+      return;
+    }
+
     try {
       const data = localStorage.getItem("selectedEvent");
       if (data) {
         const parsed = JSON.parse(data);
         setEventDetails({
+          id: parsed.id,
           title: parsed.title,
           venue: parsed.venue || parsed.location || "Main Arena",
           priceVal: parsed.price != null
@@ -36,7 +45,7 @@ function SeatSelectionPageContent() {
     } catch (e) {
       console.error(e);
     }
-  }, [params.id, searchParams]);
+  }, [params.id, searchParams, router]);
 
   const { title, venue, priceVal, category } = eventDetails;
 

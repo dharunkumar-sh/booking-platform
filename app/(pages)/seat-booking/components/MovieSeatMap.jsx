@@ -1,4 +1,5 @@
 "use client";
+import React, { useState, useEffect } from "react";
 
 /* ── Row/seat configuration ──────────────────────── */
 const ROWS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
@@ -59,8 +60,30 @@ function getSeatClass(type, isSelected, isBooked) {
   return `vp-seat vp-seat-${type}`;
 }
 
-export default function MovieSeatMap({ selectedSeats, onSeatToggle }) {
+export default function MovieSeatMap({ eventId, selectedSeats, onSeatToggle }) {
   const isSelected = (id) => selectedSeats.some((s) => s.id === id);
+  const [dbBookedSeats, setDbBookedSeats] = useState(new Set());
+  const [hasCheckedDb, setHasCheckedDb] = useState(false);
+
+  useEffect(() => {
+    if (!eventId) {
+      setDbBookedSeats(BOOKED);
+      setHasCheckedDb(true);
+      return;
+    }
+    fetch(`/api/bookings?eventId=${eventId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.seats) {
+          setDbBookedSeats(new Set(data.seats));
+        }
+        setHasCheckedDb(true);
+      })
+      .catch((err) => {
+        console.error("Error checking seat bookings:", err);
+        setHasCheckedDb(true);
+      });
+  }, [eventId]);
 
   return (
     <div className="flex flex-col items-center gap-0.5" style={{ minWidth: 480 }}>
@@ -102,7 +125,7 @@ export default function MovieSeatMap({ selectedSeats, onSeatToggle }) {
               <div className="flex gap-1">
                 {COLS.map((col) => {
                   const id = `${row}-${col}`;
-                  const booked = BOOKED.has(id);
+                  const booked = hasCheckedDb && dbBookedSeats.has(id);
                   const selected = isSelected(id);
                   const seat = {
                     id,

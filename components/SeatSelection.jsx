@@ -193,16 +193,16 @@ export default function SeatSelection({
       >
         <div className="no-scrollbar" style={{ width: "100%", display: "flex", justifyContent: "center", overflow: "hidden" }}>
           {venueType === "theatre" && (
-            <MovieSeatMap selectedSeats={selectedSeats} onSeatToggle={handleSeatToggle} />
+            <MovieSeatMap eventId={event.id} selectedSeats={selectedSeats} onSeatToggle={handleSeatToggle} />
           )}
           {venueType === "stadium" && (
-            <StadiumSeatMap selectedSeats={selectedSeats} onSeatToggle={handleSeatToggle} />
+            <StadiumSeatMap eventId={event.id} selectedSeats={selectedSeats} onSeatToggle={handleSeatToggle} />
           )}
           {venueType === "hall" && (
-            <OpenSpaceSeatMap selectedSeats={selectedSeats} onSeatToggle={handleSeatToggle} />
+            <OpenSpaceSeatMap eventId={event.id} selectedSeats={selectedSeats} onSeatToggle={handleSeatToggle} />
           )}
           {venueType === "arena" && (
-            <ArenaSeatMap selectedSeats={selectedSeats} onSeatToggle={handleSeatToggle} />
+            <ArenaSeatMap eventId={event.id} selectedSeats={selectedSeats} onSeatToggle={handleSeatToggle} />
           )}
         </div>
 

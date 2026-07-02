@@ -76,11 +76,19 @@ export default function EventDetails({ event, description, organizer, price, fea
   if (!event) return null;
 
   const handleCheckout = () => {
+    const userStored = localStorage.getItem("vibepass_user");
     const query = new URLSearchParams({
       venue: event.venue || event.location || "",
       category: event.category || "",
     }).toString();
-    router.push(`/seat-selection/${encodeURIComponent(event.title)}?${query}`);
+    const destination = `/seat-selection/${encodeURIComponent(event.title)}?${query}`;
+
+    if (!userStored) {
+      localStorage.setItem("login_redirect", destination);
+      router.push("/login");
+      return;
+    }
+    router.push(destination);
   };
 
   const defaultDescription = "Join us for an unforgettable experience! This event brings together the best in the industry for a night of entertainment, learning, and connection. Don't miss out on what promises to be the highlight of the year.";

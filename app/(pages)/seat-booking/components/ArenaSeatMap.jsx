@@ -12,12 +12,9 @@ const ARENA_CONFIG = {
   upperCenter: { type: "upper", section: "Upper Bowl Center", price: 500, rows: 4, cols: 16 },
 };
 
-const BOOKED_ARENA = new Set([
-  "floor-1-3", "floor-1-4", "floor-2-8", "floor-3-1",
-  "lowerLeft-1-2", "lowerLeft-3-3", "lowerRight-2-1",
-  "lowerCenter-1-5", "lowerCenter-1-6", "lowerCenter-4-10",
-  "upperCenter-1-8", "upperCenter-2-12", "upperCenter-3-4"
-]);
+import React, { useState, useEffect } from "react";
+
+const BOOKED_ARENA = new Set();
 
 function getSeatClass(type, isSelected, isBooked) {
   if (isBooked) return "vp-seat vp-seat-booked";
@@ -25,8 +22,30 @@ function getSeatClass(type, isSelected, isBooked) {
   return `vp-seat vp-seat-${type}`;
 }
 
-export default function ArenaSeatMap({ selectedSeats, onSeatToggle }) {
+export default function ArenaSeatMap({ eventId, selectedSeats, onSeatToggle }) {
   const isSelected = (id) => selectedSeats.some((s) => s.id === id);
+  const [dbBookedSeats, setDbBookedSeats] = useState(new Set());
+  const [hasCheckedDb, setHasCheckedDb] = useState(false);
+
+  useEffect(() => {
+    if (!eventId) {
+      setDbBookedSeats(BOOKED_ARENA);
+      setHasCheckedDb(true);
+      return;
+    }
+    fetch(`/api/bookings?eventId=${eventId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.seats) {
+          setDbBookedSeats(new Set(data.seats));
+        }
+        setHasCheckedDb(true);
+      })
+      .catch((err) => {
+        console.error("Error checking seat bookings:", err);
+        setHasCheckedDb(true);
+      });
+  }, [eventId]);
 
   const renderBlock = (blockId, config) => {
     const { type, section, price, rows, cols } = config;
@@ -41,7 +60,7 @@ export default function ArenaSeatMap({ selectedSeats, onSeatToggle }) {
               const rowNum = rIdx + 1;
               const colNum = cIdx + 1;
               const id = `${blockId}-${rowNum}-${colNum}`;
-              const booked = BOOKED_ARENA.has(id);
+              const booked = hasCheckedDb && dbBookedSeats.has(id);
               const selected = isSelected(id);
               const seat = {
                 id,

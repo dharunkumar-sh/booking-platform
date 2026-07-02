@@ -19,6 +19,8 @@ const LAWN_CONFIG = {
   cols: 14,
 };
 
+import React, { useState, useEffect } from "react";
+
 const BOOKED_OPEN_SPACE = new Set([
   "pod-1-2", "pod-1-3", "pod-2-6", "pod-4-1",
   "lawn-1-5", "lawn-1-6", "lawn-2-10", "lawn-3-4", "lawn-4-12", "lawn-5-2"
@@ -30,8 +32,30 @@ function getSeatClass(type, isSelected, isBooked) {
   return `vp-seat vp-seat-${type}`;
 }
 
-export default function OpenSpaceSeatMap({ selectedSeats, onSeatToggle }) {
+export default function OpenSpaceSeatMap({ eventId, selectedSeats, onSeatToggle }) {
   const isSelected = (id) => selectedSeats.some((s) => s.id === id);
+  const [dbBookedSeats, setDbBookedSeats] = useState(new Set());
+  const [hasCheckedDb, setHasCheckedDb] = useState(false);
+
+  useEffect(() => {
+    if (!eventId) {
+      setDbBookedSeats(BOOKED_OPEN_SPACE);
+      setHasCheckedDb(true);
+      return;
+    }
+    fetch(`/api/bookings?eventId=${eventId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.seats) {
+          setDbBookedSeats(new Set(data.seats));
+        }
+        setHasCheckedDb(true);
+      })
+      .catch((err) => {
+        console.error("Error checking seat bookings:", err);
+        setHasCheckedDb(true);
+      });
+  }, [eventId]);
 
   return (
     <div className="flex flex-col items-center gap-8" style={{ minWidth: 600 }}>
@@ -55,7 +79,7 @@ export default function OpenSpaceSeatMap({ selectedSeats, onSeatToggle }) {
               {Array.from({ length: pod.size }).map((_, idx) => {
                 const seatNum = idx + 1;
                 const id = `${pod.id}-${seatNum}`;
-                const booked = BOOKED_OPEN_SPACE.has(id);
+                const booked = hasCheckedDb && dbBookedSeats.has(id);
                 const selected = isSelected(id);
                 const seat = {
                   id,
@@ -105,7 +129,7 @@ export default function OpenSpaceSeatMap({ selectedSeats, onSeatToggle }) {
                  const rowNum = rIdx + 1;
                  const colNum = cIdx + 1;
                  const id = `lawn-${rowNum}-${colNum}`;
-                 const booked = BOOKED_OPEN_SPACE.has(id);
+                 const booked = hasCheckedDb && dbBookedSeats.has(id);
                  const selected = isSelected(id);
                  const seat = {
                    id,

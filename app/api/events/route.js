@@ -46,7 +46,7 @@ export async function GET(request) {
       .groupBy(events.id);
 
     const whereConditions = [];
-    if (type)     whereConditions.push(eq(events.type, type));
+    if (type && type !== "trending") whereConditions.push(eq(events.type, type));
     if (category) whereConditions.push(ilike(events.category, category));
     if (state)    whereConditions.push(ilike(events.location, `%${state}%`));
 
@@ -55,7 +55,8 @@ export async function GET(request) {
     }
 
     if (type === "trending") {
-      query.having(sql`count(${eventLikes.id}) > 5`);
+      query.having(sql`count(${eventLikes.id}) >= 5`);
+      query.orderBy(sql`count(${eventLikes.id}) DESC`);
     }
 
     const rows = await query;

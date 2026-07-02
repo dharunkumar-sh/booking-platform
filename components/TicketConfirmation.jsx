@@ -73,12 +73,37 @@ export default function TicketConfirmation() {
 
   const handleConfirm = async () => {
     try {
+      const seatIds = seats.map((s) => s.id || s.label || s);
+      const postBody = {
+        email: user?.email,
+        name: user?.name,
+        phone: user?.phone,
+        eventId: event.id,
+        seats: seatIds,
+        totalPrice: finalTotal
+      };
+      
+      let dbBookingId = null;
+      try {
+        const response = await fetch("/api/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(postBody),
+        });
+        const responseData = await response.json();
+        if (responseData.success) {
+          dbBookingId = responseData.bookingId;
+        }
+      } catch (err) {
+        console.error("Failed saving booking to database:", err);
+      }
+
       const existingStr = localStorage.getItem("confirmedBookings");
       const list = existingStr ? JSON.parse(existingStr) : [];
 
       const confirmedBooking = {
         ...booking,
-        bookingId,
+        bookingId: dbBookingId ? `DB-${dbBookingId}` : bookingId,
         audiNumber,
         pricing: {
           ticketCost,

@@ -60,16 +60,25 @@ export default function Home() {
 
   // ── Booking handler ───────────────────────────────────────────────────────
   const handleBookEvent = (event) => {
+    const userStored = localStorage.getItem("vibepass_user");
+    const query = new URLSearchParams({
+      venue: event.venue || event.location || "",
+      category: event.category || "",
+    }).toString();
+    const destination = `/seat-selection/${encodeURIComponent(event.title)}?${query}`;
+
     try {
       localStorage.setItem("selectedEvent", JSON.stringify(event));
     } catch (e) {
       console.error("Failed to save selected event to localStorage:", e);
     }
-    const query = new URLSearchParams({
-      venue: event.venue || event.location || "",
-      category: event.category || "",
-    }).toString();
-    router.push(`/seat-selection/${encodeURIComponent(event.title)}?${query}`);
+
+    if (!userStored) {
+      localStorage.setItem("login_redirect", destination);
+      router.push("/login");
+      return;
+    }
+    router.push(destination);
   };
 
   return (

@@ -14,6 +14,25 @@ export default function UserForm() {
   const [bookingDetails, setBookingDetails] = useState(null);
 
   useEffect(() => {
+    // Enforce authentication
+    const userProfile = localStorage.getItem("vibepass_user");
+    if (!userProfile) {
+      localStorage.setItem("login_redirect", window.location.pathname);
+      router.push("/login");
+      return;
+    } else {
+      try {
+        const parsedUser = JSON.parse(userProfile);
+        setFormData({
+          name: parsedUser.name || "",
+          email: parsedUser.email || "",
+          phone: parsedUser.phone || "",
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     // Load pending booking details to show summary
     try {
       const data = localStorage.getItem("pendingBooking");
@@ -23,7 +42,7 @@ export default function UserForm() {
     } catch (e) {
       console.error(e);
     }
-  }, []);
+  }, [router]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

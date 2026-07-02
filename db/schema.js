@@ -41,6 +41,7 @@ export const bookings = pgTable("bookings", {
   totalPrice: integer("total_price").notNull(),
   status: varchar("status", { length: 50 }).default("pending").notNull(),
   bookingDate: timestamp("booking_date").defaultNow().notNull(),
+  seats: jsonb("seats").default([]),
 });
 
 export const userform = pgTable("userform", {
