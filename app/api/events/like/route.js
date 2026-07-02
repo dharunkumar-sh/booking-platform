@@ -24,18 +24,36 @@ export async function POST(request) {
         )
       );
 
+
     if (existing.length > 0) {
-      // Fetch the current likes count from eventLikes table
+      // User has already liked, so UNLIKE it
+      await db.delete(eventLikes)
+        .where(
+          and(
+            eq(eventLikes.eventId, Number(eventId)),
+            eq(eventLikes.userId, Number(userId))
+          )
+        );
+
+      // Get updated count
       const countRow = await db
         .select({ count: sql`count(*)` })
         .from(eventLikes)
         .where(eq(eventLikes.eventId, Number(eventId)));
 
-      return NextResponse.json({ 
-        success: false, 
-        error: "You have already liked this event",
-        likes: Number(countRow[0]?.count || 0)
-      }, { status: 400 });
+      const likesCount = Number(countRow[0]?.count || 0);
+
+      // Sync the events table likes column
+      await db.update(events)
+        .set({ likes: likesCount })
+        .where(eq(events.id, Number(eventId)));
+
+      return NextResponse.json({
+        success: true,
+        message: "Unliked successfully",
+        likes: likesCount,
+        hasLiked: false
+      });
     }
 
     // Record the like
@@ -60,7 +78,8 @@ export async function POST(request) {
     return NextResponse.json({ 
       success: true, 
       message: "Liked successfully", 
-      likes: likesCount 
+      likes: likesCount,
+      hasLiked: true
     });
   } catch (error) {
     console.error("[POST /api/events/like] Error:", error);

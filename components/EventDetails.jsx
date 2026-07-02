@@ -42,7 +42,7 @@ export default function EventDetails({ event, description, organizer, price, fea
       .then(data => {
         if (data.success) {
           setLikesCount(data.likes);
-          setHasLiked(true);
+          setHasLiked(data.hasLiked);
         }
       });
     }
@@ -66,7 +66,7 @@ export default function EventDetails({ event, description, organizer, price, fea
       const data = await res.json();
       if (data.success) {
         setLikesCount(data.likes);
-        setHasLiked(true);
+        setHasLiked(data.hasLiked);
       }
     } catch (err) {
       console.error(err);

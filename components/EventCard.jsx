@@ -78,7 +78,7 @@ export default function EventCard({
       .then(data => {
         if (data.success) {
           setLikesCount(data.likes);
-          setHasLiked(true);
+          setHasLiked(data.hasLiked);
         }
       })
       .catch(err => console.error("Pending like apply failed:", err));
@@ -100,12 +100,14 @@ export default function EventCard({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ eventId: event.id, userId: user.id })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setLikesCount(data.likes);
-        setHasLiked(true);
-      }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setLikesCount(data.likes);
+          setHasLiked(data.hasLiked);
+        }
+      })
     } catch (err) {
       console.error("Like failed:", err);
     }
