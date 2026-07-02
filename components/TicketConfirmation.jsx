@@ -51,7 +51,7 @@ export default function TicketConfirmation() {
 
   useEffect(() => {
     try {
-      const data = localStorage.getItem("pendingBooking");
+      const data = sessionStorage.getItem("pendingBooking");
       if (data) {
         const parsed = JSON.parse(data);
         setBooking(parsed);
@@ -95,7 +95,7 @@ export default function TicketConfirmation() {
   const convenienceFee = 60 * totalTickets; // ₹60 flat convenience fee per ticket
   const finalTotal = ticketCost + gstAmount + convenienceFee;
 
-  const handleConfirm = async () => {
+  const handleConfirm = async (paymentMethod = "card") => {
     try {
       const seatIds = seats.map((s) => s.id || s.label || s);
       const postBody = {
@@ -105,7 +105,8 @@ export default function TicketConfirmation() {
         eventId: event.id,
         seats: seatIds,
         totalPrice: finalTotal,
-        bookingStartedAt: booking.bookingStartedAt || localStorage.getItem("bookingStartedAt") || Date.now().toString()
+        paymentMethod,
+        bookingStartedAt: booking.bookingStartedAt || sessionStorage.getItem("bookingStartedAt") || Date.now().toString()
       };
       
       let dbBookingId = null;
@@ -118,12 +119,15 @@ export default function TicketConfirmation() {
         const responseData = await response.json();
         if (responseData.success) {
           dbBookingId = responseData.bookingId;
+          console.log("Successfully stored booking in database. ID:", dbBookingId);
+        } else {
+          console.error("Booking API returned failure:", responseData.error || responseData);
         }
       } catch (err) {
         console.error("Failed saving booking to database:", err);
       }
 
-      const existingStr = localStorage.getItem("confirmedBookings");
+      const existingStr = sessionStorage.getItem("confirmedBookings");
       const list = existingStr ? JSON.parse(existingStr) : [];
 
       const confirmedBooking = {
@@ -140,21 +144,19 @@ export default function TicketConfirmation() {
       };
 
       list.push(confirmedBooking);
-
-      localStorage.setItem("confirmedBookings", JSON.stringify(list));
-      localStorage.removeItem("pendingBooking");
-      localStorage.removeItem("bookingStartedAt");
+      sessionStorage.setItem("confirmedBookings", JSON.stringify(list));
+      sessionStorage.removeItem("pendingBooking");
+      sessionStorage.removeItem("bookingStartedAt");
     } catch (e) {
-      console.error(e);
+      console.error("Error confirming booking:", e);
     }
-    
-    setStep("confirmed");
+    router.push("/tickets");
   };
 
   const handleCancel = async () => {
     try {
-      localStorage.removeItem("pendingBooking");
-      localStorage.removeItem("bookingStartedAt");
+      sessionStorage.removeItem("pendingBooking");
+      sessionStorage.removeItem("bookingStartedAt");
     } catch (e) {
       console.error(e);
     }
@@ -305,7 +307,7 @@ export default function TicketConfirmation() {
       <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Booking Card & Details */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="lg:col-span-6 space-y-6">
           <div className="bg-neutral-900/60 backdrop-blur-lg border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-6">
             <div className="border-b border-neutral-800 pb-4">
               <span className="text-xs font-bold text-orange-500 uppercase tracking-widest block mb-1">Confirm Booking</span>

@@ -22,7 +22,7 @@ export default function EventDetails({ event, description, organizer, price, fea
 
   useEffect(() => {
     if (!event?.id) return;
-    const userStored = localStorage.getItem("vibepass_user");
+    const userStored = sessionStorage.getItem("vibepass_user");
     const userId = userStored ? JSON.parse(userStored).id : "";
     fetch(`/api/events/like?eventId=${event.id}&userId=${userId}`)
       .then((res) => res.json())
@@ -38,10 +38,10 @@ export default function EventDetails({ event, description, organizer, price, fea
 
   useEffect(() => {
     if (!event?.id) return;
-    const pendingId = localStorage.getItem("like_pending_event_id");
-    const userStored = localStorage.getItem("vibepass_user");
+    const pendingId = sessionStorage.getItem("like_pending_event_id");
+    const userStored = sessionStorage.getItem("vibepass_user");
     if (pendingId && Number(pendingId) === event.id && userStored) {
-      localStorage.removeItem("like_pending_event_id");
+      sessionStorage.removeItem("like_pending_event_id");
       const user = JSON.parse(userStored);
       fetch("/api/events/like", {
         method: "POST",
@@ -74,7 +74,7 @@ export default function EventDetails({ event, description, organizer, price, fea
   // Sync logged in user profile details
   useEffect(() => {
     const checkUser = () => {
-      const stored = localStorage.getItem("vibepass_user");
+      const stored = sessionStorage.getItem("vibepass_user");
       if (stored) {
         try {
           setCurrentUser(JSON.parse(stored));
@@ -88,11 +88,12 @@ export default function EventDetails({ event, description, organizer, price, fea
     checkUser();
   }, []);
 
+
   const handleLike = async () => {
-    const userStored = localStorage.getItem("vibepass_user");
+    const userStored = sessionStorage.getItem("vibepass_user");
     if (!userStored) {
-      localStorage.setItem("like_pending_event_id", event.id);
-      localStorage.setItem("login_redirect", window.location.pathname);
+      sessionStorage.setItem("like_pending_event_id", event.id);
+      sessionStorage.setItem("login_redirect", window.location.pathname);
       router.push("/login");
       return;
     }
@@ -159,7 +160,7 @@ export default function EventDetails({ event, description, organizer, price, fea
   if (!event) return null;
 
   const handleCheckout = () => {
-    const userStored = localStorage.getItem("vibepass_user");
+    const userStored = sessionStorage.getItem("vibepass_user");
     const query = new URLSearchParams({
       venue: event.venue || event.location || "",
       category: event.category || "",
@@ -167,7 +168,7 @@ export default function EventDetails({ event, description, organizer, price, fea
     const destination = `/seat-selection/${encodeURIComponent(event.title)}?${query}`;
 
     if (!userStored) {
-      localStorage.setItem("login_redirect", destination);
+      sessionStorage.setItem("login_redirect", destination);
       router.push("/login");
       return;
     }

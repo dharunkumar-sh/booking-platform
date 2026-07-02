@@ -7,7 +7,7 @@ const EventDetailsLayout = ({ children }) => {
 
   useEffect(() => {
     try {
-      const data = localStorage.getItem("selectedEvent");
+      const data = sessionStorage.getItem("selectedEvent");
       if (data) {
         const parsed = JSON.parse(data);
         if (parsed?.title) {

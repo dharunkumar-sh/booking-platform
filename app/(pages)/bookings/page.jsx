@@ -32,32 +32,80 @@ export default function BookingsPage() {
   const [selectedTicketModal, setSelectedTicketModal] = useState(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const userBooked = JSON.parse(localStorage.getItem("userBookings") || "[]");
-      const confirmedBooked = JSON.parse(localStorage.getItem("confirmedBookings") || "[]");
+    async function loadBookings() {
+      let userBooked = [];
+      let confirmedBooked = [];
+      try {
+        userBooked = JSON.parse(sessionStorage.getItem("userBookings") || "[]");
+        confirmedBooked = JSON.parse(sessionStorage.getItem("confirmedBookings") || "[]");
+      } catch (e) {
+        console.error("Failed loading local bookings:", e);
+      }
 
-      // Standardize the fields so both formats map cleanly
-      const normalizedConfirmed = confirmedBooked.map((b) => ({
-        id: b.bookingId,
-        bookingId: b.bookingId,
-        eventTitle: b.event?.title || b.title,
-        eventDate: b.event?.date || b.date,
+      let dbBookings = [];
+      try {
+        const storedUser = sessionStorage.getItem("vibepass_user");
+        if (storedUser) {
+          const user = JSON.parse(storedUser);
+          if (user?.email) {
+            const res = await fetch(`/api/bookings?email=${encodeURIComponent(user.email)}`);
+            const data = await res.json();
+            if (data.success && data.bookings) {
+              dbBookings = data.bookings;
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Failed syncing bookings from database:", e);
+      }
+
+      // Normalize all formats
+      const normalize = (b) => ({
+        id: b.bookingId || b.id,
+        bookingId: b.bookingId || b.id,
+        eventTitle: b.event?.title || b.title || b.eventTitle,
+        eventDate: b.event?.date || b.date || b.eventDate,
         venue: b.event?.venue || b.venue,
         seats: b.seats?.map(s => s.label || s.id) || b.seats,
-        totalAmount: b.pricing?.finalTotal || b.total,
+        totalAmount: b.pricing?.finalTotal || b.totalAmount || b.total || b.price,
         user: b.user,
         pricing: b.pricing,
         event: b.event,
         audiNumber: b.audiNumber,
-        category: b.event?.category || b.category || ""
-      }));
+        category: b.event?.category || b.category || "",
+        confirmedAt: b.confirmedAt || b.bookingDate || 0
+      });
 
-      const combined = [...userBooked, ...normalizedConfirmed];
+      const mergedMap = new Map();
+
+      // Load local bookings
+      userBooked.forEach(b => {
+        const norm = normalize(b);
+        if (norm.id) mergedMap.set(norm.id, norm);
+      });
+
+      confirmedBooked.forEach(b => {
+        const norm = normalize(b);
+        if (norm.id) mergedMap.set(norm.id, norm);
+      });
+
+      // Load DB bookings (will overwrite local with same ID)
+      dbBookings.forEach(b => {
+        const norm = normalize(b);
+        if (norm.id) mergedMap.set(norm.id, norm);
+      });
+
+      const combined = Array.from(mergedMap.values());
+      // Sort by confirmedAt descending
+      combined.sort((a, b) => new Date(b.confirmedAt) - new Date(a.confirmedAt));
+
       setBookings(combined);
       if (combined.length > 0) {
         setSelectedTicket(combined[0]);
       }
     }
+
+    loadBookings();
   }, []);
 
   const filtered = bookings.filter((b) => {

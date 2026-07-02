@@ -122,7 +122,7 @@ export default function DiscoverCategoryPage({
                 key={item.id || idx}
                 onClick={async () => {
                   try {
-                    localStorage.setItem("selectedEvent", JSON.stringify(item));
+                    sessionStorage.setItem("selectedEvent", JSON.stringify(item));
                   } catch (e) {
                     console.error(e);
                   }
@@ -150,7 +150,7 @@ export default function DiscoverCategoryPage({
                     onClick={(e) => {
                       e.stopPropagation();
                       try {
-                        localStorage.setItem("selectedEvent", JSON.stringify(item));
+                        sessionStorage.setItem("selectedEvent", JSON.stringify(item));
                       } catch (err) {
                         console.error(err);
                       }

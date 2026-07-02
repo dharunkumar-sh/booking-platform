@@ -17,7 +17,7 @@ export default function EventDetailsPage() {
     
     let found = false;
     try {
-      const data = localStorage.getItem("selectedEvent");
+      const data = sessionStorage.getItem("selectedEvent");
       if (data) {
         const parsedEvent = JSON.parse(data);
         if (parsedEvent && parsedEvent.title === titleParam) {
@@ -26,7 +26,7 @@ export default function EventDetailsPage() {
         }
       }
     } catch (e) {
-      console.error("Local storage read error for event:", e);
+      console.error("Session storage read error for event:", e);
     }
 
     if (!found) {
@@ -43,7 +43,7 @@ export default function EventDetailsPage() {
             const parsedEvent = data.events[0];
             setEvent(parsedEvent);
             try {
-              localStorage.setItem("selectedEvent", JSON.stringify(parsedEvent));
+              sessionStorage.setItem("selectedEvent", JSON.stringify(parsedEvent));
             } catch (e) {
               console.error(e);
             }

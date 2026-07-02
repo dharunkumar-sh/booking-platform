@@ -12,20 +12,71 @@ export default function TicketsPage() {
   const [selectedTicketModal, setSelectedTicketModal] = useState(null);
 
   useEffect(() => {
-    try {
-      const data = localStorage.getItem("confirmedBookings");
-      if (data) {
-        setConfirmedBookings(JSON.parse(data));
+    async function loadTickets() {
+      setIsLoading(true);
+      let localBookings = [];
+      try {
+        const localData = sessionStorage.getItem("confirmedBookings");
+        if (localData) {
+          localBookings = JSON.parse(localData);
+        }
+      } catch (e) {
+        console.error("Failed loading local bookings:", e);
       }
-    } catch (e) {
-      console.error(e);
+
+      // Check if user is logged in to sync from DB
+      let dbBookings = [];
+      try {
+        const storedUser = sessionStorage.getItem("vibepass_user");
+        if (storedUser) {
+          const user = JSON.parse(storedUser);
+          if (user?.email) {
+            const res = await fetch(`/api/bookings?email=${encodeURIComponent(user.email)}`);
+            const data = await res.json();
+            if (data.success && data.bookings) {
+              dbBookings = data.bookings;
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Failed syncing bookings from database:", e);
+      }
+
+      // Merge local and DB bookings by unique bookingId
+      const mergedMap = new Map();
+      
+      // Load local bookings first
+      localBookings.forEach((b) => {
+        if (b && b.bookingId) {
+          mergedMap.set(b.bookingId, b);
+        }
+      });
+      
+      // DB bookings override or add to local bookings
+      dbBookings.forEach((b) => {
+        if (b && b.bookingId) {
+          mergedMap.set(b.bookingId, b);
+        }
+      });
+
+      const mergedList = Array.from(mergedMap.values());
+      // Sort by confirmedAt / bookingDate descending (latest first)
+      mergedList.sort((a, b) => {
+        const dateA = new Date(a.confirmedAt || a.bookingDate || 0);
+        const dateB = new Date(b.confirmedAt || b.bookingDate || 0);
+        return dateB - dateA;
+      });
+
+      setConfirmedBookings(mergedList);
+      setIsLoading(false);
     }
-    setIsLoading(false);
+
+    loadTickets();
   }, []);
 
   const handleBookNew = async (ticketDetails) => {
     try {
-      localStorage.setItem("pendingBooking", JSON.stringify(ticketDetails));
+      sessionStorage.setItem("pendingBooking", JSON.stringify(ticketDetails));
     } catch (e) {
       console.error(e);
     }

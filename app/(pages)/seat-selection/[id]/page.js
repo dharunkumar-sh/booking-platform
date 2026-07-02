@@ -19,15 +19,15 @@ function SeatSelectionPageContent() {
   });
 
   useEffect(() => {
-    const userProfile = localStorage.getItem("vibepass_user");
+    const userProfile = sessionStorage.getItem("vibepass_user");
     if (!userProfile) {
-      localStorage.setItem("login_redirect", window.location.pathname + window.location.search);
+      sessionStorage.setItem("login_redirect", window.location.pathname + window.location.search);
       router.push("/login");
       return;
     }
 
     try {
-      const data = localStorage.getItem("selectedEvent");
+      const data = sessionStorage.getItem("selectedEvent");
       if (data) {
         const parsed = JSON.parse(data);
         setEventDetails({
@@ -77,7 +77,7 @@ function SeatSelectionPageContent() {
           }}
           onConfirmBooking={async (ticketDetails) => {
             try {
-              localStorage.setItem("pendingBooking", JSON.stringify(ticketDetails));
+              sessionStorage.setItem("pendingBooking", JSON.stringify(ticketDetails));
             } catch (e) {
               console.error(e);
             }
@@ -94,7 +94,7 @@ function SeatSelectionPageContent() {
       onCancel={() => router.push("/")}
       onConfirmSelection={(seats) => {
         setConfirmedSeats(seats);
-        localStorage.setItem("bookingStartedAt", Date.now().toString());
+        sessionStorage.setItem("bookingStartedAt", Date.now().toString());
         setStep("tickets");
       }}
     />

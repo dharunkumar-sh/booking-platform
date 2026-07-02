@@ -14,7 +14,7 @@ export default function CookiePolicyPage() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const city = localStorage.getItem("userCity") || "Not set";
-      const bookings = JSON.parse(localStorage.getItem("userBookings") || "[]");
+      const bookings = JSON.parse(sessionStorage.getItem("confirmedBookings") || "[]");
       const loc = localStorage.getItem("userLocation");
       setStorageStatus({
         city,

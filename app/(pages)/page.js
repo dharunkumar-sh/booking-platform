@@ -60,7 +60,7 @@ export default function Home() {
 
   // ── Booking handler ───────────────────────────────────────────────────────
   const handleBookEvent = (event) => {
-    const userStored = localStorage.getItem("vibepass_user");
+    const userStored = sessionStorage.getItem("vibepass_user");
     const query = new URLSearchParams({
       venue: event.venue || event.location || "",
       category: event.category || "",
@@ -68,13 +68,13 @@ export default function Home() {
     const destination = `/seat-selection/${encodeURIComponent(event.title)}?${query}`;
 
     try {
-      localStorage.setItem("selectedEvent", JSON.stringify(event));
+      sessionStorage.setItem("selectedEvent", JSON.stringify(event));
     } catch (e) {
-      console.error("Failed to save selected event to localStorage:", e);
+      console.error("Failed to save selected event to sessionStorage:", e);
     }
 
     if (!userStored) {
-      localStorage.setItem("login_redirect", destination);
+      sessionStorage.setItem("login_redirect", destination);
       router.push("/login");
       return;
     }

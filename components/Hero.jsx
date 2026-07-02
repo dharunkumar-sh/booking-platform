@@ -314,9 +314,9 @@ const Hero = ({
     setShowDropdown(false);
     setActiveIndex(-1);
     try {
-      localStorage.setItem("selectedEvent", JSON.stringify(event));
+      sessionStorage.setItem("selectedEvent", JSON.stringify(event));
     } catch (err) {
-      console.error("[Hero] localStorage write error:", err);
+      console.error("[Hero] sessionStorage write error:", err);
     }
     router.push(`/event-details/${encodeURIComponent(event.title)}`);
   };

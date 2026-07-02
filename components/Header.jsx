@@ -158,7 +158,7 @@ const Header = () => {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(NOTIF_KEY);
+      const saved = sessionStorage.getItem(NOTIF_KEY);
       setNotifications(saved ? JSON.parse(saved) : DEFAULT_NOTIFICATIONS);
     } catch {
       setNotifications(DEFAULT_NOTIFICATIONS);
@@ -167,7 +167,7 @@ const Header = () => {
 
   const saveNotifications = (updated) => {
     setNotifications(updated);
-    try { localStorage.setItem(NOTIF_KEY, JSON.stringify(updated)); } catch {}
+    try { sessionStorage.setItem(NOTIF_KEY, JSON.stringify(updated)); } catch {}
   };
 
   const markAsRead = (id) =>

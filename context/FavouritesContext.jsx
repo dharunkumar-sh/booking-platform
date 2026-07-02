@@ -13,7 +13,7 @@ export function FavouritesProvider({ children }) {
   // 1. Monitor user authentication status
   useEffect(() => {
     const checkUser = () => {
-      const stored = localStorage.getItem("vibepass_user");
+      const stored = sessionStorage.getItem("vibepass_user");
       if (stored) {
         try {
           setUser(JSON.parse(stored));
@@ -29,7 +29,7 @@ export function FavouritesProvider({ children }) {
     return () => window.removeEventListener("storage", checkUser);
   }, []);
 
-  // 2. Fetch favourites from backend or localStorage
+  // 2. Fetch favourites from backend or sessionStorage
   const loadFavourites = useCallback(async () => {
     if (user?.id) {
       try {
@@ -43,9 +43,9 @@ export function FavouritesProvider({ children }) {
         console.error("Failed to load favourites from backend:", err);
       }
     }
-    // Fallback to localStorage
+    // Fallback to sessionStorage
     try {
-      const saved = localStorage.getItem(FAV_KEY);
+      const saved = sessionStorage.getItem(FAV_KEY);
       if (saved) setFavourites(JSON.parse(saved));
     } catch {
       setFavourites([]);
@@ -58,9 +58,9 @@ export function FavouritesProvider({ children }) {
 
   // 3. Process pending favourite action post-login
   useEffect(() => {
-    const pendingId = localStorage.getItem("favourite_pending_event_id");
+    const pendingId = sessionStorage.getItem("favourite_pending_event_id");
     if (pendingId && user?.id) {
-      localStorage.removeItem("favourite_pending_event_id");
+      sessionStorage.removeItem("favourite_pending_event_id");
       fetch("/api/events/favourite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -83,11 +83,11 @@ export function FavouritesProvider({ children }) {
 
   const toggleFavourite = useCallback(
     async (item) => {
-      const storedUser = localStorage.getItem("vibepass_user");
+      const storedUser = sessionStorage.getItem("vibepass_user");
       if (!storedUser) {
         // Redirect to login
-        localStorage.setItem("favourite_pending_event_id", item.id);
-        localStorage.setItem("login_redirect", window.location.pathname);
+        sessionStorage.setItem("favourite_pending_event_id", item.id);
+        sessionStorage.setItem("login_redirect", window.location.pathname);
         window.location.href = "/login";
         return;
       }
@@ -111,7 +111,7 @@ export function FavouritesProvider({ children }) {
   );
 
   const removeFavourite = useCallback(async (id) => {
-    const storedUser = localStorage.getItem("vibepass_user");
+    const storedUser = sessionStorage.getItem("vibepass_user");
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       try {
@@ -129,14 +129,14 @@ export function FavouritesProvider({ children }) {
     // Fallback local remove
     setFavourites((prev) => {
       const next = prev.filter((f) => f.id !== id);
-      try { localStorage.setItem(FAV_KEY, JSON.stringify(next)); } catch {}
+      try { sessionStorage.setItem(FAV_KEY, JSON.stringify(next)); } catch {}
       return next;
     });
   }, [loadFavourites]);
 
   const clearFavourites = useCallback(() => {
     setFavourites([]);
-    try { localStorage.removeItem(FAV_KEY); } catch {}
+    try { sessionStorage.removeItem(FAV_KEY); } catch {}
   }, []);
 
   return (

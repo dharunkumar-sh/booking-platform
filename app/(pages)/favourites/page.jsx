@@ -168,7 +168,7 @@ export default function FavouritesPage() {
 
   const handleBook = (item) => {
     try {
-      localStorage.setItem("selectedEvent", JSON.stringify(item));
+      sessionStorage.setItem("selectedEvent", JSON.stringify(item));
     } catch {}
     router.push(`/event-details/${encodeURIComponent(item.title)}`);
   };

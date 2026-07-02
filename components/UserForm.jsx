@@ -29,16 +29,16 @@ export default function UserForm() {
 
   useEffect(() => {
     // Enforce authentication
-    const userProfile = localStorage.getItem("vibepass_user");
+    const userProfile = sessionStorage.getItem("vibepass_user");
     if (!userProfile) {
-      localStorage.setItem("login_redirect", window.location.pathname);
+      sessionStorage.setItem("login_redirect", window.location.pathname);
       router.push("/login");
       return;
     }
 
     // Load pending booking details to show summary
     try {
-      const data = localStorage.getItem("pendingBooking");
+      const data = sessionStorage.getItem("pendingBooking");
       if (data) {
         setBookingDetails(JSON.parse(data));
       }
@@ -99,10 +99,10 @@ export default function UserForm() {
 
         // 2. Sync to store
         try {
-          localStorage.setItem("bookingUser", JSON.stringify(finalUserPayload));
+          sessionStorage.setItem("bookingUser", JSON.stringify(finalUserPayload));
           if (bookingDetails) {
             const updatedBooking = { ...bookingDetails, user: finalUserPayload };
-            localStorage.setItem("pendingBooking", JSON.stringify(updatedBooking));
+            sessionStorage.setItem("pendingBooking", JSON.stringify(updatedBooking));
           }
         } catch (e) {
           console.error("Error storing booking details locally:", e);

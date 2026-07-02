@@ -112,7 +112,7 @@ const TicketSelection = ({
       seats: confirmedSeats,
       tickets: selectedTickets.map(t => ({ id: t.id, title: t.title, quantity: selections[t.id], price: t.price })),
       total: totalAmount,
-      bookingStartedAt: localStorage.getItem("bookingStartedAt") || Date.now().toString()
+      bookingStartedAt: sessionStorage.getItem("bookingStartedAt") || Date.now().toString()
     });
   };
 

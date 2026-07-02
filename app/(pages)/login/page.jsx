@@ -71,15 +71,15 @@ export default function LoginPage() {
       const response = await axios.post("/api/auth/google", { accessToken });
       if (response.data.success) {
         const user = response.data.user;
-        localStorage.setItem("vibepass_user", JSON.stringify(user));
+        sessionStorage.setItem("vibepass_user", JSON.stringify(user));
         
         // Dispatch custom storage event so Header updates immediately
         window.dispatchEvent(new Event("storage"));
         
         setLoginSuccess(true);
         setTimeout(() => {
-          const redirect = localStorage.getItem("login_redirect") || "/";
-          localStorage.removeItem("login_redirect");
+          const redirect = sessionStorage.getItem("login_redirect") || "/";
+          sessionStorage.removeItem("login_redirect");
           router.push(redirect);
         }, 1500);
       }
@@ -179,15 +179,15 @@ export default function LoginPage() {
       
       if (response.data.success) {
         const user = response.data.user;
-        localStorage.setItem("vibepass_user", JSON.stringify(user));
+        sessionStorage.setItem("vibepass_user", JSON.stringify(user));
         
         // Dispatch custom storage event so Header updates immediately
         window.dispatchEvent(new Event("storage"));
         
         setLoginSuccess(true);
         setTimeout(() => {
-          const redirect = localStorage.getItem("login_redirect") || "/";
-          localStorage.removeItem("login_redirect");
+          const redirect = sessionStorage.getItem("login_redirect") || "/";
+          sessionStorage.removeItem("login_redirect");
           router.push(redirect);
         }, 1500);
       }

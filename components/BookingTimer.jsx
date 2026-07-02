@@ -10,7 +10,7 @@ export default function BookingTimer() {
   const [expiredEventId, setExpiredEventId] = useState("");
 
   useEffect(() => {
-    const startedAtStr = localStorage.getItem("bookingStartedAt");
+    const startedAtStr = sessionStorage.getItem("bookingStartedAt");
     if (!startedAtStr) return;
 
     const startedAt = parseInt(startedAtStr, 10);
@@ -26,7 +26,7 @@ export default function BookingTimer() {
         // Find event ID to redirect to
         let eventId = "";
         try {
-          const pendingData = localStorage.getItem("pendingBooking");
+          const pendingData = sessionStorage.getItem("pendingBooking");
           if (pendingData) {
             const parsed = JSON.parse(pendingData);
             if (parsed?.event?.id) {
@@ -40,8 +40,8 @@ export default function BookingTimer() {
         setExpiredEventId(eventId);
         
         // Clear pending bookings immediately
-        localStorage.removeItem("pendingBooking");
-        localStorage.removeItem("bookingStartedAt");
+        sessionStorage.removeItem("pendingBooking");
+        sessionStorage.removeItem("bookingStartedAt");
         
         setShowExpiredModal(true);
       } else {
