@@ -189,6 +189,13 @@ const Hero = ({
     fetchUpcoming();
   }, [selectedState]);
 
+  // ── Sync background images with selected mood ────────────────────────────
+  useEffect(() => {
+    const key = selectedMoodKey || "default";
+    setImages(HIGH_RES_IMAGES[key] || HIGH_RES_IMAGES.default);
+    setCurrentIndex(0);
+  }, [selectedMoodKey]);
+
   // ── Preload background images ────────────────────────────────────────────
   useEffect(() => {
     setLoadedImages({});

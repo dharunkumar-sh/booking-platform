@@ -47,7 +47,7 @@ export async function GET(request) {
 
     const whereConditions = [];
     if (type)     whereConditions.push(eq(events.type, type));
-    if (category) whereConditions.push(eq(events.category, category));
+    if (category) whereConditions.push(ilike(events.category, category));
     if (state)    whereConditions.push(ilike(events.location, `%${state}%`));
 
     if (whereConditions.length > 0) {

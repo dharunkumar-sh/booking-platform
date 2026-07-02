@@ -10,11 +10,11 @@ import { useState } from "react";
 
 // Maps Hero mood keys → event category values stored in DB
 const MOOD_TO_CATEGORY = {
-  relaxed: ["comedy", "food"],
-  adventure: ["sports"],
-  romantic: ["drama"],
-  productive: ["games"],
-  luxury: ["music"],
+  relaxed: ["show"],
+  adventure: ["event"],
+  romantic: ["movie"],
+  productive: ["show", "event"],
+  luxury: ["concert"],
 };
 
 import { useGeolocationContext } from "@/context/GeolocationContext";
