@@ -17,6 +17,7 @@ import {
   CreditCard
 } from "lucide-react";
 import PaymentGateway from "@/components/PaymentGateway";
+import BookingTimer from "@/components/BookingTimer";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -46,6 +47,7 @@ export default function TicketConfirmation() {
   const [bookingId, setBookingId] = useState("");
   const [audiNumber, setAudiNumber] = useState("");
   const [step, setStep] = useState("review"); // "review" | "payment" | "confirmed"
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   useEffect(() => {
     try {
@@ -102,7 +104,8 @@ export default function TicketConfirmation() {
         phone: user?.phone,
         eventId: event.id,
         seats: seatIds,
-        totalPrice: finalTotal
+        totalPrice: finalTotal,
+        bookingStartedAt: booking.bookingStartedAt || localStorage.getItem("bookingStartedAt") || Date.now().toString()
       };
       
       let dbBookingId = null;
@@ -140,6 +143,7 @@ export default function TicketConfirmation() {
 
       localStorage.setItem("confirmedBookings", JSON.stringify(list));
       localStorage.removeItem("pendingBooking");
+      localStorage.removeItem("bookingStartedAt");
     } catch (e) {
       console.error(e);
     }
@@ -148,14 +152,13 @@ export default function TicketConfirmation() {
   };
 
   const handleCancel = async () => {
-    if (confirm("Are you sure you want to cancel your booking? Your selected seats will be released.")) {
-      try {
-        localStorage.removeItem("pendingBooking");
-      } catch (e) {
-        console.error(e);
-      }
-      router.push("/");
+    try {
+      localStorage.removeItem("pendingBooking");
+      localStorage.removeItem("bookingStartedAt");
+    } catch (e) {
+      console.error(e);
     }
+    router.push("/");
   };
 
   const qrData = JSON.stringify({
@@ -282,15 +285,9 @@ export default function TicketConfirmation() {
                 </div>
               </div>
 
-              <button
-                onClick={() => router.push("/tickets")}
-                className="w-full py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white font-bold rounded-xl shadow-lg hover:opacity-95 hover:shadow-orange-500/30 transition-all cursor-pointer"
-              >
-                Go to My Tickets
-              </button>
-              <button
+               <button
                 onClick={() => router.push("/")}
-                className="w-full py-4 bg-neutral-950 border border-neutral-800 text-neutral-300 font-bold rounded-xl hover:text-white hover:border-neutral-700 transition-colors cursor-pointer"
+                className="w-full py-4 bg-linear-to-r from-orange-500 to-rose-500 text-white font-bold rounded-xl shadow-lg hover:opacity-95 hover:shadow-orange-500/30 transition-all cursor-pointer"
               >
                 Back to Home
               </button>
@@ -304,10 +301,11 @@ export default function TicketConfirmation() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col items-center justify-center px-6 py-12">
+      <BookingTimer />
       <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Booking Card & Details */}
-        <div className="lg:col-span-8 space-y-6">
+        <div className="lg:col-span-5 space-y-6">
           <div className="bg-neutral-900/60 backdrop-blur-lg border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-6">
             <div className="border-b border-neutral-800 pb-4">
               <span className="text-xs font-bold text-orange-500 uppercase tracking-widest block mb-1">Confirm Booking</span>
@@ -356,44 +354,37 @@ export default function TicketConfirmation() {
           {/* Action Row */}
           <div className="flex gap-4">
             <button
-              onClick={handleCancel}
-              className="flex-1 py-4 bg-neutral-900 border border-neutral-800 rounded-xl font-bold hover:bg-neutral-800 hover:text-red-400 transition-all flex items-center justify-center gap-2 group cursor-pointer"
+              onClick={() => setShowCancelModal(true)}
+              className="w-full py-4 bg-neutral-900 border border-neutral-800 rounded-xl font-bold hover:bg-neutral-800 hover:text-red-400 transition-all flex items-center justify-center gap-2 group cursor-pointer"
             >
               <XCircle size={18} className="text-red-500" />
               Cancel Booking
-            </button>
-            <button
-              onClick={() => router.push("/tickets")}
-              className="flex-1 py-4 bg-neutral-900 border border-neutral-800 rounded-xl font-bold hover:bg-neutral-800 hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer text-neutral-300"
-            >
-              <Ticket size={18} className="text-rose-500" />
-              My Tickets
             </button>
           </div>
         </div>
 
         {/* Pricing Breakdown Sidebar */}
-        <div className="lg:col-span-4">
-          <div className="bg-neutral-900/60 backdrop-blur-lg border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-6 sticky top-24">
-            <h3 className="font-bold text-lg border-b border-neutral-800 pb-3 flex items-center gap-2"><FileText size={18} className="text-rose-500" /> Payment Summary</h3>
+        <div className="lg:col-span-5">
+          <div className="bg-neutral-900/60 backdrop-blur-lg border border-neutral-800 rounded-3xl p-8 shadow-2xl space-y-6 sticky top-24">
+            <h3 className="font-extrabold text-xl border-b border-neutral-800 pb-4 flex items-center gap-2"><FileText size={20} className="text-rose-500" /> Payment Summary</h3>
             
-            <div className="space-y-3 text-sm text-neutral-300">
-              <div className="flex justify-between">
-                <span>Tickets ({totalTickets} x ₹{averagePrice})</span>
-                <span>₹{ticketCost}</span>
+            <div className="space-y-5 text-base text-neutral-300">
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-400">Tickets ({totalTickets} x ₹{averagePrice})</span>
+                <span className="font-semibold text-white">₹{ticketCost}</span>
               </div>
-              <div className="flex justify-between">
-                <span>GST / Tax (18%)</span>
-                <span>₹{gstAmount}</span>
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-400">GST / Tax (18%)</span>
+                <span className="font-semibold text-white">₹{gstAmount}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Convenience Fee</span>
-                <span>₹{convenienceFee}</span>
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-400">Convenience Fee</span>
+                <span className="font-semibold text-white">₹{convenienceFee}</span>
               </div>
               
-              <div className="border-t border-neutral-800 pt-3 flex justify-between font-bold text-white text-base">
+              <div className="border-t border-neutral-800 pt-5 flex justify-between font-extrabold text-white text-lg">
                 <span>Total Amount</span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-rose-500">₹{finalTotal}</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-rose-500 text-xl font-black">₹{finalTotal}</span>
               </div>
             </div>
 
@@ -413,6 +404,37 @@ export default function TicketConfirmation() {
         </div>
 
       </div>
+
+      {/* Custom Cancel Warning Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-neutral-900 border-2 border-red-500/50 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="mx-auto w-16 h-16 bg-red-500/10 border-2 border-red-500/30 text-red-500 rounded-full flex items-center justify-center animate-pulse">
+              <AlertCircle size={32} />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white mb-2">Cancel Ticket Booking?</h3>
+              <p className="text-sm text-neutral-400">
+                Are you sure you want to cancel this booking? Doing so will immediately release your selected seats and abort your reservation.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <button
+                onClick={handleCancel}
+                className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all cursor-pointer shadow-lg shadow-red-600/20"
+              >
+                Yes, Cancel Booking
+              </button>
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1 py-3 bg-neutral-800 border border-neutral-700 hover:bg-neutral-700 text-neutral-200 font-bold rounded-xl transition-all cursor-pointer"
+              >
+                No, Keep Booking
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

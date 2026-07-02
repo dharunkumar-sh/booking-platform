@@ -1,42 +1,10 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TicketCard from './TicketCard';
 import styles from './Tickets.module.css';
 import { ArrowRight, ArrowLeft, CheckCircle2, Calendar, MapPin, QrCode } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-
-const TICKET_DATA = [
-  {
-    id: 'silver',
-    title: 'Silver Pass',
-    price: 499,
-    description: 'Standard entry pass to the event with access to all general areas.',
-    benefits: ['General Admission', 'Standard Seating', 'Food Court Access'],
-    availableCount: 150,
-    status: 'Available',
-    isPopular: false
-  },
-  {
-    id: 'gold',
-    title: 'Gold Pass',
-    price: 999,
-    description: 'Premium experience with better seating and exclusive perks.',
-    benefits: ['Priority Entry', 'Premium Seating', '1 Complimentary Drink', 'Exclusive Lounge Access'],
-    availableCount: 45,
-    status: 'Filling Fast',
-    isPopular: true
-  },
-  {
-    id: 'vip',
-    title: 'VIP Experience',
-    price: 1999,
-    description: 'The ultimate luxury experience with backstage access.',
-    benefits: ['Backstage Tour', 'Front Row Seating', 'All-inclusive Food & Drinks', 'Meet & Greet', 'Free Parking'],
-    availableCount: 15,
-    status: 'Filling Fast',
-    isPopular: false
-  }
-];
+import BookingTimer from '@/components/BookingTimer';
 
 const TicketSelection = ({
   event = { title: 'Special Event Concert', venue: 'Main Arena', priceVal: 499 },
@@ -47,8 +15,78 @@ const TicketSelection = ({
   const router = useRouter();
   const [selections, setSelections] = useState({});
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  const [passesData, setPassesData] = useState(null);
 
-  const selectedTickets = TICKET_DATA.filter(ticket => selections[ticket.id] > 0);
+  useEffect(() => {
+    if (event?.id) {
+      fetch(`/api/bookings/pass-status?eventId=${event.id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.passes) {
+            setPassesData(data.passes);
+          }
+        })
+        .catch((err) => console.error("Error fetching pass status in TicketSelection:", err));
+    }
+  }, [event?.id]);
+
+  const getPassAvailableCount = (passId, fallback) => {
+    return passesData?.[passId]?.availableCount !== undefined ? passesData[passId].availableCount : fallback;
+  };
+
+  const getPassStatusLabel = (passId, fallback) => {
+    return passesData?.[passId]?.status || fallback;
+  };
+
+  const seatPriceSum = confirmedSeats.reduce((sum, s) => sum + (s.price || 0), 0);
+  const basePrice = confirmedSeats.length > 0 
+    ? Math.round(seatPriceSum / confirmedSeats.length) 
+    : (event.priceVal || 499);
+
+  const ticketTypes = [
+    {
+      id: 'general',
+      title: 'General Pass',
+      price: basePrice,
+      description: 'Standard general entry pass to the event with no additions.',
+      benefits: ['General Admission Entry', 'Standard Zone Access'],
+      availableCount: getPassAvailableCount('general', 200),
+      status: getPassStatusLabel('general', 'Available'),
+      isPopular: false
+    },
+    {
+      id: 'silver',
+      title: 'Silver Pass',
+      price: basePrice + 150,
+      description: 'Enhanced standard pass with standard seating and food court coupons.',
+      benefits: ['General Admission Entry', 'Standard Seating Access', 'Food Court Access', 'Standard Souvenir Pass'],
+      availableCount: getPassAvailableCount('silver', 150),
+      status: getPassStatusLabel('silver', 'Available'),
+      isPopular: false
+    },
+    {
+      id: 'gold',
+      title: 'Gold Pass',
+      price: basePrice + 450,
+      description: 'Premium experience with priority seating and exclusive lounge access.',
+      benefits: ['Priority Fast-track Entry', 'Premium Elevated Seating', '1 Complimentary Drink & Snack', 'Exclusive Lounge Access'],
+      availableCount: getPassAvailableCount('gold', 45),
+      status: getPassStatusLabel('gold', 'Filling Fast'),
+      isPopular: true
+    },
+    {
+      id: 'vip',
+      title: 'VIP Experience',
+      price: basePrice + 1000,
+      description: 'The ultimate luxury experience with backstage access and meet & greet.',
+      benefits: ['Front Row Seating Access', 'Backstage VIP Pass', 'Meet & Greet with Artists/Cast', 'All-Inclusive Premium Food & Drinks', 'VIP Lounge & Free Valet Parking'],
+      availableCount: getPassAvailableCount('vip', 15),
+      status: getPassStatusLabel('vip', 'Filling Fast'),
+      isPopular: false
+    }
+  ];
+
+  const selectedTickets = ticketTypes.filter(ticket => selections[ticket.id] > 0);
   const totalTickets = selectedTickets.reduce((sum, ticket) => sum + selections[ticket.id], 0);
   const totalAmount = selectedTickets.reduce((sum, ticket) => sum + (ticket.price * selections[ticket.id]), 0);
 
@@ -73,7 +111,8 @@ const TicketSelection = ({
       event,
       seats: confirmedSeats,
       tickets: selectedTickets.map(t => ({ id: t.id, title: t.title, quantity: selections[t.id], price: t.price })),
-      total: totalAmount
+      total: totalAmount,
+      bookingStartedAt: localStorage.getItem("bookingStartedAt") || Date.now().toString()
     });
   };
 
@@ -168,18 +207,12 @@ const TicketSelection = ({
         </div>
       </div>
 
-      {!isStandalone && (
-        <div className={styles.seatsNotification}>
-          <p>
-            🎟️ You selected <strong>{confirmedSeats.length} seats</strong>: {confirmedSeats.map(s => s.label || s.id).join(', ')}. 
-            Please select exactly <strong>{confirmedSeats.length} tickets</strong> to proceed.
-          </p>
-        </div>
-      )}
+      <BookingTimer />
+
 
       <div className={styles.contentWrapper}>
         <div className={styles.grid}>
-          {TICKET_DATA.map(ticket => (
+          {ticketTypes.map(ticket => (
             <TicketCard 
               key={ticket.id} 
               ticket={ticket} 

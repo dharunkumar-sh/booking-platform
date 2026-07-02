@@ -94,6 +94,7 @@ function SeatSelectionPageContent() {
       onCancel={() => router.push("/")}
       onConfirmSelection={(seats) => {
         setConfirmedSeats(seats);
+        localStorage.setItem("bookingStartedAt", Date.now().toString());
         setStep("tickets");
       }}
     />

@@ -76,12 +76,28 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { email, name, phone, eventId, seats, totalPrice } = body;
+    const { email, name, phone, eventId, seats, totalPrice, bookingStartedAt } = body;
 
     if (!email || !eventId || !seats || !Array.isArray(seats) || seats.length === 0) {
       return NextResponse.json(
         { error: "Email, eventId, and seats are required." },
         { status: 400 }
+      );
+    }
+
+    // Secure backend timer verification
+    if (!bookingStartedAt) {
+      return NextResponse.json(
+        { error: "Booking session timestamp is missing." },
+        { status: 400 }
+      );
+    }
+
+    const startTime = parseInt(bookingStartedAt, 10);
+    if (isNaN(startTime) || (Date.now() - startTime) > 10 * 60 * 1000) {
+      return NextResponse.json(
+        { error: "Your 10-minute booking session has expired. Please select seats again." },
+        { status: 410 } // 410 Gone / Expired
       );
     }
 
