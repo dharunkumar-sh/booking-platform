@@ -436,10 +436,15 @@ const Header = () => {
                             if (item.type === "ott") {
                               router.push(`/ott/search?q=${encodeURIComponent(item.title)}`);
                             } else {
-                              router.push(`/event-details/${item.id}`);
+                              try {
+                                localStorage.setItem("selectedEvent", JSON.stringify(item));
+                              } catch (e) {
+                                console.error("Failed to save selected event to localStorage:", e);
+                              }
+                              router.push(`/event-details/${encodeURIComponent(item.title)}`);
                             }
                           }}
-                          className="w-full flex items-center gap-3.5 px-4 py-3 text-left hover:bg-neutral-900/60 transition-colors border-b border-neutral-800/30 last:border-b-0"
+                          className="w-full flex items-center gap-3.5 px-4 py-3 text-left hover:bg-neutral-900/60 transition-colors border-b border-neutral-800/30 last:border-b-0 cursor-pointer"
                         >
                           <img
                             src={item.image}
@@ -795,10 +800,15 @@ const Header = () => {
                             if (item.type === "ott") {
                               router.push(`/ott/search?q=${encodeURIComponent(item.title)}`);
                             } else {
-                              router.push(`/event-details/${item.id}`);
+                              try {
+                                localStorage.setItem("selectedEvent", JSON.stringify(item));
+                              } catch (e) {
+                                console.error("Failed to save selected event to localStorage:", e);
+                              }
+                              router.push(`/event-details/${encodeURIComponent(item.title)}`);
                             }
                           }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-neutral-900 transition-colors border-b border-neutral-800/30 last:border-b-0"
+                          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-neutral-900 transition-colors border-b border-neutral-800/30 last:border-b-0 cursor-pointer"
                         >
                           <img
                             src={item.image}

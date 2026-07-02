@@ -3,6 +3,28 @@
 import React, { useState, useEffect } from "react";
 import { Ticket, Calendar, MapPin, QrCode, ArrowRight, Download, CheckCircle2, AlertCircle, Search, X, Printer, User, Mail, Phone } from "lucide-react";
 
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  try {
+    return new Date(dateStr).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
+function formatTime(timeStr, category) {
+  if (!timeStr) return "";
+  const cat = (category || "").toLowerCase();
+  if (cat === "movie" || cat === "cinema" || timeStr.toLowerCase() === "various timings") {
+    return "10:45 AM, 1:45 PM, 4:45 PM, 7:45 PM, 10:45 PM";
+  }
+  return timeStr;
+}
+
 export default function BookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,7 +48,8 @@ export default function BookingsPage() {
         user: b.user,
         pricing: b.pricing,
         event: b.event,
-        audiNumber: b.audiNumber
+        audiNumber: b.audiNumber,
+        category: b.event?.category || b.category || ""
       }));
 
       const combined = [...userBooked, ...normalizedConfirmed];
@@ -104,7 +127,7 @@ export default function BookingsPage() {
                         <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-400">Confirmed Pass</span>
                         <h3 className="mt-3 text-xl font-bold text-white">{b.eventTitle || b.title || "Live Entertainment Pass"}</h3>
                         <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-neutral-400">
-                          <span className="flex items-center gap-1.5"><Calendar size={14} className="text-orange-400" /> {b.eventDate || b.date || "Upcoming Session"}</span>
+                          <span className="flex items-center gap-1.5"><Calendar size={14} className="text-orange-400" /> {formatDate(b.eventDate || b.date) || "Upcoming Session"} • {formatTime(b.event?.time || b.time || "7:00 PM", b.event?.category || b.category)}</span>
                           <span className="flex items-center gap-1.5"><MapPin size={14} className="text-orange-400" /> {b.venue || "Selected Arena"}</span>
                         </div>
                       </div>
@@ -204,7 +227,9 @@ export default function BookingsPage() {
                 <div className="grid grid-cols-2 gap-3 text-[11px]">
                   <div>
                     <span className="text-neutral-500 block mb-0.5">DATE & TIME</span>
-                    <span className="font-semibold text-white">{selectedTicketModal.eventDate || selectedTicketModal.date || "Upcoming Session"}</span>
+                    <span className="font-semibold text-white">
+                      {formatDate(selectedTicketModal.eventDate || selectedTicketModal.date) || "Upcoming Session"} at {formatTime(selectedTicketModal.event?.time || selectedTicketModal.time || "7:00 PM", selectedTicketModal.event?.category || selectedTicketModal.category)}
+                    </span>
                   </div>
                   <div>
                     <span className="text-neutral-500 block mb-0.5">VENUE</span>

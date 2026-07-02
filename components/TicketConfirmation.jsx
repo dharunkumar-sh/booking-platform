@@ -18,6 +18,28 @@ import {
 } from "lucide-react";
 import PaymentGateway from "@/components/PaymentGateway";
 
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  try {
+    return new Date(dateStr).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
+function formatTime(timeStr, category) {
+  if (!timeStr) return "";
+  const cat = (category || "").toLowerCase();
+  if (cat === "movie" || cat === "cinema" || timeStr.toLowerCase() === "various timings") {
+    return "10:45 AM, 1:45 PM, 4:45 PM, 7:45 PM, 10:45 PM";
+  }
+  return timeStr;
+}
+
 export default function TicketConfirmation() {
   const router = useRouter();
   const [booking, setBooking] = useState(null);
@@ -176,9 +198,9 @@ export default function TicketConfirmation() {
                 <h3 className="text-2xl lg:text-3xl font-extrabold bg-linear-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent mb-2">
                   {event.title}
                 </h3>
-                <div className="flex flex-wrap gap-4 text-xs text-neutral-400 mt-2">
-                  <span className="flex items-center gap-1">📅 {event.date || "July 15, 2026"}</span>
-                  <span className="flex items-center gap-1">🕒 {event.time || "7:00 PM"}</span>
+                 <div className="flex flex-wrap gap-4 text-xs text-neutral-400 mt-2">
+                  <span className="flex items-center gap-1">📅 {formatDate(event.date) || "July 15, 2026"}</span>
+                  <span className="flex items-center gap-1">🕒 {formatTime(event.time, event.category) || "7:00 PM"}</span>
                   <span className="flex items-center gap-1">📍 {event.venue}</span>
                 </div>
               </div>
@@ -291,8 +313,8 @@ export default function TicketConfirmation() {
               <span className="text-xs font-bold text-orange-500 uppercase tracking-widest block mb-1">Confirm Booking</span>
               <h2 className="text-2xl font-bold">{event.title}</h2>
               <div className="flex flex-wrap gap-4 text-xs text-neutral-400 mt-2">
-                <span className="flex items-center gap-1"><Calendar size={14} className="text-rose-500" /> {event.date || "July 15, 2026"}</span>
-                <span className="flex items-center gap-1"><Clock size={14} className="text-orange-500" /> {event.time || "7:00 PM"}</span>
+                <span className="flex items-center gap-1"><Calendar size={14} className="text-rose-500" /> {formatDate(event.date) || "July 15, 2026"}</span>
+                <span className="flex items-center gap-1"><Clock size={14} className="text-orange-500" /> {formatTime(event.time, event.category) || "7:00 PM"}</span>
                 <span className="flex items-center gap-1"><MapPin size={14} className="text-rose-500" /> {event.venue}</span>
               </div>
             </div>

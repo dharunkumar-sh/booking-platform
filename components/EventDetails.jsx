@@ -4,11 +4,21 @@ import { useState, useEffect } from "react";
 import { Info, User, Ticket, CheckCircle2, Users, Star, MessageSquare, ArrowRight, ThumbsUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export default function EventDetails({ event, description, organizer, price, features, crew, reviews }) {
+export default function EventDetails({ event, description, organizer, price, features, crew, reviews: initialReviews }) {
   const router = useRouter();
   const [likesCount, setLikesCount] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
   const [likesLoaded, setLikesLoaded] = useState(false);
+
+  // Reviews states
+  const [eventReviews, setEventReviews] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [formRating, setFormRating] = useState(5);
+  const [hoveredStar, setHoveredStar] = useState(0);
+  const [formComment, setFormComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [submitSuccess, setSubmitSuccess] = useState("");
 
   useEffect(() => {
     if (!event?.id) return;
@@ -48,6 +58,36 @@ export default function EventDetails({ event, description, organizer, price, fea
     }
   }, [event?.id]);
 
+  // Load reviews dynamically from DB
+  useEffect(() => {
+    if (!event?.id) return;
+    fetch(`/api/events/review?eventId=${event.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setEventReviews(data.reviews || []);
+        }
+      })
+      .catch((err) => console.error("Error fetching reviews:", err));
+  }, [event?.id]);
+
+  // Sync logged in user profile details
+  useEffect(() => {
+    const checkUser = () => {
+      const stored = localStorage.getItem("vibepass_user");
+      if (stored) {
+        try {
+          setCurrentUser(JSON.parse(stored));
+        } catch {
+          setCurrentUser(null);
+        }
+      } else {
+        setCurrentUser(null);
+      }
+    };
+    checkUser();
+  }, []);
+
   const handleLike = async () => {
     const userStored = localStorage.getItem("vibepass_user");
     if (!userStored) {
@@ -70,6 +110,49 @@ export default function EventDetails({ event, description, organizer, price, fea
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!event?.id) return;
+    if (!currentUser) return;
+
+    if (!formComment.trim()) {
+      setSubmitError("Review comment cannot be empty.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError("");
+    setSubmitSuccess("");
+
+    try {
+      const res = await fetch("/api/events/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventId: event.id,
+          userId: currentUser.id,
+          rating: formRating,
+          comment: formComment,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setEventReviews(data.reviews || []);
+        setFormComment("");
+        setFormRating(5);
+        setSubmitSuccess("Thank you! Your review has been added.");
+      } else {
+        setSubmitError(data.error || "Failed to submit review.");
+      }
+    } catch (err) {
+      console.error(err);
+      setSubmitError("An error occurred while submitting your review.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -103,11 +186,6 @@ export default function EventDetails({ event, description, organizer, price, fea
     { name: "Anirudh", role: "Lead Artist", img: "https://ui-avatars.com/api/?name=Anirudh&background=random&size=200" },
     { name: "Jonita Gandhi", role: "Guest Singer", img: "https://ui-avatars.com/api/?name=Jonita+Gandhi&background=random&size=200" },
     { name: "MS Dhoni", role: "Captain", img: "https://ui-avatars.com/api/?name=MS+Dhoni&background=random&size=200" }
-  ];
-
-  const defaultReviews = [
-    { name: "Emily R.", rating: 5, comment: "Absolutely breathtaking! The performance exceeded all my expectations. Highly recommended!" },
-    { name: "John T.", rating: 4, comment: "Great experience overall. The crowd was amazing and the sound quality was top notch." }
   ];
 
   return (
@@ -157,29 +235,114 @@ export default function EventDetails({ event, description, organizer, price, fea
           </div>
         </section>
 
-        {/* Top Reviews Section */}
-        <section className="bg-neutral-900/50 backdrop-blur-md border border-neutral-800 rounded-3xl p-8 shadow-xl hover:shadow-rose-500/10 transition-shadow duration-300">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2 mb-6">
-            <MessageSquare className="text-rose-500" /> Top Reviews
-          </h2>
-          <div className="space-y-6">
-            {(reviews || defaultReviews).map((review, idx) => (
-              <div key={idx} className="bg-neutral-950/50 rounded-2xl p-6 border border-neutral-800 hover:border-neutral-700 transition-colors">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-full bg-linear-to-r from-orange-500 to-rose-500 flex items-center justify-center text-sm font-bold text-white shadow-lg">
-                    {review.name.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="text-white font-semibold text-sm">{review.name}</p>
-                    <div className="flex gap-1 text-yellow-400 mt-0.5">
-                      {[...Array(review.rating)].map((_, i) => <Star key={i} size={12} className="fill-yellow-400" />)}
+        {/* Top Reviews Section - Render only if actual DB reviews exist */}
+        {eventReviews && eventReviews.filter(r => r && r.createdAt).length > 0 && (
+          <section className="bg-neutral-900/50 backdrop-blur-md border border-neutral-800 rounded-3xl p-8 shadow-xl hover:shadow-rose-500/10 transition-shadow duration-300">
+            <h2 className="text-2xl font-bold text-white flex items-center gap-2 mb-6">
+              <MessageSquare className="text-rose-500" /> Top Reviews
+            </h2>
+            <div className="space-y-6">
+              {eventReviews.filter(r => r && r.createdAt).map((review, idx) => (
+                <div key={idx} className="bg-neutral-950/50 rounded-2xl p-6 border border-neutral-800 hover:border-neutral-700 transition-colors">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-linear-to-r from-orange-500 to-rose-500 flex items-center justify-center text-sm font-bold text-white shadow-lg">
+                      {(review.name || "U").charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-white font-semibold text-sm">{review.name}</p>
+                      <div className="flex gap-1 text-yellow-400 mt-0.5">
+                        {[...Array(Number(review.rating || 5))].map((_, i) => <Star key={i} size={12} className="fill-yellow-400" />)}
+                      </div>
                     </div>
                   </div>
+                  <p className="text-neutral-300 text-sm italic leading-relaxed">"{review.comment}"</p>
                 </div>
-                <p className="text-neutral-300 text-sm italic leading-relaxed">"{review.comment}"</p>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Write a Review Section */}
+        <section className="bg-neutral-900/50 backdrop-blur-md border border-neutral-800 rounded-3xl p-8 shadow-xl hover:shadow-orange-500/10 transition-shadow duration-300">
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2 mb-6">
+            <Star className="text-orange-500" /> Share Your Review
+          </h2>
+          {currentUser ? (
+            <form onSubmit={handleReviewSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-neutral-300 mb-2">Rating</label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setFormRating(star)}
+                      onMouseEnter={() => setHoveredStar(star)}
+                      onMouseLeave={() => setHoveredStar(0)}
+                      className="cursor-pointer transition-transform duration-150 active:scale-95 text-left bg-transparent border-none p-0 outline-none"
+                    >
+                      <Star
+                        size={28}
+                        className={`transition-colors duration-150 ${
+                          star <= (hoveredStar || formRating)
+                            ? "text-yellow-400 fill-yellow-400"
+                            : "text-neutral-650 fill-none"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
+
+              <div>
+                <label htmlFor="review-comment" className="block text-sm font-semibold text-neutral-300 mb-2">Comment</label>
+                <textarea
+                  id="review-comment"
+                  value={formComment}
+                  onChange={(e) => setFormComment(e.target.value)}
+                  placeholder="Tell others what you loved about this event..."
+                  rows={4}
+                  className="w-full bg-neutral-950/70 border border-neutral-800 focus:border-orange-500/50 rounded-2xl p-4 text-white text-sm outline-none transition-colors duration-200 resize-none placeholder-neutral-600"
+                />
+              </div>
+
+              {submitError && (
+                <p className="text-red-400 text-xs font-semibold">{submitError}</p>
+              )}
+              {submitSuccess && (
+                <p className="text-emerald-400 text-xs font-semibold">{submitSuccess}</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 disabled:from-neutral-700 disabled:to-neutral-800 disabled:text-neutral-500 text-white rounded-xl font-bold transition-all duration-300 shadow-md hover:shadow-orange-500/20 active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit Review"
+                )}
+              </button>
+            </form>
+          ) : (
+            <div className="bg-neutral-950/50 rounded-2xl p-6 border border-neutral-850 text-center">
+              <p className="text-neutral-400 text-sm mb-4">You must be logged in to share your experience.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.setItem("login_redirect", window.location.pathname);
+                  router.push("/login");
+                }}
+                className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white rounded-xl font-bold transition-all duration-300 shadow-lg shadow-orange-500/10 cursor-pointer active:scale-95"
+              >
+                Log In / Register
+              </button>
+            </div>
+          )}
         </section>
       </div>
 
@@ -222,7 +385,7 @@ export default function EventDetails({ event, description, organizer, price, fea
             <ThumbsUp size={16} className={hasLiked ? "fill-orange-400 text-orange-400" : ""} />
             <span>{hasLiked ? "Liked" : "Like Event"}</span>
             {likesLoaded && likesCount > 0 && (
-              <span className="ml-1.5 px-2 py-0.5 rounded-md bg-neutral-800 text-xs text-neutral-400 font-extrabold">
+              <span className="ml-1.5 px-2 py-0.5 rounded-md bg-neutral-850 text-xs text-neutral-400 font-extrabold">
                 {likesCount}
               </span>
             )}

@@ -2,6 +2,28 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Calendar, MapPin, Clock, Star, Tag } from "lucide-react";
 
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  try {
+    return new Date(dateStr).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
+function formatTime(timeStr, category) {
+  if (!timeStr) return "";
+  const cat = (category || "").toLowerCase();
+  if (cat === "movie" || cat === "cinema" || timeStr.toLowerCase() === "various timings") {
+    return "10:45 AM, 1:45 PM, 4:45 PM, 7:45 PM, 10:45 PM";
+  }
+  return timeStr;
+}
+
 export default function EventHeader({ event }) {
   const fallbackImage = "https://images.unsplash.com/photo-1501386761578-eac5c94b800a";
   const [imgSrc, setImgSrc] = useState(fallbackImage);
@@ -60,7 +82,7 @@ export default function EventHeader({ event }) {
               <div className="p-2 rounded-full bg-white/10 backdrop-blur-sm">
                 <Calendar size={18} className="text-orange-400" />
               </div>
-              <span className="text-sm md:text-base font-medium">{event.date}</span>
+              <span className="text-sm md:text-base font-medium">{formatDate(event.date)}</span>
             </div>
           )}
 
@@ -69,7 +91,7 @@ export default function EventHeader({ event }) {
               <div className="p-2 rounded-full bg-white/10 backdrop-blur-sm">
                 <Clock size={18} className="text-orange-400" />
               </div>
-              <span className="text-sm md:text-base font-medium">{event.time}</span>
+              <span className="text-sm md:text-base font-medium">{formatTime(event.time, event.category)}</span>
             </div>
           )}
 

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import {
   MapPin,
   Mail,
@@ -32,6 +33,7 @@ const footerLinks = [
 
 
 const Footer = () => {
+  const pathname = usePathname();
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
 
@@ -46,6 +48,10 @@ const Footer = () => {
     setMessage("Thanks for subscribing. We will keep you posted.");
     setEmail("");
   };
+
+  if (pathname !== "/") {
+    return null;
+  }
 
   return (
     <footer className="relative border-t border-neutral-800 bg-neutral-950 text-white">

@@ -3,6 +3,19 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User, Mail, Phone, ArrowRight, Calendar, MapPin } from "lucide-react";
 
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  try {
+    return new Date(dateStr).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
 export default function UserForm() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -125,7 +138,7 @@ export default function UserForm() {
             <span className="text-neutral-400">₹{bookingDetails.total}</span>
           </div>
           <div className="flex gap-4 text-xs text-neutral-400 mt-1">
-            <span className="flex items-center gap-1"><Calendar size={12} /> {bookingDetails.event.date || "July 15, 2026"}</span>
+            <span className="flex items-center gap-1"><Calendar size={12} /> {formatDate(bookingDetails.event.date) || "July 15, 2026"}</span>
             <span className="flex items-center gap-1"><MapPin size={12} /> {bookingDetails.event.venue}</span>
           </div>
           <div className="text-xs text-neutral-400 mt-1">
