@@ -63,42 +63,6 @@ const MOODS = [
   { name: "Luxury 👑", key: "luxury" },
 ];
 
-// ── Mood destinations (static inspiration) ────────────────────────────────
-const MOOD_PLACES = {
-  relaxed: [
-    { name: "Maldives", description: "Crystal clear waters & overwater villas", image: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=150&q=80" },
-    { name: "Kyoto, Japan", description: "Peaceful bamboo forests & temples", image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=150&q=80" },
-    { name: "Santorini, Greece", description: "Breathtaking caldera views & sunsets", image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=150&q=80" },
-  ],
-  adventure: [
-    { name: "Queenstown, NZ", description: "Bungee jumping & skiing capital", image: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=150&q=80" },
-    { name: "Swiss Alps", description: "Majestic peaks & thrilling trails", image: "https://images.unsplash.com/photo-1502784444187-359ac186c5bb?auto=format&fit=crop&w=150&q=80" },
-    { name: "Patagonia, Chile", description: "Glaciers & dramatic mountain treks", image: "https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?auto=format&fit=crop&w=150&q=80" },
-  ],
-  romantic: [
-    { name: "Paris, France", description: "The city of love and lights", image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=150&q=80" },
-    { name: "Venice, Italy", description: "Gondola rides through historic canals", image: "https://images.unsplash.com/photo-1527631746610-bca00a040d60?auto=format&fit=crop&w=150&q=80" },
-    { name: "Maui, Hawaii", description: "Sunset beaches & tropical breeze", image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=150&q=80" },
-  ],
-  productive: [
-    { name: "Silicon Valley", description: "Innovation, tech hubs & coding cafes", image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=150&q=80" },
-    { name: "Singapore", description: "Futuristic workspace & green oasis", image: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=150&q=80" },
-    { name: "Tokyo, Japan", description: "Ultra-fast internet & 24/7 cafes", image: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=150&q=80" },
-  ],
-  luxury: [
-    { name: "Dubai, UAE", description: "Opulent hotels & luxury shopping", image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=150&q=80" },
-    { name: "Monaco", description: "Yachts, casinos & glamorous life", image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=150&q=80" },
-    { name: "Beverly Hills", description: "High-end fashion & elite villas", image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=150&q=80" },
-  ],
-};
-
-// ── Upcoming events ticker ────────────────────────────────────────────────
-const UPCOMING_EVENTS = [
-  { id: 1, emoji: "🎵", name: "Sunburn Festival", date: new Date("2026-06-28T18:00:00"), color: "#f97316" },
-  { id: 2, emoji: "🌙", name: "Neon Nights", date: new Date("2026-07-04T21:00:00"), color: "#a855f7" },
-  { id: 3, emoji: "✈️", name: "Bali Travel Expo", date: new Date("2026-07-12T10:00:00"), color: "#06b6d4" },
-];
-
 const getTimeLeft = (targetDate) => {
   const diff = targetDate - Date.now();
   if (diff <= 0) return { d: 0, h: 0, m: 0, s: 0 };
@@ -171,10 +135,9 @@ const Hero = ({
   const [selectedMood, setSelectedMood] = useState("");
   const [selectedMoodKey, setSelectedMoodKey] = useState("");
 
-  // Countdown timers
-  const [timers, setTimers] = useState(() =>
-    UPCOMING_EVENTS.map(() => ({ d: 0, h: 0, m: 0, s: 0 }))
-  );
+  // Countdown timers & dynamic events state
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [timers, setTimers] = useState([]);
 
   const searchContainerRef = useRef(null);
   const debounceTimerRef = useRef(null);
@@ -188,10 +151,43 @@ const Hero = ({
   const inputRef = useRef(null);
   const debounceRef = useRef(null);
 
+  const allUpcomingEventsRef = useRef([]);
+
   const locationCity = location?.city || null;
   const heroSubtitle = locationCity
     ? `Explore concerts, shows, nightlife, and exclusive events near ${locationCity}.`
     : "Explore concerts, shows, nightlife, destinations, travel packages, and exclusive experiences happening around you.";
+
+  // Fetch upcoming events dynamically from events API
+  useEffect(() => {
+    async function fetchUpcoming() {
+      try {
+        const res = await fetch(`/api/events${selectedState ? `?state=${encodeURIComponent(selectedState)}` : ""}`);
+        const data = await res.json();
+        if (data.success && data.events) {
+          const now = Date.now();
+          const upcoming = data.events
+            .map((e) => ({
+              id: e.id,
+              emoji: getCategoryEmoji(e.category),
+              name: e.title,
+              date: new Date(e.date),
+              color: e.category === "music" ? "#f97316" : e.category === "comedy" ? "#a855f7" : "#06b6d4"
+            }))
+            .filter((e) => e.date.getTime() > now)
+            .sort((a, b) => a.date - b.date);
+
+          allUpcomingEventsRef.current = upcoming;
+          const displaySlice = upcoming.slice(0, 3);
+          setUpcomingEvents(displaySlice);
+          setTimers(displaySlice.map((e) => getTimeLeft(e.date)));
+        }
+      } catch (err) {
+        console.error("Failed to fetch upcoming events:", err);
+      }
+    }
+    fetchUpcoming();
+  }, [selectedState]);
 
   // ── Preload background images ────────────────────────────────────────────
   useEffect(() => {
@@ -217,7 +213,15 @@ const Hero = ({
   // ── Countdown tick ───────────────────────────────────────────────────────
   useEffect(() => {
     const tick = setInterval(() => {
-      setTimers(UPCOMING_EVENTS.map((e) => getTimeLeft(e.date)));
+      const now = Date.now();
+      // Filter out any events that have already ended
+      allUpcomingEventsRef.current = allUpcomingEventsRef.current.filter(
+        (e) => e.date.getTime() > now
+      );
+
+      const activeDisplay = allUpcomingEventsRef.current.slice(0, 3);
+      setUpcomingEvents(activeDisplay);
+      setTimers(activeDisplay.map((e) => getTimeLeft(e.date)));
     }, 1000);
     return () => clearInterval(tick);
   }, []);
@@ -428,8 +432,8 @@ const Hero = ({
 
         {/* ── Upcoming event countdown pills ── */}
         <div className="flex gap-2 mb-4" style={{ flexWrap: "wrap" }}>
-          {UPCOMING_EVENTS.map((event, i) => {
-            const t = timers[i];
+          {upcomingEvents.map((event, i) => {
+            const t = timers[i] || { d: 0, h: 0, m: 0, s: 0 };
             return (
               <div
                 key={event.id}
