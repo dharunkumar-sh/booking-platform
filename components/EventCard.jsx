@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Ticket, Heart, ThumbsUp } from "lucide-react";
+import { useBookingStore } from "@/hooks/useBookingStore";
 
 function formatPrice(price) {
   if (price == null) return "";
@@ -48,8 +49,8 @@ export default function EventCard({
 
   // Fetch likes count and user like status dynamically on mount
   useEffect(() => {
-    const userStored = sessionStorage.getItem("vibepass_user");
-    const userId = userStored ? JSON.parse(userStored).id : "";
+    const user = useBookingStore.getState().user;
+    const userId = user ? user.id : "";
     fetch(`/api/events/like?eventId=${event.id}&userId=${userId}`)
       .then((res) => res.json())
       .then((data) => {
@@ -64,11 +65,11 @@ export default function EventCard({
 
   // Auto-apply pending like after auth redirect
   useEffect(() => {
-    const pendingId = sessionStorage.getItem("like_pending_event_id");
-    const userStored = sessionStorage.getItem("vibepass_user");
-    if (pendingId && Number(pendingId) === event.id && userStored) {
-      sessionStorage.removeItem("like_pending_event_id");
-      const user = JSON.parse(userStored);
+    const store = useBookingStore.getState();
+    const pendingId = store.likePendingEventId;
+    const user = store.user;
+    if (pendingId && Number(pendingId) === event.id && user) {
+      store.setLikePendingEventId(null);
       fetch("/api/events/like", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -87,14 +88,14 @@ export default function EventCard({
 
   const handleLike = async (e) => {
     e.stopPropagation();
-    const userStored = sessionStorage.getItem("vibepass_user");
-    if (!userStored) {
-      sessionStorage.setItem("like_pending_event_id", event.id);
-      sessionStorage.setItem("login_redirect", window.location.pathname);
+    const store = useBookingStore.getState();
+    const user = store.user;
+    if (!user) {
+      store.setLikePendingEventId(event.id);
+      store.setLoginRedirect(window.location.pathname);
       router.push("/login");
       return;
     }
-    const user = JSON.parse(userStored);
     try {
       const res = await fetch("/api/events/like", {
         method: "POST",
@@ -116,11 +117,7 @@ export default function EventCard({
   return (
     <div
       onClick={async () => {
-        try {
-          sessionStorage.setItem("selectedEvent", JSON.stringify(event));
-        } catch (e) {
-          console.error(e);
-        }
+        useBookingStore.getState().setSelectedEvent(event);
         router.push(`/event-details/${encodeURIComponent(event.title)}`);
       }}
       className="group relative flex flex-col rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-orange-500/20 bg-neutral-900/30 border border-white/5 transition duration-300"
@@ -228,7 +225,7 @@ export default function EventCard({
         />
       </button>
 
-      <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
       <div className="p-5 flex flex-col justify-between grow">
         <div>
@@ -254,7 +251,7 @@ export default function EventCard({
             e.stopPropagation();
             onBookEvent(event);
           }}
-          className="mt-4 w-full bg-linear-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 py-2.5 rounded-xl flex items-center justify-center gap-2 font-bold text-white transition-all duration-300 shadow-md hover:shadow-orange-500/20 cursor-pointer relative z-10 text-sm"
+          className="mt-4 w-full bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 py-2.5 rounded-xl flex items-center justify-center gap-2 font-bold text-white transition-all duration-300 shadow-md hover:shadow-orange-500/20 cursor-pointer relative z-10 text-sm"
         >
           <Ticket size={16} /> Book Now
         </button>

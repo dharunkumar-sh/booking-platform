@@ -21,8 +21,13 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+import { useBookingStore } from "@/hooks/useBookingStore";
+
 export default function LoginPage() {
   const router = useRouter();
+  const setUser = useBookingStore((state) => state.setUser);
+  const loginRedirect = useBookingStore((state) => state.loginRedirect);
+  const setLoginRedirect = useBookingStore((state) => state.setLoginRedirect);
   // Form input states
   const [email, setEmail] = useState("");
 
@@ -71,15 +76,12 @@ export default function LoginPage() {
       const response = await axios.post("/api/auth/google", { accessToken });
       if (response.data.success) {
         const user = response.data.user;
-        sessionStorage.setItem("vibepass_user", JSON.stringify(user));
-        
-        // Dispatch custom storage event so Header updates immediately
-        window.dispatchEvent(new Event("storage"));
+        setUser(user);
         
         setLoginSuccess(true);
         setTimeout(() => {
-          const redirect = sessionStorage.getItem("login_redirect") || "/";
-          sessionStorage.removeItem("login_redirect");
+          const redirect = loginRedirect || "/";
+          setLoginRedirect(null);
           router.push(redirect);
         }, 1500);
       }
@@ -179,15 +181,12 @@ export default function LoginPage() {
       
       if (response.data.success) {
         const user = response.data.user;
-        sessionStorage.setItem("vibepass_user", JSON.stringify(user));
-        
-        // Dispatch custom storage event so Header updates immediately
-        window.dispatchEvent(new Event("storage"));
+        setUser(user);
         
         setLoginSuccess(true);
         setTimeout(() => {
-          const redirect = sessionStorage.getItem("login_redirect") || "/";
-          sessionStorage.removeItem("login_redirect");
+          const redirect = loginRedirect || "/";
+          setLoginRedirect(null);
           router.push(redirect);
         }, 1500);
       }

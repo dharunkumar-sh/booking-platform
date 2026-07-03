@@ -6,16 +6,8 @@ const EventDetailsLayout = ({ children }) => {
   const params = useParams();
 
   useEffect(() => {
-    try {
-      const data = sessionStorage.getItem("selectedEvent");
-      if (data) {
-        const parsed = JSON.parse(data);
-        if (parsed?.title) {
-          document.title = `${parsed.title} - VibePass`;
-        }
-      }
-    } catch (e) {
-      console.error(e);
+    if (params.id) {
+      document.title = `${decodeURIComponent(params.id)} - VibePass`;
     }
   }, [params.id]);
 

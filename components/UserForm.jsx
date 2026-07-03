@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User, Mail, Phone, ArrowRight, Calendar, MapPin } from "lucide-react";
 import BookingTimer from "@/components/BookingTimer";
+import { useBookingStore } from "@/hooks/useBookingStore";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -29,21 +30,18 @@ export default function UserForm() {
 
   useEffect(() => {
     // Enforce authentication
-    const userProfile = sessionStorage.getItem("vibepass_user");
+    const store = useBookingStore.getState();
+    const userProfile = store.user;
     if (!userProfile) {
-      sessionStorage.setItem("login_redirect", window.location.pathname);
+      store.setLoginRedirect(window.location.pathname);
       router.push("/login");
       return;
     }
 
     // Load pending booking details to show summary
-    try {
-      const data = sessionStorage.getItem("pendingBooking");
-      if (data) {
-        setBookingDetails(JSON.parse(data));
-      }
-    } catch (e) {
-      console.error(e);
+    const data = store.pendingBooking;
+    if (data) {
+      setBookingDetails(data);
     }
   }, [router]);
 
@@ -98,14 +96,10 @@ export default function UserForm() {
         }
 
         // 2. Sync to store
-        try {
-          sessionStorage.setItem("bookingUser", JSON.stringify(finalUserPayload));
-          if (bookingDetails) {
-            const updatedBooking = { ...bookingDetails, user: finalUserPayload };
-            sessionStorage.setItem("pendingBooking", JSON.stringify(updatedBooking));
-          }
-        } catch (e) {
-          console.error("Error storing booking details locally:", e);
+        const store = useBookingStore.getState();
+        if (bookingDetails) {
+          const updatedBooking = { ...bookingDetails, user: finalUserPayload };
+          store.setPendingBooking(updatedBooking);
         }
       } catch (e) {
         console.error("Error storing booking details:", e);
@@ -123,7 +117,7 @@ export default function UserForm() {
         {/* Event Mini Summary if available */}
         {bookingDetails && (
           <div className="w-full md:max-w-md bg-neutral-900/40 backdrop-blur-md border border-neutral-800 rounded-3xl p-8 text-sm flex flex-col gap-5">
-            <h3 className="font-bold text-transparent bg-clip-text bg-linear-to-r from-orange-500 to-rose-500 text-lg border-b border-neutral-800/80 pb-3">
+            <h3 className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-rose-500 text-lg border-b border-neutral-800/80 pb-3">
               You're booking for:
             </h3>
             <div className="flex justify-between items-center text-lg gap-4">
@@ -145,7 +139,7 @@ export default function UserForm() {
 
         {/* Main Checkout Form Card */}
         <div className="w-full md:max-w-md bg-neutral-900/60 backdrop-blur-lg border border-neutral-800/80 rounded-3xl p-8 shadow-2xl hover:shadow-orange-500/5 transition-shadow duration-500">
-          <h2 className="text-2xl font-bold text-center mb-2 bg-linear-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent">
+          <h2 className="text-2xl font-bold text-center mb-2 bg-gradient-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent">
             Contact Details
           </h2>
           <p className="text-neutral-400 text-center text-sm mb-8">
@@ -219,7 +213,7 @@ export default function UserForm() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full mt-8 py-4 bg-linear-to-r from-orange-500 to-rose-500 text-white rounded-xl font-bold hover:opacity-95 transition-opacity flex items-center justify-center gap-2 group shadow-lg hover:shadow-orange-500/20 cursor-pointer"
+              className="w-full mt-8 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-xl font-bold hover:opacity-95 transition-opacity flex items-center justify-center gap-2 group shadow-lg hover:shadow-orange-500/20 cursor-pointer"
             >
               Continue to Confirmation
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />

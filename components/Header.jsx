@@ -23,6 +23,8 @@ import {
   Tag,
 } from "lucide-react";
 import { useGeolocationContext } from "@/context/GeolocationContext";
+import { useBookingStore } from "@/hooks/useBookingStore";
+import { useStore } from "@/hooks/useStore";
 import { useFavourites } from "@/context/FavouritesContext";
 
 const OTT_PLATFORMS = [
@@ -151,33 +153,26 @@ const Header = () => {
     },
   ];
 
-  const NOTIF_KEY = "vibepass_notifications";
-
-  const [notifications, setNotifications] = useState([]);
+  const storeNotifications = useStore(useBookingStore, (state) => state.notifications) || [];
+  const setStoreNotifications = useBookingStore((state) => state.setNotifications);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
-  useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem(NOTIF_KEY);
-      setNotifications(saved ? JSON.parse(saved) : DEFAULT_NOTIFICATIONS);
-    } catch {
-      setNotifications(DEFAULT_NOTIFICATIONS);
-    }
-  }, []);
+  const notifications = storeNotifications;
 
-  const saveNotifications = (updated) => {
-    setNotifications(updated);
-    try { sessionStorage.setItem(NOTIF_KEY, JSON.stringify(updated)); } catch {}
-  };
+  useEffect(() => {
+    if (storeNotifications.length === 0) {
+      setStoreNotifications(DEFAULT_NOTIFICATIONS);
+    }
+  }, [storeNotifications.length, setStoreNotifications]);
 
   const markAsRead = (id) =>
-    saveNotifications(notifications.map((n) => n.id === id ? { ...n, read: true } : n));
+    setStoreNotifications(storeNotifications.map((n) => n.id === id ? { ...n, read: true } : n));
 
   const deleteNotification = (id) =>
-    saveNotifications(notifications.filter((n) => n.id !== id));
+    setStoreNotifications(storeNotifications.filter((n) => n.id !== id));
 
   const markAllAsRead = () =>
-    saveNotifications(notifications.map((n) => ({ ...n, read: true })));
+    setStoreNotifications(storeNotifications.map((n) => ({ ...n, read: true })));
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -225,32 +220,13 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const checkUser = () => {
-      const stored = localStorage.getItem("vibepass_user");
-      if (stored) {
-        try {
-          setUser(JSON.parse(stored));
-        } catch {
-          setUser(null);
-        }
-      } else {
-        setUser(null);
-      }
-    };
-
-    checkUser();
-    
-    // Listen for storage/custom events to update user state dynamically
-    window.addEventListener("storage", checkUser);
-    return () => window.removeEventListener("storage", checkUser);
-  }, []);
+  const storeUser = useStore(useBookingStore, (state) => state.user);
+  const user = storeUser || null;
+  const logout = useBookingStore((state) => state.logout);
+  const setSelectedEvent = useBookingStore((state) => state.setSelectedEvent);
 
   const handleLogout = () => {
-    localStorage.removeItem("vibepass_user");
-    setUser(null);
+    logout();
     router.push("/");
   };
 
@@ -299,7 +275,7 @@ const Header = () => {
                 height={80}
                 className="h-10 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
               />
-              <span className="text-2xl font-extrabold tracking-tight bg-linear-to-r from-orange-400 via-orange-500 to-rose-500 bg-clip-text text-transparent group-hover:opacity-90 transition-opacity mr-3">
+              <span className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-orange-400 via-orange-500 to-rose-500 bg-clip-text text-transparent group-hover:opacity-90 transition-opacity mr-3">
                 VibePass
               </span>
             </a>
@@ -436,11 +412,7 @@ const Header = () => {
                             if (item.type === "ott") {
                               router.push(`/ott/search?q=${encodeURIComponent(item.title)}`);
                             } else {
-                              try {
-                                localStorage.setItem("selectedEvent", JSON.stringify(item));
-                              } catch (e) {
-                                console.error("Failed to save selected event to localStorage:", e);
-                              }
+                              setSelectedEvent(item);
                               router.push(`/event-details/${encodeURIComponent(item.title)}`);
                             }
                           }}
@@ -722,7 +694,7 @@ const Header = () => {
             ) : (
               <button
                 onClick={() => router.push("/login")}
-                className="px-5 py-2 text-sm font-semibold rounded-xl bg-linear-to-r from-orange-500 to-rose-500 hover:opacity-90 active:scale-95 text-white shadow-lg shadow-orange-500/10 transition-all duration-200 shrink-0 cursor-pointer"
+                className="px-5 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 hover:opacity-90 active:scale-95 text-white shadow-lg shadow-orange-500/10 transition-all duration-200 shrink-0 cursor-pointer"
               >
                 Sign In
               </button>
@@ -800,11 +772,7 @@ const Header = () => {
                             if (item.type === "ott") {
                               router.push(`/ott/search?q=${encodeURIComponent(item.title)}`);
                             } else {
-                              try {
-                                localStorage.setItem("selectedEvent", JSON.stringify(item));
-                              } catch (e) {
-                                console.error("Failed to save selected event to localStorage:", e);
-                              }
+                              setSelectedEvent(item);
                               router.push(`/event-details/${encodeURIComponent(item.title)}`);
                             }
                           }}

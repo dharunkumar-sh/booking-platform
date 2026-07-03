@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Calendar, MapPin, QrCode, User, Phone, Mail, ArrowLeft, Ticket, X, Download, Printer } from "lucide-react";
 import TicketSelection from "./TicketSelection";
+import { useBookingStore } from "@/hooks/useBookingStore";
 
 export default function TicketsPage() {
   const router = useRouter();
@@ -14,72 +15,42 @@ export default function TicketsPage() {
   useEffect(() => {
     async function loadTickets() {
       setIsLoading(true);
-      let localBookings = [];
-      try {
-        const localData = sessionStorage.getItem("confirmedBookings");
-        if (localData) {
-          localBookings = JSON.parse(localData);
-        }
-      } catch (e) {
-        console.error("Failed loading local bookings:", e);
+      const store = useBookingStore.getState();
+      const user = store.user;
+
+      if (!user || !user.email) {
+        store.setLoginRedirect(window.location.pathname);
+        router.push("/login");
+        return;
       }
 
-      // Check if user is logged in to sync from DB
       let dbBookings = [];
       try {
-        const storedUser = sessionStorage.getItem("vibepass_user");
-        if (storedUser) {
-          const user = JSON.parse(storedUser);
-          if (user?.email) {
-            const res = await fetch(`/api/bookings?email=${encodeURIComponent(user.email)}`);
-            const data = await res.json();
-            if (data.success && data.bookings) {
-              dbBookings = data.bookings;
-            }
-          }
+        const res = await fetch(`/api/bookings?email=${encodeURIComponent(user.email)}`);
+        const data = await res.json();
+        if (data.success && data.bookings) {
+          dbBookings = data.bookings;
         }
       } catch (e) {
         console.error("Failed syncing bookings from database:", e);
       }
 
-      // Merge local and DB bookings by unique bookingId
-      const mergedMap = new Map();
-      
-      // Load local bookings first
-      localBookings.forEach((b) => {
-        if (b && b.bookingId) {
-          mergedMap.set(b.bookingId, b);
-        }
-      });
-      
-      // DB bookings override or add to local bookings
-      dbBookings.forEach((b) => {
-        if (b && b.bookingId) {
-          mergedMap.set(b.bookingId, b);
-        }
-      });
-
-      const mergedList = Array.from(mergedMap.values());
       // Sort by confirmedAt / bookingDate descending (latest first)
-      mergedList.sort((a, b) => {
+      dbBookings.sort((a, b) => {
         const dateA = new Date(a.confirmedAt || a.bookingDate || 0);
         const dateB = new Date(b.confirmedAt || b.bookingDate || 0);
         return dateB - dateA;
       });
 
-      setConfirmedBookings(mergedList);
+      setConfirmedBookings(dbBookings);
       setIsLoading(false);
     }
 
     loadTickets();
-  }, []);
+  }, [router]);
 
   const handleBookNew = async (ticketDetails) => {
-    try {
-      sessionStorage.setItem("pendingBooking", JSON.stringify(ticketDetails));
-    } catch (e) {
-      console.error(e);
-    }
+    useBookingStore.getState().setPendingBooking(ticketDetails);
     router.push("/checkout");
   };
 
@@ -189,12 +160,6 @@ export default function TicketsPage() {
                       <span className="flex items-center gap-1"><Mail size={12} /> {booking.user?.email}</span>
                       <span className="flex items-center gap-1"><Phone size={12} /> {booking.user?.phone}</span>
                     </div>
-                    <button
-                      onClick={() => setSelectedTicketModal(booking)}
-                      className="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition-all duration-200 cursor-pointer shadow-md shadow-orange-550/20 active:scale-95"
-                    >
-                      View Ticket
-                    </button>
                   </div>
                 </div>
 

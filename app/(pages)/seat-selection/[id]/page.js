@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter, useParams } from "next/navigation";
 import SeatSelection from "@/components/SeatSelection";
 import TicketSelection from "@/app/(pages)/tickets/TicketSelection";
+import { useBookingStore } from "@/hooks/useBookingStore";
 
 function SeatSelectionPageContent() {
   const searchParams = useSearchParams();
@@ -19,31 +20,27 @@ function SeatSelectionPageContent() {
   });
 
   useEffect(() => {
-    const userProfile = sessionStorage.getItem("vibepass_user");
+    const store = useBookingStore.getState();
+    const userProfile = store.user;
     if (!userProfile) {
-      sessionStorage.setItem("login_redirect", window.location.pathname + window.location.search);
+      store.setLoginRedirect(window.location.pathname + window.location.search);
       router.push("/login");
       return;
     }
 
-    try {
-      const data = sessionStorage.getItem("selectedEvent");
-      if (data) {
-        const parsed = JSON.parse(data);
-        setEventDetails({
-          id: parsed.id,
-          title: parsed.title,
-          venue: parsed.venue || parsed.location || "Main Arena",
-          priceVal: parsed.price != null
-            ? (typeof parsed.price === "number"
-                ? (parsed.price >= 10000 ? Math.round(parsed.price / 100) : parsed.price)
-                : parseInt(parsed.price.toString().replace(/[^\d]/g, ""), 10))
-            : (parsed.priceVal || 499),
-          category: parsed.category || "",
-        });
-      }
-    } catch (e) {
-      console.error(e);
+    const data = store.selectedEvent;
+    if (data) {
+      setEventDetails({
+        id: data.id,
+        title: data.title,
+        venue: data.venue || data.location || "Main Arena",
+        priceVal: data.price != null
+          ? (typeof data.price === "number"
+              ? (data.price >= 10000 ? Math.round(data.price / 100) : data.price)
+              : parseInt(data.price.toString().replace(/[^\d]/g, ""), 10))
+          : (data.priceVal || 499),
+        category: data.category || "",
+      });
     }
   }, [params.id, searchParams, router]);
 
@@ -76,11 +73,7 @@ function SeatSelectionPageContent() {
             }
           }}
           onConfirmBooking={async (ticketDetails) => {
-            try {
-              sessionStorage.setItem("pendingBooking", JSON.stringify(ticketDetails));
-            } catch (e) {
-              console.error(e);
-            }
+            useBookingStore.getState().setPendingBooking(ticketDetails);
             router.push("/checkout");
           }}
         />
@@ -92,9 +85,43 @@ function SeatSelectionPageContent() {
     <SeatSelection
       event={eventDetails}
       onCancel={() => router.push("/")}
-      onConfirmSelection={(seats) => {
+      onConfirmSelection={async (seats) => {
         setConfirmedSeats(seats);
-        sessionStorage.setItem("bookingStartedAt", Date.now().toString());
+        const store = useBookingStore.getState();
+        store.setBookingStartedAt(Date.now().toString());
+
+        // Create a pending booking in the database to hold selected seats
+        try {
+          const user = store.user;
+          if (user) {
+            const seatIds = seats.map((s) => s.id || s.label || s);
+            const cancelBookingId = store.dbBookingId;
+            const response = await fetch("/api/bookings", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                email: user.email,
+                name: user.name,
+                phone: user.phone || "",
+                eventId: eventDetails.id,
+                seats: seatIds,
+                seatsBooked: seats.length,
+                totalPrice: seats.reduce((acc, curr) => acc + (curr.price || 0), 0),
+                status: "pending",
+                bookingStartedAt: Date.now().toString(),
+                cancelBookingId: cancelBookingId || undefined
+              })
+            });
+            const resData = await response.json();
+            if (resData.success && resData.bookingId) {
+              store.setDbBookingId(resData.bookingId.toString());
+              console.log("Held seats. Pending booking ID:", resData.bookingId);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to hold seats in database:", err);
+        }
+
         setStep("tickets");
       }}
     />

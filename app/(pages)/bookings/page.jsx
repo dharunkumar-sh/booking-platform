@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Ticket, Calendar, MapPin, QrCode, ArrowRight, Download, CheckCircle2, AlertCircle, Search, X, Printer, User, Mail, Phone } from "lucide-react";
+import { useBookingStore } from "@/hooks/useBookingStore";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -33,26 +34,18 @@ export default function BookingsPage() {
 
   useEffect(() => {
     async function loadBookings() {
+      const store = useBookingStore.getState();
       let userBooked = [];
-      let confirmedBooked = [];
-      try {
-        userBooked = JSON.parse(sessionStorage.getItem("userBookings") || "[]");
-        confirmedBooked = JSON.parse(sessionStorage.getItem("confirmedBookings") || "[]");
-      } catch (e) {
-        console.error("Failed loading local bookings:", e);
-      }
+      let confirmedBooked = store.confirmedBookings || [];
 
       let dbBookings = [];
       try {
-        const storedUser = sessionStorage.getItem("vibepass_user");
-        if (storedUser) {
-          const user = JSON.parse(storedUser);
-          if (user?.email) {
-            const res = await fetch(`/api/bookings?email=${encodeURIComponent(user.email)}`);
-            const data = await res.json();
-            if (data.success && data.bookings) {
-              dbBookings = data.bookings;
-            }
+        const user = store.user;
+        if (user && user.email) {
+          const res = await fetch(`/api/bookings?email=${encodeURIComponent(user.email)}`);
+          const data = await res.json();
+          if (data.success && data.bookings) {
+            dbBookings = data.bookings;
           }
         }
       } catch (e) {

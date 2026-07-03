@@ -2,18 +2,10 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 
-/**
- * Geolocation position shape:
- * { latitude, longitude, accuracy, timestamp, city, region, country }
- *
- * Status values:
- * "idle" | "requesting" | "granted" | "denied" | "unavailable" | "timeout" | "error"
- */
-
 const GEO_OPTIONS = {
   enableHighAccuracy: true,
-  timeout: 10000,        // 10 seconds
-  maximumAge: 300000,    // Cache for 5 minutes
+  timeout: 10000,
+  maximumAge: 300000,
 };
 
 const ERROR_MESSAGES = {
@@ -22,10 +14,6 @@ const ERROR_MESSAGES = {
   3: "Location request timed out. Check your connection and try again.",
 };
 
-/**
- * Reverse geocodes lat/lng to a human-readable city name using
- * the free OpenStreetMap Nominatim API (no API key required).
- */
 async function reverseGeocode(latitude, longitude) {
   try {
     const res = await fetch(
@@ -35,7 +23,7 @@ async function reverseGeocode(latitude, longitude) {
           "Accept-Language": "en",
           "User-Agent": "VibePass-App/1.0",
         },
-      }
+      },
     );
     if (!res.ok) throw new Error("Geocoding failed");
     const contentType = res.headers.get("content-type");
@@ -63,16 +51,6 @@ async function reverseGeocode(latitude, longitude) {
   }
 }
 
-/**
- * useGeolocation — reusable hook for browser geolocation.
- *
- * Returns:
- *   location  — { latitude, longitude, accuracy, timestamp, city, region, country } | null
- *   status    — "idle" | "requesting" | "granted" | "denied" | "unavailable" | "timeout" | "error"
- *   error     — human-readable error string | null
- *   requestLocation() — imperative trigger
- *   clearLocation()   — reset state
- */
 export function useGeolocation() {
   const [status, setStatus] = useState("idle");
   const [location, setLocation] = useState(null);
@@ -85,17 +63,17 @@ export function useGeolocation() {
     try {
       const saved = localStorage.getItem("vibepass_geo_location");
       if (saved) {
-        const { status: savedStatus, location: savedLocation } = JSON.parse(saved);
+        const { status: savedStatus, location: savedLocation } =
+          JSON.parse(saved);
         if (savedStatus && savedLocation) {
           setStatus(savedStatus);
           setLocation(savedLocation);
           setIsRestored(true);
-          requestedRef.current = savedStatus === "granted" || savedStatus === "requesting";
+          requestedRef.current =
+            savedStatus === "granted" || savedStatus === "requesting";
         }
       }
-    } catch {
-      // ignore
-    }
+    } catch {}
   }, []);
 
   const requestLocation = useCallback(() => {
@@ -148,9 +126,7 @@ export function useGeolocation() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ...locationData, sessionId }),
           });
-        } catch {
-          // Silently swallow — backend sync failure must not break the UI
-        }
+        } catch {}
       },
       (err) => {
         const code = err.code; // 1=PERMISSION_DENIED, 2=POSITION_UNAVAILABLE, 3=TIMEOUT
@@ -160,11 +136,14 @@ export function useGeolocation() {
           3: "timeout",
         };
         setStatus(statusMap[code] || "error");
-        setError(ERROR_MESSAGES[code] || "An unknown error occurred while fetching your location.");
+        setError(
+          ERROR_MESSAGES[code] ||
+            "An unknown error occurred while fetching your location.",
+        );
         setLocation(null);
         requestedRef.current = false; // Allow retry on failure
       },
-      GEO_OPTIONS
+      GEO_OPTIONS,
     );
   }, []);
 
@@ -176,5 +155,12 @@ export function useGeolocation() {
     requestedRef.current = false;
   }, []);
 
-  return { location, status, error, isRestored, requestLocation, clearLocation };
+  return {
+    location,
+    status,
+    error,
+    isRestored,
+    requestLocation,
+    clearLocation,
+  };
 }

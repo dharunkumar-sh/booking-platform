@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Clock, AlertTriangle } from "lucide-react";
+import { useBookingStore } from "@/hooks/useBookingStore";
 
 export default function BookingTimer() {
   const router = useRouter();
@@ -10,7 +11,8 @@ export default function BookingTimer() {
   const [expiredEventId, setExpiredEventId] = useState("");
 
   useEffect(() => {
-    const startedAtStr = sessionStorage.getItem("bookingStartedAt");
+    const store = useBookingStore.getState();
+    const startedAtStr = store.bookingStartedAt;
     if (!startedAtStr) return;
 
     const startedAt = parseInt(startedAtStr, 10);
@@ -26,12 +28,22 @@ export default function BookingTimer() {
         // Find event ID to redirect to
         let eventId = "";
         try {
-          const pendingData = sessionStorage.getItem("pendingBooking");
+          const pendingData = store.pendingBooking;
           if (pendingData) {
-            const parsed = JSON.parse(pendingData);
-            if (parsed?.event?.id) {
-              eventId = parsed.event.id;
+            if (pendingData?.event?.id) {
+              eventId = pendingData.event.id;
             }
+          }
+
+          // Release pending seats in database immediately on expiration
+          const dbBookingId = store.dbBookingId;
+          if (dbBookingId) {
+            fetch("/api/bookings", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ bookingId: dbBookingId })
+            }).catch(err => console.error("Error releasing expired booking:", err));
+            store.clearDbBookingId();
           }
         } catch (e) {
           console.error(e);
@@ -40,8 +52,9 @@ export default function BookingTimer() {
         setExpiredEventId(eventId);
         
         // Clear pending bookings immediately
-        sessionStorage.removeItem("pendingBooking");
-        sessionStorage.removeItem("bookingStartedAt");
+        store.setBookingStartedAt(null);
+        store.clearDbBookingId();
+        store.clearPendingBooking();
         
         setShowExpiredModal(true);
       } else {

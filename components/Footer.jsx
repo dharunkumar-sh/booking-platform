@@ -55,7 +55,7 @@ const Footer = () => {
 
   return (
     <footer className="relative border-t border-neutral-800 bg-neutral-950 text-white">
-      <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-orange-500/70 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-orange-500/70 to-transparent" />
 
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[1.2fr_1fr_1fr]">
@@ -69,7 +69,7 @@ const Footer = () => {
                 className="h-12 w-auto object-contain transition-transform group-hover:scale-105"
               />
               <div>
-                <p className="text-2xl font-extrabold tracking-leading bg-linear-to-r from-orange-400 via-orange-500 to-rose-500 bg-clip-text text-transparent">
+                <p className="text-2xl font-extrabold tracking-leading bg-gradient-to-r from-orange-400 via-orange-500 to-rose-500 bg-clip-text text-transparent">
                   VibePass
                 </p>
                 <p className="text-xs font-medium text-neutral-400">
@@ -165,7 +165,7 @@ const Footer = () => {
             />
             <button
               type="submit"
-              className="min-h-11 rounded-xl bg-linear-to-r from-orange-500 to-rose-500 px-5 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition hover:opacity-90 active:scale-95"
+              className="min-h-11 rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 px-5 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition hover:opacity-90 active:scale-95"
             >
               Subscribe
             </button>

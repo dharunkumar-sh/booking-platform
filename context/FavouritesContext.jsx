@@ -1,35 +1,19 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-
-const FAV_KEY = "vibepass_favourites";
+import React, { createContext, useContext, useEffect, useCallback } from "react";
+import { useBookingStore } from "@/hooks/useBookingStore";
 
 const FavouritesContext = createContext(null);
 
 export function FavouritesProvider({ children }) {
-  const [favourites, setFavourites] = useState([]);
-  const [user, setUser] = useState(null);
+  const user = useBookingStore((state) => state.user);
+  const favourites = useBookingStore((state) => state.favourites);
+  const setFavourites = useBookingStore((state) => state.setFavourites);
+  const favouritePendingEventId = useBookingStore((state) => state.favouritePendingEventId);
+  const setFavouritePendingEventId = useBookingStore((state) => state.setFavouritePendingEventId);
+  const setLoginRedirect = useBookingStore((state) => state.setLoginRedirect);
 
-  // 1. Monitor user authentication status
-  useEffect(() => {
-    const checkUser = () => {
-      const stored = sessionStorage.getItem("vibepass_user");
-      if (stored) {
-        try {
-          setUser(JSON.parse(stored));
-        } catch {
-          setUser(null);
-        }
-      } else {
-        setUser(null);
-      }
-    };
-    checkUser();
-    window.addEventListener("storage", checkUser);
-    return () => window.removeEventListener("storage", checkUser);
-  }, []);
-
-  // 2. Fetch favourites from backend or sessionStorage
+  // 1. Fetch favourites from backend
   const loadFavourites = useCallback(async () => {
     if (user?.id) {
       try {
@@ -43,24 +27,17 @@ export function FavouritesProvider({ children }) {
         console.error("Failed to load favourites from backend:", err);
       }
     }
-    // Fallback to sessionStorage
-    try {
-      const saved = sessionStorage.getItem(FAV_KEY);
-      if (saved) setFavourites(JSON.parse(saved));
-    } catch {
-      setFavourites([]);
-    }
-  }, [user]);
+  }, [user, setFavourites]);
 
   useEffect(() => {
     loadFavourites();
   }, [loadFavourites]);
 
-  // 3. Process pending favourite action post-login
+  // 2. Process pending favourite action post-login
   useEffect(() => {
-    const pendingId = sessionStorage.getItem("favourite_pending_event_id");
-    if (pendingId && user?.id) {
-      sessionStorage.removeItem("favourite_pending_event_id");
+    if (favouritePendingEventId && user?.id) {
+      const pendingId = favouritePendingEventId;
+      setFavouritePendingEventId(null);
       fetch("/api/events/favourite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -74,7 +51,7 @@ export function FavouritesProvider({ children }) {
       })
       .catch(err => console.error("Auto-apply pending favourite failed:", err));
     }
-  }, [user, loadFavourites]);
+  }, [user, favouritePendingEventId, setFavouritePendingEventId, loadFavourites]);
 
   const isFavourite = useCallback(
     (id) => favourites.some((f) => f.id === id),
@@ -83,21 +60,19 @@ export function FavouritesProvider({ children }) {
 
   const toggleFavourite = useCallback(
     async (item) => {
-      const storedUser = sessionStorage.getItem("vibepass_user");
-      if (!storedUser) {
+      if (!user) {
         // Redirect to login
-        sessionStorage.setItem("favourite_pending_event_id", item.id);
-        sessionStorage.setItem("login_redirect", window.location.pathname);
+        setFavouritePendingEventId(item.id);
+        setLoginRedirect(window.location.pathname);
         window.location.href = "/login";
         return;
       }
 
-      const parsedUser = JSON.parse(storedUser);
       try {
         const res = await fetch("/api/events/favourite", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ eventId: item.id, userId: parsedUser.id })
+          body: JSON.stringify({ eventId: item.id, userId: user.id })
         });
         const data = await res.json();
         if (data.success) {
@@ -107,18 +82,16 @@ export function FavouritesProvider({ children }) {
         console.error("Failed to toggle favourite on backend:", err);
       }
     },
-    [loadFavourites]
+    [user, loadFavourites, setFavouritePendingEventId, setLoginRedirect]
   );
 
   const removeFavourite = useCallback(async (id) => {
-    const storedUser = sessionStorage.getItem("vibepass_user");
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
+    if (user) {
       try {
         await fetch("/api/events/favourite", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ eventId: id, userId: parsedUser.id })
+          body: JSON.stringify({ eventId: id, userId: user.id })
         });
         loadFavourites();
         return;
@@ -127,17 +100,12 @@ export function FavouritesProvider({ children }) {
       }
     }
     // Fallback local remove
-    setFavourites((prev) => {
-      const next = prev.filter((f) => f.id !== id);
-      try { sessionStorage.setItem(FAV_KEY, JSON.stringify(next)); } catch {}
-      return next;
-    });
-  }, [loadFavourites]);
+    setFavourites(favourites.filter((f) => f.id !== id));
+  }, [user, favourites, setFavourites, loadFavourites]);
 
   const clearFavourites = useCallback(() => {
     setFavourites([]);
-    try { sessionStorage.removeItem(FAV_KEY); } catch {}
-  }, []);
+  }, [setFavourites]);
 
   return (
     <FavouritesContext.Provider

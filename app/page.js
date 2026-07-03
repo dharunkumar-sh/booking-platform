@@ -5,6 +5,7 @@ import FeaturedEvents from "@/components/FeaturedEvents";
 import TrendingEvents from "@/components/TrendingEvents";
 import EventMapWrapper from "@/components/EventMapWrapper";
 import { useRouter } from "next/navigation";
+import { useBookingStore } from "@/hooks/useBookingStore";
 
 import { useState } from "react";
 
@@ -39,21 +40,18 @@ export default function Home() {
   };
 
   const handleBookEvent = (event) => {
-    const userStored = sessionStorage.getItem("vibepass_user");
+    const store = useBookingStore.getState();
+    const user = store.user;
     const query = new URLSearchParams({
       venue: event.venue || event.location || "",
       category: event.category || "",
     }).toString();
     const destination = `/seat-selection/${encodeURIComponent(event.title)}?${query}`;
 
-    try {
-      sessionStorage.setItem("selectedEvent", JSON.stringify(event));
-    } catch (e) {
-      console.error("Failed to save selected event to sessionStorage:", e);
-    }
+    store.setSelectedEvent(event);
 
-    if (!userStored) {
-      sessionStorage.setItem("login_redirect", destination);
+    if (!user) {
+      store.setLoginRedirect(destination);
       router.push("/login");
       return;
     }

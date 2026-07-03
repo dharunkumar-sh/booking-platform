@@ -23,29 +23,17 @@ export async function GET(request) {
 
     const sql = neon(DATABASE_URL);
 
-    // Retrieve all bookings for the specified event that are not cancelled
+    // Retrieve the sum of booked seats for the specified event that are not cancelled
+    // (and pending bookings must not be older than 10 minutes)
     const dbBookings = await sql`
-      SELECT seats FROM bookings
-      WHERE event_id = ${eventId} AND status != 'cancelled'
+      SELECT COALESCE(SUM(seats_booked), 0) AS "totalBooked"
+      FROM bookings
+      WHERE event_id = ${eventId} 
+        AND status != 'cancelled'
+        AND (status != 'pending' OR booking_date >= NOW() - INTERVAL '10 minutes')
     `;
 
-    // Flatten all seats from the returned bookings to count booked seats
-    let bookedSeatsCount = 0;
-    for (const b of dbBookings) {
-      if (b.seats) {
-        let seatsArr = [];
-        if (typeof b.seats === "string") {
-          try {
-            seatsArr = JSON.parse(b.seats);
-          } catch {
-            seatsArr = b.seats.split(",").map(s => s.trim());
-          }
-        } else if (Array.isArray(b.seats)) {
-          seatsArr = b.seats;
-        }
-        bookedSeatsCount += seatsArr.length;
-      }
-    }
+    const bookedSeatsCount = parseInt(dbBookings[0].totalBooked, 10);
 
     const getPassStatus = (available, maxCap) => {
       if (available <= 0) return 'Sold Out';

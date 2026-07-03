@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Info, User, Ticket, CheckCircle2, Users, Star, MessageSquare, ArrowRight, ThumbsUp } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useBookingStore } from "@/hooks/useBookingStore";
+import { useStore } from "@/hooks/useStore";
 
 export default function EventDetails({ event, description, organizer, price, features, crew, reviews: initialReviews }) {
   const router = useRouter();
@@ -20,10 +22,13 @@ export default function EventDetails({ event, description, organizer, price, fea
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState("");
 
+  const storeUser = useStore(useBookingStore, (state) => state.user);
+  const user = storeUser || null;
+
   useEffect(() => {
     if (!event?.id) return;
-    const userStored = sessionStorage.getItem("vibepass_user");
-    const userId = userStored ? JSON.parse(userStored).id : "";
+    const store = useBookingStore.getState();
+    const userId = store.user ? store.user.id : "";
     fetch(`/api/events/like?eventId=${event.id}&userId=${userId}`)
       .then((res) => res.json())
       .then((data) => {
@@ -38,11 +43,12 @@ export default function EventDetails({ event, description, organizer, price, fea
 
   useEffect(() => {
     if (!event?.id) return;
-    const pendingId = sessionStorage.getItem("like_pending_event_id");
-    const userStored = sessionStorage.getItem("vibepass_user");
+    const store = useBookingStore.getState();
+    const pendingId = store.likePendingEventId;
+    const userStored = store.user;
     if (pendingId && Number(pendingId) === event.id && userStored) {
-      sessionStorage.removeItem("like_pending_event_id");
-      const user = JSON.parse(userStored);
+      store.setLikePendingEventId(null);
+      const user = userStored;
       fetch("/api/events/like", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -73,31 +79,20 @@ export default function EventDetails({ event, description, organizer, price, fea
 
   // Sync logged in user profile details
   useEffect(() => {
-    const checkUser = () => {
-      const stored = sessionStorage.getItem("vibepass_user");
-      if (stored) {
-        try {
-          setCurrentUser(JSON.parse(stored));
-        } catch {
-          setCurrentUser(null);
-        }
-      } else {
-        setCurrentUser(null);
-      }
-    };
-    checkUser();
-  }, []);
+    setCurrentUser(user);
+  }, [user]);
 
 
   const handleLike = async () => {
-    const userStored = sessionStorage.getItem("vibepass_user");
+    const store = useBookingStore.getState();
+    const userStored = store.user;
     if (!userStored) {
-      sessionStorage.setItem("like_pending_event_id", event.id);
-      sessionStorage.setItem("login_redirect", window.location.pathname);
+      store.setLikePendingEventId(event.id);
+      store.setLoginRedirect(window.location.pathname);
       router.push("/login");
       return;
     }
-    const user = JSON.parse(userStored);
+    const user = userStored;
     try {
       const res = await fetch("/api/events/like", {
         method: "POST",
@@ -160,7 +155,8 @@ export default function EventDetails({ event, description, organizer, price, fea
   if (!event) return null;
 
   const handleCheckout = () => {
-    const userStored = sessionStorage.getItem("vibepass_user");
+    const store = useBookingStore.getState();
+    const userStored = store.user;
     const query = new URLSearchParams({
       venue: event.venue || event.location || "",
       category: event.category || "",
@@ -168,7 +164,7 @@ export default function EventDetails({ event, description, organizer, price, fea
     const destination = `/seat-selection/${encodeURIComponent(event.title)}?${query}`;
 
     if (!userStored) {
-      sessionStorage.setItem("login_redirect", destination);
+      store.setLoginRedirect(destination);
       router.push("/login");
       return;
     }
@@ -209,7 +205,7 @@ export default function EventDetails({ event, description, organizer, price, fea
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {(features || defaultFeatures).map((feature, idx) => (
               <li key={idx} className="flex items-start gap-3 text-neutral-300">
-                <div className="mt-1 bg-linear-to-br from-orange-500 to-rose-500 rounded-full p-1">
+                <div className="mt-1 bg-gradient-to-br from-orange-500 to-rose-500 rounded-full p-1">
                   <CheckCircle2 size={12} className="text-white" />
                 </div>
                 <span>{feature}</span>
@@ -246,7 +242,7 @@ export default function EventDetails({ event, description, organizer, price, fea
               {eventReviews.filter(r => r && r.createdAt).map((review, idx) => (
                 <div key={idx} className="bg-neutral-950/50 rounded-2xl p-6 border border-neutral-800 hover:border-neutral-700 transition-colors">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 rounded-full bg-linear-to-r from-orange-500 to-rose-500 flex items-center justify-center text-sm font-bold text-white shadow-lg">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-rose-500 flex items-center justify-center text-sm font-bold text-white shadow-lg">
                       {(review.name || "U").charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -369,7 +365,7 @@ export default function EventDetails({ event, description, organizer, price, fea
 
           <button 
             onClick={handleCheckout}
-            className="w-full py-4 rounded-xl font-bold text-white bg-linear-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-orange-500/50 cursor-pointer flex items-center justify-center gap-2"
+            className="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-orange-500/50 cursor-pointer flex items-center justify-center gap-2"
           >
             <span>Proceed to Checkout</span>
             <ArrowRight size={18} />

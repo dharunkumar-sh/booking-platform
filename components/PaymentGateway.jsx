@@ -126,7 +126,7 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
   // ── UPI state ────────────────────────────────────────────────────────────────
   const [selectedUpiApp, setSelectedUpiApp] = useState("gpay");
   const [upiStep, setUpiStep] = useState("input"); // "input" | "qr"
-  const [upiSecondsLeft, setUpiSecondsLeft] = useState(30);
+  const [upiSecondsLeft, setUpiSecondsLeft] = useState(15);
   const [transactionRef] = useState(() =>
     `VP${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`
   );
@@ -156,18 +156,6 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
     "Punjab National Bank",
   ];
 
-  // ── UPI ID validation ─────────────────────────────────────────────────────────
-  const UPI_REGEX = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
-
-  const getUpiPlaceholder = () => {
-    const app = upiApps.find((a) => a.id === selectedUpiApp);
-    if (selectedUpiApp === "gpay")    return "yourname@okicici  or  9876543210@okhdfcbank";
-    if (selectedUpiApp === "phonepe") return "yourname@ybl  or  9876543210@ibl";
-    if (selectedUpiApp === "paytm")   return "yourname@paytm  or  9876543210@paytm";
-    return "username@bankhandle";
-  };
-
-  // ── Payment handler ───────────────────────────────────────────────────────────
   const handlePay = useCallback(
     async (e) => {
       e.preventDefault();
@@ -208,7 +196,7 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
         setProcessingText("Payment Successful!");
         await new Promise((r) => setTimeout(r, 600));
         setIsProcessing(false);
-        onSuccess();
+        onSuccess("netbanking");
         return;
       }
 
@@ -261,7 +249,7 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
           setProcessingText("Payment Successful!");
           await new Promise((r) => setTimeout(r, 700));
           setIsProcessing(false);
-          onSuccess();
+          onSuccess("card");
         } else {
           throw new Error("Payment was not completed. Please try again.");
         }
@@ -272,12 +260,14 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
     },
     [
       activeTab,
+      upiStep,
+      selectedUpiApp,
+      selectedBank,
       stripe,
       elements,
       cardComplete,
       amount,
       booking,
-      selectedUpiApp,
       onSuccess,
     ]
   );

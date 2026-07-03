@@ -107,9 +107,12 @@ export async function GET(request) {
     const sql = neon(DATABASE_URL);
 
     // Retrieve all bookings for the specified event that are not cancelled
+    // (and pending bookings must not be older than 10 minutes)
     const dbBookings = await sql`
       SELECT seats FROM bookings
-      WHERE event_id = ${eventId} AND status != 'cancelled'
+      WHERE event_id = ${eventId} 
+        AND status != 'cancelled'
+        AND (status != 'pending' OR booking_date >= NOW() - INTERVAL '10 minutes')
     `;
 
     // Flatten all seats from the returned bookings
@@ -153,13 +156,52 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { email, name, phone, eventId, seats, totalPrice, bookingStartedAt, paymentMethod } = body;
+    const { email, name, phone, eventId, seats, totalPrice, bookingStartedAt, paymentMethod, status, seatsBooked, cancelBookingId, bookingId } = body;
 
-    if (!email || !eventId || !seats || !Array.isArray(seats) || seats.length === 0) {
+    if (!email || !eventId || !seats || !Array.isArray(seats)) {
       return NextResponse.json(
         { error: "Email, eventId, and seats are required." },
         { status: 400 }
       );
+    }
+
+    const sql = neon(DATABASE_URL);
+
+    // 0. If cancelBookingId is provided, release/delete the previous pending booking
+    if (cancelBookingId) {
+      try {
+        await sql`
+          DELETE FROM bookings WHERE id = ${parseInt(cancelBookingId, 10)} AND status = 'pending'
+        `;
+      } catch (err) {
+        console.error("Failed to delete cancelBookingId:", err);
+      }
+    }
+
+    // 0.5. Check if we are confirming/updating an existing pending booking
+    if (bookingId && (status === "confirmed" || !status)) {
+      try {
+        const updated = await sql`
+          UPDATE bookings
+          SET status = 'confirmed',
+              payment_method = ${paymentMethod || "card"},
+              total_price = ${parseInt(totalPrice, 10) || 0}
+          WHERE id = ${parseInt(bookingId, 10)}
+          RETURNING id
+        `;
+        if (updated.length > 0) {
+          return NextResponse.json(
+            {
+              success: true,
+              bookingId: updated[0].id,
+              message: "Booking updated to confirmed in database.",
+            },
+            { status: 200 }
+          );
+        }
+      } catch (err) {
+        console.error("Failed to update pending booking to confirmed, falling back to insert:", err);
+      }
     }
 
     // Secure backend timer verification
@@ -175,8 +217,6 @@ export async function POST(request) {
     if (isNaN(startTime) || (Date.now() - startTime) > 30 * 60 * 1000) {
       console.warn("Session time check warning. Proceeding to prevent booking failure after successful payment.");
     }
-
-    const sql = neon(DATABASE_URL);
 
     // 1. Find or dynamically create the user in the users table to prevent 401 blocks
     const emailLower = email.toLowerCase().trim();
@@ -197,10 +237,12 @@ export async function POST(request) {
       userId = existingUser[0].id;
     }
 
-    // 2. Perform duplicate booking check
+    // 2. Perform duplicate booking check (excluding expired pending bookings)
     const dbBookings = await sql`
       SELECT seats FROM bookings
-      WHERE event_id = ${parseInt(eventId, 10)} AND status != 'cancelled'
+      WHERE event_id = ${parseInt(eventId, 10)} 
+        AND status != 'cancelled'
+        AND (status != 'pending' OR booking_date >= NOW() - INTERVAL '10 minutes')
     `;
 
     const bookedSeatsSet = new Set();
@@ -238,15 +280,18 @@ export async function POST(request) {
       ADD COLUMN IF NOT EXISTS payment_method varchar(50) DEFAULT 'card'
     `;
 
+    const numSeats = seatsBooked || seats.length || 1;
+    const targetStatus = status || "confirmed";
+
     // 4. Insert booking record into bookings table
     const result = await sql`
       INSERT INTO bookings (user_id, event_id, seats_booked, total_price, status, seats, payment_method)
       VALUES (
         ${userId},
         ${parseInt(eventId, 10)},
-        ${seats.length},
+        ${numSeats},
         ${parseInt(totalPrice, 10) || 0},
-        'confirmed',
+        ${targetStatus},
         ${JSON.stringify(seats)},
         ${paymentMethod || "card"}
       )
@@ -267,5 +312,22 @@ export async function POST(request) {
       { error: "Failed to store booking." },
       { status: 500 }
     );
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const { bookingId } = await request.json();
+    if (!bookingId) {
+      return NextResponse.json({ error: "bookingId is required." }, { status: 400 });
+    }
+    const sql = neon(DATABASE_URL);
+    await sql`
+      DELETE FROM bookings WHERE id = ${parseInt(bookingId, 10)} AND status = 'pending'
+    `;
+    return NextResponse.json({ success: true, message: "Pending booking released." });
+  } catch (error) {
+    console.error("[DELETE /api/bookings] Error:", error);
+    return NextResponse.json({ error: "Failed to release booking." }, { status: 500 });
   }
 }

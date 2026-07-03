@@ -1,9 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useBookingStore } from "@/hooks/useBookingStore";
+import BookingTimer from "./BookingTimer";
+import PaymentGateway from "./PaymentGateway";
 import { 
   CheckCircle2, 
-  XCircle, 
   QrCode, 
   Calendar, 
   MapPin, 
@@ -14,10 +16,9 @@ import {
   Ticket, 
   FileText,
   AlertCircle,
-  CreditCard
+  CreditCard,
+  XCircle
 } from "lucide-react";
-import PaymentGateway from "@/components/PaymentGateway";
-import BookingTimer from "@/components/BookingTimer";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -51,11 +52,11 @@ export default function TicketConfirmation() {
 
   useEffect(() => {
     try {
-      const data = sessionStorage.getItem("pendingBooking");
+      const store = useBookingStore.getState();
+      const data = store.pendingBooking;
       if (data) {
-        const parsed = JSON.parse(data);
-        setBooking(parsed);
-        
+        setBooking(data);
+          
         // Generate unique Booking ID
         const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
         const rand = Math.floor(1000 + Math.random() * 9000);
@@ -98,15 +99,19 @@ export default function TicketConfirmation() {
   const handleConfirm = async (paymentMethod = "card") => {
     try {
       const seatIds = seats.map((s) => s.id || s.label || s);
+      const store = useBookingStore.getState();
+      const dbBookingIdFromStorage = store.dbBookingId;
       const postBody = {
         email: user?.email,
         name: user?.name,
         phone: user?.phone,
         eventId: event.id,
         seats: seatIds,
+        seatsBooked: totalTickets,
         totalPrice: finalTotal,
         paymentMethod,
-        bookingStartedAt: booking.bookingStartedAt || sessionStorage.getItem("bookingStartedAt") || Date.now().toString()
+        bookingId: dbBookingIdFromStorage ? parseInt(dbBookingIdFromStorage, 10) : undefined,
+        bookingStartedAt: booking.bookingStartedAt || store.bookingStartedAt || Date.now().toString()
       };
       
       let dbBookingId = null;
@@ -120,15 +125,13 @@ export default function TicketConfirmation() {
         if (responseData.success) {
           dbBookingId = responseData.bookingId;
           console.log("Successfully stored booking in database. ID:", dbBookingId);
+          store.clearDbBookingId();
         } else {
           console.error("Booking API returned failure:", responseData.error || responseData);
         }
       } catch (err) {
         console.error("Failed saving booking to database:", err);
       }
-
-      const existingStr = sessionStorage.getItem("confirmedBookings");
-      const list = existingStr ? JSON.parse(existingStr) : [];
 
       const confirmedBooking = {
         ...booking,
@@ -143,10 +146,10 @@ export default function TicketConfirmation() {
         confirmedAt: new Date().toISOString()
       };
 
-      list.push(confirmedBooking);
-      sessionStorage.setItem("confirmedBookings", JSON.stringify(list));
-      sessionStorage.removeItem("pendingBooking");
-      sessionStorage.removeItem("bookingStartedAt");
+      store.addConfirmedBooking(confirmedBooking);
+      store.setBookingStartedAt(null);
+      store.clearDbBookingId();
+      store.clearPendingBooking();
     } catch (e) {
       console.error("Error confirming booking:", e);
     }
@@ -155,8 +158,22 @@ export default function TicketConfirmation() {
 
   const handleCancel = async () => {
     try {
-      sessionStorage.removeItem("pendingBooking");
-      sessionStorage.removeItem("bookingStartedAt");
+      const store = useBookingStore.getState();
+      const dbBookingId = store.dbBookingId;
+      if (dbBookingId) {
+        try {
+          await fetch("/api/bookings", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ bookingId: dbBookingId })
+          });
+        } catch (err) {
+          console.error("Failed to delete booking in DB on cancel:", err);
+        }
+        store.clearDbBookingId();
+      }
+      store.setBookingStartedAt(null);
+      store.clearPendingBooking();
     } catch (e) {
       console.error(e);
     }
@@ -174,12 +191,17 @@ export default function TicketConfirmation() {
 
   if (step === "payment") {
     return (
-      <PaymentGateway
-        amount={finalTotal}
-        booking={booking}
-        onBack={() => setStep("review")}
-        onSuccess={handleConfirm}
-      />
+      <div className="min-h-screen bg-neutral-950 text-white flex flex-col items-center justify-center px-6 py-12 w-full">
+        <BookingTimer />
+        <div className="w-full max-w-5xl mt-6">
+          <PaymentGateway
+            amount={finalTotal}
+            booking={booking}
+            onBack={() => setStep("review")}
+            onSuccess={handleConfirm}
+          />
+        </div>
+      </div>
     );
   }
   if (step === "confirmed") {
@@ -200,7 +222,7 @@ export default function TicketConfirmation() {
               </div>
 
               <div>
-                <h3 className="text-2xl lg:text-3xl font-extrabold bg-linear-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent mb-2">
+                <h3 className="text-2xl lg:text-3xl font-extrabold bg-gradient-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent mb-2">
                   {event.title}
                 </h3>
                  <div className="flex flex-wrap gap-4 text-xs text-neutral-400 mt-2">
@@ -289,7 +311,7 @@ export default function TicketConfirmation() {
 
                <button
                 onClick={() => router.push("/")}
-                className="w-full py-4 bg-linear-to-r from-orange-500 to-rose-500 text-white font-bold rounded-xl shadow-lg hover:opacity-95 hover:shadow-orange-500/30 transition-all cursor-pointer"
+                className="w-full py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white font-bold rounded-xl shadow-lg hover:opacity-95 hover:shadow-orange-500/30 transition-all cursor-pointer"
               >
                 Back to Home
               </button>

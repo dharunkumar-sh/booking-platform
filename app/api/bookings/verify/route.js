@@ -38,9 +38,12 @@ export async function GET(request) {
     const sql = neon(DATABASE_URL);
 
     // Retrieve all bookings for the specified event that are not cancelled
+    // (and pending bookings must not be older than 10 minutes)
     const dbBookings = await sql`
       SELECT seats FROM bookings
-      WHERE event_id = ${eventId} AND status != 'cancelled'
+      WHERE event_id = ${eventId} 
+        AND status != 'cancelled'
+        AND (status != 'pending' OR booking_date >= NOW() - INTERVAL '10 minutes')
     `;
 
     // Flatten currently booked seats

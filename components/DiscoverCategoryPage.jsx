@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Search, Calendar, MapPin, Ticket, ArrowRight, Sparkles, Filter, SlidersHorizontal } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useBookingStore } from "@/hooks/useBookingStore";
 
 export default function DiscoverCategoryPage({
   title = "Discover Events",
@@ -121,11 +122,7 @@ export default function DiscoverCategoryPage({
               <div
                 key={item.id || idx}
                 onClick={async () => {
-                  try {
-                    sessionStorage.setItem("selectedEvent", JSON.stringify(item));
-                  } catch (e) {
-                    console.error(e);
-                  }
+                  useBookingStore.getState().setSelectedEvent(item);
                   router.push(`/event-details/${encodeURIComponent(item.title)}`);
                 }}
                 className="group cursor-pointer overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900/40 transition hover:-translate-y-1 hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10"
@@ -149,11 +146,7 @@ export default function DiscoverCategoryPage({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      try {
-                        sessionStorage.setItem("selectedEvent", JSON.stringify(item));
-                      } catch (err) {
-                        console.error(err);
-                      }
+                      useBookingStore.getState().setSelectedEvent(item);
                       const query = new URLSearchParams({
                         venue: item.venue || item.location || "",
                         category: item.category || "",

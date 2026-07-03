@@ -5,6 +5,7 @@ import styles from './Tickets.module.css';
 import { ArrowRight, ArrowLeft, CheckCircle2, Calendar, MapPin, QrCode } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import BookingTimer from '@/components/BookingTimer';
+import { useBookingStore } from "@/hooks/useBookingStore";
 
 const TicketSelection = ({
   event = { title: 'Special Event Concert', venue: 'Main Arena', priceVal: 499 },
@@ -112,7 +113,7 @@ const TicketSelection = ({
       seats: confirmedSeats,
       tickets: selectedTickets.map(t => ({ id: t.id, title: t.title, quantity: selections[t.id], price: t.price })),
       total: totalAmount,
-      bookingStartedAt: sessionStorage.getItem("bookingStartedAt") || Date.now().toString()
+      bookingStartedAt: useBookingStore.getState().bookingStartedAt || Date.now().toString()
     });
   };
 

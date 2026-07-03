@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useBookingStore } from "@/hooks/useBookingStore";
+import { useStore } from "@/hooks/useStore";
 import { ArrowLeft } from "lucide-react";
 import EventHeader from "@/components/EventHeader";
 import EventDetails from "@/components/EventDetails";
@@ -8,6 +10,7 @@ import EventDetails from "@/components/EventDetails";
 export default function EventDetailsPage() {
   const [event, setEvent] = useState(null);
   const router = useRouter();
+  const setSelectedEvent = useBookingStore((state) => state.setSelectedEvent);
   const params = useParams();
 
   const titleParam = params.id ? decodeURIComponent(params.id) : "";
@@ -16,17 +19,11 @@ export default function EventDetailsPage() {
     if (!titleParam) return;
     
     let found = false;
-    try {
-      const data = sessionStorage.getItem("selectedEvent");
-      if (data) {
-        const parsedEvent = JSON.parse(data);
-        if (parsedEvent && parsedEvent.title === titleParam) {
-          setEvent(parsedEvent);
-          found = true;
-        }
-      }
-    } catch (e) {
-      console.error("Session storage read error for event:", e);
+    const store = useBookingStore.getState();
+    const data = store.selectedEvent;
+    if (data && data.title === titleParam) {
+      setEvent(data);
+      found = true;
     }
 
     if (!found) {
@@ -42,18 +39,14 @@ export default function EventDetailsPage() {
           if (data.success && data.events && data.events.length > 0) {
             const parsedEvent = data.events[0];
             setEvent(parsedEvent);
-            try {
-              sessionStorage.setItem("selectedEvent", JSON.stringify(parsedEvent));
-            } catch (e) {
-              console.error(e);
-            }
+            setSelectedEvent(parsedEvent);
           }
         })
         .catch((err) => {
           console.error("Failed fetching event details from API:", err);
         });
     }
-  }, [titleParam]);
+  }, [titleParam, setSelectedEvent]);
 
   if (!event) {
     return (

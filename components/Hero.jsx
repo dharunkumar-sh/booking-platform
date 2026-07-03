@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Search, MapPin, X, Sparkles, Loader2 } from "lucide-react";
 import { useGeolocationContext } from "@/context/GeolocationContext";
 import { useRouter } from "next/navigation";
+import { useBookingStore } from "@/hooks/useBookingStore";
 
 // ── Static image banks ─────────────────────────────────────────────────────
 const HIGH_RES_IMAGES = {
@@ -313,11 +314,7 @@ const Hero = ({
     setSearchQuery(event.title);
     setShowDropdown(false);
     setActiveIndex(-1);
-    try {
-      sessionStorage.setItem("selectedEvent", JSON.stringify(event));
-    } catch (err) {
-      console.error("[Hero] sessionStorage write error:", err);
-    }
+    useBookingStore.getState().setSelectedEvent(event);
     router.push(`/event-details/${encodeURIComponent(event.title)}`);
   };
 
