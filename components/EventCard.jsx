@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Ticket, Heart, ThumbsUp } from "lucide-react";
+import axios from "axios";
 import { useBookingStore } from "@/hooks/useBookingStore";
 
 function formatPrice(price) {
@@ -51,13 +52,24 @@ export default function EventCard({
   useEffect(() => {
     const user = useBookingStore.getState().user;
     const userId = user ? user.id : "";
-    fetch(`/api/events/like?eventId=${event.id}&userId=${userId}`)
-      .then((res) => res.json())
-      .then((data) => {
+    axios.get(`/api/events/like?eventId=${event.id}&userId=${userId}`)
+      .then((response) => {
+        const data = response.data;
         if (data.success) {
           setLikesCount(data.likes);
           setHasLiked(data.hasLiked);
           setLikesLoaded(true);
+          // Sync with Zustand store
+          const store = useBookingStore.getState();
+          const isStored = store.likedEventIds.includes(event.id);
+          const isObjStored = store.likedEvents.some((e) => e.id === event.id);
+          if (data.hasLiked) {
+            if (!isStored) store.toggleLikedEventId(event.id);
+            if (!isObjStored) store.toggleLikedEvent(event);
+          } else {
+            if (isStored) store.toggleLikedEventId(event.id);
+            if (isObjStored) store.toggleLikedEvent(event);
+          }
         }
       })
       .catch((err) => console.error("Failed to fetch dynamic like count:", err));
@@ -70,23 +82,25 @@ export default function EventCard({
     const user = store.user;
     if (pendingId && Number(pendingId) === event.id && user) {
       store.setLikePendingEventId(null);
-      fetch("/api/events/like", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId: event.id, userId: user.id })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setLikesCount(data.likes);
-          setHasLiked(data.hasLiked);
-        }
-      })
-      .catch(err => console.error("Pending like apply failed:", err));
+      axios.post("/api/events/like", { eventId: event.id, userId: user.id })
+        .then((response) => {
+          const data = response.data;
+          if (data.success) {
+            setLikesCount(data.likes);
+            setHasLiked(data.hasLiked);
+            const isStored = store.likedEventIds.includes(event.id);
+            const isObjStored = store.likedEvents.some((e) => e.id === event.id);
+            if (data.hasLiked) {
+              if (!isStored) store.toggleLikedEventId(event.id);
+              if (!isObjStored) store.toggleLikedEvent(event);
+            }
+          }
+        })
+        .catch(err => console.error("Pending like apply failed:", err));
     }
   }, [event.id]);
 
-  const handleLike = async (e) => {
+  const handleLike = (e) => {
     e.stopPropagation();
     const store = useBookingStore.getState();
     const user = store.user;
@@ -96,23 +110,52 @@ export default function EventCard({
       router.push("/login");
       return;
     }
-    try {
-      const res = await fetch("/api/events/like", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId: event.id, userId: user.id })
-      })
-      .then(res => res.json())
-      .then(data => {
+    // Optimistic update
+    const prevLiked = hasLiked;
+    const prevCount = likesCount;
+    setHasLiked(!hasLiked);
+    setLikesCount((c) => (hasLiked ? Math.max(0, c - 1) : c + 1));
+    store.toggleLikedEventId(event.id);
+    store.toggleLikedEvent(event);
+
+    axios.post("/api/events/like", { eventId: event.id, userId: user.id })
+      .then((response) => {
+        const data = response.data;
         if (data.success) {
           setLikesCount(data.likes);
           setHasLiked(data.hasLiked);
+          // Sync store with actual result
+          const alreadyStored = store.likedEventIds.includes(event.id);
+          const alreadyObjStored = store.likedEvents.some((e) => e.id === event.id);
+          if (data.hasLiked !== alreadyStored) {
+            store.toggleLikedEventId(event.id);
+          }
+          if (data.hasLiked !== alreadyObjStored) {
+            store.toggleLikedEvent(event);
+          }
+        } else {
+          // Rollback on error
+          setHasLiked(prevLiked);
+          setLikesCount(prevCount);
+          store.toggleLikedEventId(event.id);
+          store.toggleLikedEvent(event);
         }
       })
-    } catch (err) {
-      console.error("Like failed:", err);
-    }
+      .catch((err) => {
+        console.error("Like failed:", err);
+        // Rollback on network error
+        setHasLiked(prevLiked);
+        setLikesCount(prevCount);
+        store.toggleLikedEventId(event.id);
+        store.toggleLikedEvent(event);
+        if (err.response?.data?.invalidSession) {
+          store.logout();
+          router.push("/login");
+        }
+      });
   };
+
+
 
   return (
     <div

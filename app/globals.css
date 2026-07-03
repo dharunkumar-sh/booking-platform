@@ -66,3 +66,45 @@ body {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
+@media print {
+  @page {
+    size: auto;
+    margin: 0mm;
+  }
+  html, body {
+    height: 100% !important;
+    overflow: hidden !important;
+    background: #0a0a0a !important;
+  }
+  header, footer, nav, .geolocation-banner {
+    display: none !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .print-area, .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: fixed !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) scale(1.35) !important;
+    transform-origin: center center !important;
+    width: 90% !important;
+    max-width: 460px !important;
+    background: #171717 !important;
+    color: #ffffff !important;
+    border: 1px solid #262626 !important;
+    border-radius: 24px !important;
+    padding: 16px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    height: auto !important;
+    max-height: 90vh !important;
+    overflow: visible !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}

@@ -243,7 +243,7 @@ export default function BookingsPage() {
               </button>
             </div>
             {/* Ticket Content Container */}
-            <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto scrollbar-none" style={{ scrollbarWidth: 'none' }}>
+            <div className="print-area p-5 space-y-4 max-h-[75vh] overflow-y-auto scrollbar-none" style={{ scrollbarWidth: 'none' }}>
               
               {/* Event Poster details */}
               <div className="text-center">

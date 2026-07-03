@@ -12,6 +12,8 @@ export const useBookingStore = create(
       favourites: [],
       favouritePendingEventId: null,
       likePendingEventId: null,
+      likedEventIds: [],
+      likedEvents: [],
       loginRedirect: null,
       notifications: [],
       sessionId: null,
@@ -26,6 +28,8 @@ export const useBookingStore = create(
         favourites: [],
         favouritePendingEventId: null,
         likePendingEventId: null,
+        likedEventIds: [],
+        likedEvents: [],
         loginRedirect: null,
         notifications: [],
         bookingStartedAt: null,
@@ -40,6 +44,21 @@ export const useBookingStore = create(
       setFavourites: (favourites) => set({ favourites }),
       setFavouritePendingEventId: (id) => set({ favouritePendingEventId: id }),
       setLikePendingEventId: (id) => set({ likePendingEventId: id }),
+      setLikedEventIds: (likedEventIds) => set({ likedEventIds }),
+      toggleLikedEventId: (id) => set((state) => {
+        const isLiked = state.likedEventIds.includes(id);
+        const likedEventIds = isLiked
+          ? state.likedEventIds.filter((item) => item !== id)
+          : [...state.likedEventIds, id];
+        return { likedEventIds };
+      }),
+      toggleLikedEvent: (event) => set((state) => {
+        const isLiked = state.likedEvents.some((e) => e.id === event.id);
+        const likedEvents = isLiked
+          ? state.likedEvents.filter((e) => e.id !== event.id)
+          : [...state.likedEvents, { id: event.id, title: event.title }];
+        return { likedEvents };
+      }),
       setLoginRedirect: (path) => set({ loginRedirect: path }),
       setNotifications: (notifications) => set({ notifications }),
       setSessionId: (sessionId) => set({ sessionId }),

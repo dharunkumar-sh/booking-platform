@@ -1,12 +1,14 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useCallback } from "react";
+import axios from "axios";
 import { useBookingStore } from "@/hooks/useBookingStore";
 
 const FavouritesContext = createContext(null);
 
 export function FavouritesProvider({ children }) {
   const user = useBookingStore((state) => state.user);
+  const logout = useBookingStore((state) => state.logout);
   const favourites = useBookingStore((state) => state.favourites);
   const setFavourites = useBookingStore((state) => state.setFavourites);
   const favouritePendingEventId = useBookingStore((state) => state.favouritePendingEventId);
@@ -14,20 +16,24 @@ export function FavouritesProvider({ children }) {
   const setLoginRedirect = useBookingStore((state) => state.setLoginRedirect);
 
   // 1. Fetch favourites from backend
-  const loadFavourites = useCallback(async () => {
+  const loadFavourites = useCallback(() => {
     if (user?.id) {
-      try {
-        const res = await fetch(`/api/events/favourite?userId=${user.id}`);
-        const data = await res.json();
-        if (data.success) {
-          setFavourites(data.events || []);
-          return;
-        }
-      } catch (err) {
-        console.error("Failed to load favourites from backend:", err);
-      }
+      axios.get(`/api/events/favourite?userId=${user.id}`)
+        .then((response) => {
+          const data = response.data;
+          if (data.success) {
+            setFavourites(data.events || []);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load favourites from backend:", err);
+          if (err.response?.data?.invalidSession) {
+            logout();
+            window.location.href = "/login";
+          }
+        });
     }
-  }, [user, setFavourites]);
+  }, [user, setFavourites, logout]);
 
   useEffect(() => {
     loadFavourites();
@@ -38,28 +44,31 @@ export function FavouritesProvider({ children }) {
     if (favouritePendingEventId && user?.id) {
       const pendingId = favouritePendingEventId;
       setFavouritePendingEventId(null);
-      fetch("/api/events/favourite", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId: Number(pendingId), userId: user.id })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          loadFavourites();
-        }
-      })
-      .catch(err => console.error("Auto-apply pending favourite failed:", err));
+      axios.post("/api/events/favourite", { eventId: Number(pendingId), userId: user.id })
+        .then((response) => {
+          const data = response.data;
+          if (data.success) {
+            loadFavourites();
+          }
+        })
+        .catch(err => {
+          console.error("Auto-apply pending favourite failed:", err);
+          if (err.response?.data?.invalidSession) {
+            logout();
+            window.location.href = "/login";
+          }
+        });
     }
-  }, [user, favouritePendingEventId, setFavouritePendingEventId, loadFavourites]);
+  }, [user, favouritePendingEventId, setFavouritePendingEventId, loadFavourites, logout]);
 
+  // eslint-disable-next-line eqeqeq
   const isFavourite = useCallback(
-    (id) => favourites.some((f) => f.id === id),
+    (id) => favourites.some((f) => f.id == id),
     [favourites]
   );
 
   const toggleFavourite = useCallback(
-    async (item) => {
+    (item) => {
       if (!user) {
         // Redirect to login
         setFavouritePendingEventId(item.id);
@@ -68,44 +77,82 @@ export function FavouritesProvider({ children }) {
         return;
       }
 
-      try {
-        const res = await fetch("/api/events/favourite", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ eventId: item.id, userId: user.id })
-        });
-        const data = await res.json();
-        if (data.success) {
-          loadFavourites();
-        }
-      } catch (err) {
-        console.error("Failed to toggle favourite on backend:", err);
+      // Optimistic update
+      // eslint-disable-next-line eqeqeq
+      const alreadyFav = favourites.some((f) => f.id == item.id);
+      if (alreadyFav) {
+        // eslint-disable-next-line eqeqeq
+        setFavourites(favourites.filter((f) => f.id != item.id));
+      } else {
+        setFavourites([...favourites, item]);
       }
+
+      axios.post("/api/events/favourite", { eventId: item.id, userId: user.id })
+        .then((response) => {
+          const data = response.data;
+          if (data.success) {
+            // Sync with server truth
+            loadFavourites();
+          } else {
+            // Rollback
+            loadFavourites();
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to toggle favourite on backend:", err);
+          // Rollback by reloading
+          loadFavourites();
+          if (err.response?.data?.invalidSession) {
+            logout();
+            window.location.href = "/login";
+          }
+        });
     },
-    [user, loadFavourites, setFavouritePendingEventId, setLoginRedirect]
+    [user, favourites, setFavourites, loadFavourites, setFavouritePendingEventId, setLoginRedirect, logout]
   );
 
-  const removeFavourite = useCallback(async (id) => {
+  const removeFavourite = useCallback((id) => {
+    // Optimistic remove
+    // eslint-disable-next-line eqeqeq
+    setFavourites(favourites.filter((f) => f.id != id));
     if (user) {
-      try {
-        await fetch("/api/events/favourite", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ eventId: id, userId: user.id })
+      axios.post("/api/events/favourite", { eventId: id, userId: user.id })
+        .then((response) => {
+          // Re-sync to confirm
+          loadFavourites();
+        })
+        .catch((err) => {
+          console.error("Failed to remove favourite on backend:", err);
+          loadFavourites();
+          if (err.response?.data?.invalidSession) {
+            logout();
+            window.location.href = "/login";
+          }
         });
-        loadFavourites();
-        return;
-      } catch (err) {
-        console.error("Failed to remove favourite on backend:", err);
-      }
     }
-    // Fallback local remove
-    setFavourites(favourites.filter((f) => f.id !== id));
-  }, [user, favourites, setFavourites, loadFavourites]);
+  }, [user, favourites, setFavourites, loadFavourites, logout]);
 
   const clearFavourites = useCallback(() => {
+    // Optimistic clear
+    const prevFavourites = favourites;
     setFavourites([]);
-  }, [setFavourites]);
+    if (user) {
+      // Remove each from backend (toggle each that currently is favourited)
+      Promise.all(
+        prevFavourites.map((f) =>
+          axios.post("/api/events/favourite", { eventId: f.id, userId: user.id })
+        )
+      )
+      .catch((err) => {
+        console.error("Failed to clear all favourites on backend:", err);
+        if (err.response?.data?.invalidSession) {
+          logout();
+          window.location.href = "/login";
+        }
+      });
+    }
+  }, [user, favourites, setFavourites, logout]);
+
 
   return (
     <FavouritesContext.Provider

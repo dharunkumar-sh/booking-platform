@@ -1,16 +1,27 @@
 import { db } from "@/db/index";
-import { events, eventLikes } from "@/db/schema";
+import { events, eventLikes, users } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
   try {
     const { eventId, userId } = await request.json();
-    if (!eventId) {
-      return NextResponse.json({ error: "Event ID is required" }, { status: 400 });
+    if (!eventId || isNaN(Number(eventId))) {
+      return NextResponse.json({ error: "Valid Event ID is required" }, { status: 400 });
     }
-    if (!userId) {
-      return NextResponse.json({ error: "User is not authenticated" }, { status: 401 });
+    if (!userId || isNaN(Number(userId))) {
+      return NextResponse.json({ error: "Valid User ID is required" }, { status: 401 });
+    }
+
+    // Verify user and event exist to avoid foreign key violations (e.g. on database reseed)
+    const userExists = await db.select().from(users).where(eq(users.id, Number(userId)));
+    if (userExists.length === 0) {
+      return NextResponse.json({ error: "User session is invalid. Please sign out and sign in again.", invalidSession: true }, { status: 400 });
+    }
+
+    const eventExists = await db.select().from(events).where(eq(events.id, Number(eventId)));
+    if (eventExists.length === 0) {
+      return NextResponse.json({ error: "Event not found" }, { status: 400 });
     }
 
     // Check if the user has already liked this event
@@ -94,8 +105,8 @@ export async function GET(request) {
     const eventId = searchParams.get("eventId");
     const userId = searchParams.get("userId");
 
-    if (!eventId) {
-      return NextResponse.json({ error: "Event ID is required" }, { status: 400 });
+    if (!eventId || isNaN(Number(eventId))) {
+      return NextResponse.json({ error: "Valid Event ID is required" }, { status: 400 });
     }
 
     // 1. Get likes count by counting records in eventLikes table
@@ -108,7 +119,7 @@ export async function GET(request) {
 
     // 2. Check if user has liked
     let hasLiked = false;
-    if (userId) {
+    if (userId && !isNaN(Number(userId))) {
       const existing = await db
         .select()
         .from(eventLikes)

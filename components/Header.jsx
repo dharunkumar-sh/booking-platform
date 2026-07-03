@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -18,7 +18,6 @@ import {
   Trash2,
   Ticket,
   CreditCard,
-  Car,
   Clock,
   Tag,
 } from "lucide-react";
@@ -27,14 +26,6 @@ import { useBookingStore } from "@/hooks/useBookingStore";
 import { useStore } from "@/hooks/useStore";
 import { useFavourites } from "@/context/FavouritesContext";
 
-const OTT_PLATFORMS = [
-  "Netflix",
-  "Prime Video",
-  "Disney+Hotstar",
-  "SonyLIV",
-  "Zee5",
-  "Others",
-];
 
 const Header = () => {
   const router = useRouter();
@@ -109,77 +100,113 @@ const Header = () => {
     return () => clearTimeout(timer);
   }, [searchQuery, selectedState, crossOttSearch]);
 
-  // ── Notifications ──────────────────────────────────────────────────────────
-  const DEFAULT_NOTIFICATIONS = [
-    {
-      id: 1,
-      type: "booking",
-      title: "Booking Confirmed! 🎉",
-      message: "Your booking for AR Rahman Live on Jun 22 at Nehru Indoor Arena has been confirmed.",
-      date: "2026-06-28 · 10:14 AM",
-      read: false,
-    },
-    {
-      id: 2,
-      type: "payment",
-      title: "Payment Successful ✅",
-      message: "₹3,499 was successfully charged for your Vijay Antony Concert ticket. Receipt sent to your email.",
-      date: "2026-06-27 · 7:02 PM",
-      read: false,
-    },
-    {
-      id: 3,
-      type: "vehicle",
-      title: "Vehicle Assigned 🚗",
-      message: "Your cab to Chepauk Stadium has been assigned. Driver: Ravi Kumar | MH 12 AB 3456.",
-      date: "2026-06-26 · 5:30 PM",
-      read: false,
-    },
-    {
-      id: 4,
-      type: "reminder",
-      title: "Trip Reminder ⏰",
-      message: "Your event 'Coolie' at PVR Palazzo Theatre starts in 2 hours. Don't forget your e-ticket!",
-      date: "2026-06-25 · 4:00 PM",
-      read: true,
-    },
-    {
-      id: 5,
-      type: "offer",
-      title: "Special Offer Just for You 🎁",
-      message: "Get 20% off on your next booking with code VIBE20. Valid till July 10, 2026.",
-      date: "2026-06-24 · 11:00 AM",
-      read: true,
-    },
-  ];
-
-  const storeNotifications = useStore(useBookingStore, (state) => state.notifications) || [];
+  // ── Notifications (derived from real app state) ───────────────────────────
+  const storeUser = useStore(useBookingStore, (state) => state.user);
+  const user = storeUser || null;
+  // dismissedNotifIds persisted in store so dismissed items stay gone across sessions
+  const dismissedIds = useStore(useBookingStore, (state) => state.notifications) || [];
   const setStoreNotifications = useBookingStore((state) => state.setNotifications);
+  const confirmedBookings = useStore(useBookingStore, (state) => state.confirmedBookings) || [];
+  const storeFavourites = useStore(useBookingStore, (state) => state.favourites) || [];
+  const likedEvents = useStore(useBookingStore, (state) => state.likedEvents) || [];
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
-  const notifications = storeNotifications;
+  // Build real notifications from app state
+  const computedNotifications = useMemo(() => {
+    const items = [];
 
-  useEffect(() => {
-    if (storeNotifications.length === 0) {
-      setStoreNotifications(DEFAULT_NOTIFICATIONS);
+    // One notification per confirmed booking
+    confirmedBookings.forEach((b, idx) => {
+      const eventTitle = b.event?.title || "your event";
+      const venue = b.event?.venue || "";
+      const total = b.pricing?.finalTotal || b.total || "";
+      const dateStr = b.confirmedAt
+        ? new Date(b.confirmedAt).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+        : "";
+      items.push({
+        id: `booking-${b.bookingId || idx}`,
+        type: "booking",
+        title: "Booking Confirmed! 🎉",
+        message: `Your booking for "${eventTitle}"${venue ? ` at ${venue}` : ""} is confirmed.${total ? ` Total paid: ₹${total}.` : ""}`,
+        date: dateStr,
+        read: false,
+      });
+      if (total) {
+        items.push({
+          id: `payment-${b.bookingId || idx}`,
+          type: "payment",
+          title: "Payment Successful ✅",
+          message: `₹${total} was successfully charged for "${eventTitle}". Your e-ticket is ready.`,
+          date: dateStr,
+          read: false,
+        });
+      }
+    });
+
+    // Liked events
+    likedEvents.forEach((item) => {
+      items.push({
+        id: `like-${item.id}`,
+        type: "reminder",
+        title: "Event Liked! 👍",
+        message: `You liked "${item.title}". Check out more details or book tickets!`,
+        date: "",
+        read: false,
+      });
+    });
+
+    // Favourites
+    storeFavourites.forEach((item) => {
+      items.push({
+        id: `fav-${item.id}`,
+        type: "offer",
+        title: "Added to Favourites 💜",
+        message: `"${item.title}" is saved in your favourites. Book your seats now!`,
+        date: "",
+        read: false,
+      });
+    });
+
+    // Welcome notification when logged in but no bookings yet
+    if (confirmedBookings.length === 0 && storeFavourites.length === 0 && likedEvents.length === 0 && user) {
+      items.push({
+        id: "welcome",
+        type: "offer",
+        title: "Welcome to VibePass! 🎟️",
+        message: "Start exploring concerts, movies, comedy nights and sports events. Book your first ticket today!",
+        date: "",
+        read: false,
+      });
     }
-  }, [storeNotifications.length, setStoreNotifications]);
 
-  const markAsRead = (id) =>
-    setStoreNotifications(storeNotifications.map((n) => n.id === id ? { ...n, read: true } : n));
+    // Apply dismissals from store (store is repurposed to track dismissed IDs as [{id}])
+    const dismissedSet = new Set(dismissedIds.map((d) => (typeof d === "string" ? d : d?.id)));
+    return items.filter((n) => !dismissedSet.has(n.id));
+  }, [confirmedBookings, storeFavourites, likedEvents, dismissedIds, user]);
 
-  const deleteNotification = (id) =>
-    setStoreNotifications(storeNotifications.filter((n) => n.id !== id));
+  const notifications = computedNotifications;
 
-  const markAllAsRead = () =>
-    setStoreNotifications(storeNotifications.map((n) => ({ ...n, read: true })));
+  const markAsRead = (id) => {
+    // No-op: computed notifications are always current; read state managed locally
+  };
+
+  const deleteNotification = (id) => {
+    // Persist dismissed IDs so the notification stays gone
+    const current = dismissedIds.map((d) => (typeof d === "string" ? d : d?.id)).filter(Boolean);
+    setStoreNotifications([...new Set([...current, id])]);
+  };
+
+  const markAllAsRead = () => {
+    const allIds = notifications.map((n) => n.id);
+    const current = dismissedIds.map((d) => (typeof d === "string" ? d : d?.id)).filter(Boolean);
+    setStoreNotifications([...new Set([...current, ...allIds])]);
+  };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const NOTIF_ICON = {
     booking:  <Ticket  size={15} className="text-orange-400" />,
     payment:  <CreditCard size={15} className="text-emerald-400" />,
-    vehicle:  <Car     size={15} className="text-sky-400" />,
     reminder: <Clock   size={15} className="text-amber-400" />,
     offer:    <Tag     size={15} className="text-purple-400" />,
   };
@@ -187,7 +214,6 @@ const Header = () => {
   const NOTIF_RING = {
     booking:  "border-orange-500/30 bg-orange-500/5",
     payment:  "border-emerald-500/30 bg-emerald-500/5",
-    vehicle:  "border-sky-500/30 bg-sky-500/5",
     reminder: "border-amber-500/30 bg-amber-500/5",
     offer:    "border-purple-500/30 bg-purple-500/5",
   };
@@ -220,8 +246,6 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const storeUser = useStore(useBookingStore, (state) => state.user);
-  const user = storeUser || null;
   const logout = useBookingStore((state) => state.logout);
   const setSelectedEvent = useBookingStore((state) => state.setSelectedEvent);
 
@@ -607,7 +631,7 @@ const Header = () => {
                         {notifications.length} notification{notifications.length !== 1 ? "s" : ""}
                       </span>
                       <button
-                        onClick={() => saveNotifications([])}
+                        onClick={() => setStoreNotifications([])}
                         className="flex items-center gap-1.5 text-[11px] font-semibold text-neutral-500 hover:text-rose-400 transition-colors cursor-pointer"
                       >
                         <Trash2 size={12} /> Clear all

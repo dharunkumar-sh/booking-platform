@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Info, User, Ticket, CheckCircle2, Users, Star, MessageSquare, ArrowRight, ThumbsUp } from "lucide-react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 import { useBookingStore } from "@/hooks/useBookingStore";
 import { useStore } from "@/hooks/useStore";
 
@@ -29,9 +30,9 @@ export default function EventDetails({ event, description, organizer, price, fea
     if (!event?.id) return;
     const store = useBookingStore.getState();
     const userId = store.user ? store.user.id : "";
-    fetch(`/api/events/like?eventId=${event.id}&userId=${userId}`)
-      .then((res) => res.json())
-      .then((data) => {
+    axios.get(`/api/events/like?eventId=${event.id}&userId=${userId}`)
+      .then((response) => {
+        const data = response.data;
         if (data.success) {
           setLikesCount(data.likes);
           setHasLiked(data.hasLiked);
@@ -49,27 +50,24 @@ export default function EventDetails({ event, description, organizer, price, fea
     if (pendingId && Number(pendingId) === event.id && userStored) {
       store.setLikePendingEventId(null);
       const user = userStored;
-      fetch("/api/events/like", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId: event.id, userId: user.id })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setLikesCount(data.likes);
-          setHasLiked(data.hasLiked);
-        }
-      });
+      axios.post("/api/events/like", { eventId: event.id, userId: user.id })
+        .then((response) => {
+          const data = response.data;
+          if (data.success) {
+            setLikesCount(data.likes);
+            setHasLiked(data.hasLiked);
+          }
+        })
+        .catch((err) => console.error(err));
     }
   }, [event?.id]);
 
   // Load reviews dynamically from DB
   useEffect(() => {
     if (!event?.id) return;
-    fetch(`/api/events/review?eventId=${event.id}`)
-      .then((res) => res.json())
-      .then((data) => {
+    axios.get(`/api/events/review?eventId=${event.id}`)
+      .then((response) => {
+        const data = response.data;
         if (data.success) {
           setEventReviews(data.reviews || []);
         }
@@ -83,7 +81,7 @@ export default function EventDetails({ event, description, organizer, price, fea
   }, [user]);
 
 
-  const handleLike = async () => {
+  const handleLike = () => {
     const store = useBookingStore.getState();
     const userStored = store.user;
     if (!userStored) {
@@ -93,23 +91,33 @@ export default function EventDetails({ event, description, organizer, price, fea
       return;
     }
     const user = userStored;
-    try {
-      const res = await fetch("/api/events/like", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId: event.id, userId: user.id })
+    // Optimistic update
+    const prevLiked = hasLiked;
+    const prevCount = likesCount;
+    setHasLiked(!hasLiked);
+    setLikesCount((c) => (hasLiked ? Math.max(0, c - 1) : c + 1));
+
+    axios.post("/api/events/like", { eventId: event.id, userId: user.id })
+      .then((response) => {
+        const data = response.data;
+        if (data.success) {
+          setLikesCount(data.likes);
+          setHasLiked(data.hasLiked);
+        } else {
+          // Rollback
+          setHasLiked(prevLiked);
+          setLikesCount(prevCount);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        // Rollback
+        setHasLiked(prevLiked);
+        setLikesCount(prevCount);
       });
-      const data = await res.json();
-      if (data.success) {
-        setLikesCount(data.likes);
-        setHasLiked(data.hasLiked);
-      }
-    } catch (err) {
-      console.error(err);
-    }
   };
 
-  const handleReviewSubmit = async (e) => {
+  const handleReviewSubmit = (e) => {
     e.preventDefault();
     if (!event?.id) return;
     if (!currentUser) return;
@@ -123,33 +131,30 @@ export default function EventDetails({ event, description, organizer, price, fea
     setSubmitError("");
     setSubmitSuccess("");
 
-    try {
-      const res = await fetch("/api/events/review", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          eventId: event.id,
-          userId: currentUser.id,
-          rating: formRating,
-          comment: formComment,
-        }),
+    axios.post("/api/events/review", {
+      eventId: event.id,
+      userId: currentUser.id,
+      rating: formRating,
+      comment: formComment,
+    })
+      .then((response) => {
+        const data = response.data;
+        if (data.success) {
+          setEventReviews(data.reviews || []);
+          setFormComment("");
+          setFormRating(5);
+          setSubmitSuccess("Thank you! Your review has been added.");
+        } else {
+          setSubmitError(data.error || "Failed to submit review.");
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        setSubmitError("An error occurred while submitting your review.");
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setEventReviews(data.reviews || []);
-        setFormComment("");
-        setFormRating(5);
-        setSubmitSuccess("Thank you! Your review has been added.");
-      } else {
-        setSubmitError(data.error || "Failed to submit review.");
-      }
-    } catch (err) {
-      console.error(err);
-      setSubmitError("An error occurred while submitting your review.");
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   if (!event) return null;

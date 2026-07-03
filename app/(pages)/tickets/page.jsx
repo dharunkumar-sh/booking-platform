@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Calendar, MapPin, QrCode, User, Phone, Mail, ArrowLeft, Ticket, X, Download, Printer } from "lucide-react";
-import TicketSelection from "./TicketSelection";
+import { Calendar, MapPin, QrCode, User, Phone, Mail, Ticket, X, Download, Printer } from "lucide-react";
 import { useBookingStore } from "@/hooks/useBookingStore";
 
 export default function TicketsPage() {
@@ -62,19 +61,25 @@ export default function TicketsPage() {
     );
   }
 
-  // If the user has no tickets, we can show the TicketSelection component so they can still purchase tickets standalone
+  // If the user has no tickets, show a clean empty state card directing them to browse events
   if (confirmedBookings.length === 0) {
     return (
-      <div className="pt-20 pb-20 bg-neutral-950 min-h-screen text-white">
-        <div className="max-w-7xl mx-auto px-6 mb-8 flex justify-between items-center">
+      <div className="min-h-screen bg-neutral-950 text-white flex flex-col justify-center items-center px-6">
+        <div className="max-w-md w-full text-center space-y-6 bg-neutral-900/40 border border-neutral-800 rounded-3xl p-8 sm:p-12 shadow-xl">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-neutral-800 text-neutral-400">
+            <Ticket size={32} />
+          </div>
+          <h2 className="text-2xl font-bold text-white">No Booked Tickets</h2>
+          <p className="text-neutral-400 text-sm leading-relaxed">
+            You haven't booked any tickets yet. Explore concerts, movies, comedy shows, and sports events to get your passes!
+          </p>
           <button 
             onClick={() => router.push("/")}
-            className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors"
+            className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-rose-500 text-white font-bold rounded-xl text-sm hover:opacity-95 transition-opacity cursor-pointer text-center inline-flex items-center justify-center gap-2"
           >
-            <ArrowLeft size={16} /> Back to Home
+            Explore Events
           </button>
         </div>
-        <TicketSelection onConfirmBooking={handleBookNew} />
       </div>
     );
   }
@@ -214,7 +219,7 @@ export default function TicketsPage() {
               </button>
             </div>
             {/* Ticket Content Container */}
-            <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto scrollbar-none" style={{ scrollbarWidth: 'none' }}>
+            <div className="print-area p-5 space-y-4 max-h-[75vh] overflow-y-auto scrollbar-none" style={{ scrollbarWidth: 'none' }}>
               
               {/* Event Poster details */}
               <div className="text-center">

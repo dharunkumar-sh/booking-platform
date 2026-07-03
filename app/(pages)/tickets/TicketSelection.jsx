@@ -80,7 +80,7 @@ const TicketSelection = ({
       title: 'VIP Experience',
       price: basePrice + 1000,
       description: 'The ultimate luxury experience with backstage access and meet & greet.',
-      benefits: ['Front Row Seating Access', 'Backstage VIP Pass', 'Meet & Greet with Artists/Cast', 'All-Inclusive Premium Food & Drinks', 'VIP Lounge & Free Valet Parking'],
+      benefits: ['Front Row Seating Access', 'Backstage VIP Pass', 'Meet & Greet with Artists/Cast', 'All-Inclusive Premium Food & Drinks', 'VIP Lounge Access'],
       availableCount: getPassAvailableCount('vip', 15),
       status: getPassStatusLabel('vip', 'Filling Fast'),
       isPopular: false
