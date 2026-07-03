@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { Tv, Search, Play, Plus, Check, Star, Sparkles, Filter, Bookmark, Loader2 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useBookingStore } from "@/hooks/useBookingStore";
+import { useStore } from "@/hooks/useStore";
 
 const platforms = [
   { id: "all", label: "All Platforms" },
@@ -11,27 +13,35 @@ const platforms = [
   { id: "disney", label: "Disney+ Hotstar", color: "text-indigo-400" },
   { id: "apple", label: "Apple TV+", color: "text-neutral-300" },
   { id: "jiocinema", label: "JioCinema", color: "text-pink-500" },
+  { id: "sonyliv", label: "Sony LIV", color: "text-blue-500" },
+  { id: "zee5", label: "ZEE5", color: "text-amber-500" },
 ];
 
 const apiKey = "fc8544873a24aece75531acb201efa3b";
 
 const mapProviderToPlatformId = (providerName) => {
+  if (!providerName) return "other";
   const name = providerName.toLowerCase();
   if (name.includes("netflix")) return "netflix";
   if (name.includes("prime video") || name.includes("amazon")) return "prime";
   if (name.includes("disney") || name.includes("hotstar")) return "disney";
   if (name.includes("apple")) return "apple";
   if (name.includes("jio")) return "jiocinema";
+  if (name.includes("sony")) return "sonyliv";
+  if (name.includes("zee")) return "zee5";
   return "other";
 };
 
 const mapProviderToLabel = (providerName) => {
+  if (!providerName) return "";
   const name = providerName.toLowerCase();
   if (name.includes("netflix")) return "Netflix";
-  if (name.includes("prime video") || name.includes("amazon")) return "Prime Video";
+  if (name.includes("prime video") || name.includes("amazon")) return "Amazon Prime Video";
   if (name.includes("disney") || name.includes("hotstar")) return "Disney+ Hotstar";
   if (name.includes("apple")) return "Apple TV+";
   if (name.includes("jio")) return "JioCinema";
+  if (name.includes("sony")) return "Sony LIV";
+  if (name.includes("zee")) return "ZEE5";
   return providerName;
 };
 
@@ -56,23 +66,137 @@ function OttExplorerPageInner({
   pageSubtitle = "Discover where to stream the latest movies, web series, and AI-curated watchlists across all services.",
   initialFilter = "all",
   showMoodFilters = false,
+  isWatchlistPage = false,
 }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const initialQuery = searchParams ? (searchParams.get("q") || "") : "";
 
   const [activePlatform, setActivePlatform] = useState(initialFilter);
   const [search, setSearch] = useState(initialQuery);
-  const [watchlist, setWatchlist] = useState([]);
+
+  useEffect(() => {
+    setSearch(initialQuery);
+  }, [initialQuery]);
+
+  const storeUser = useStore(useBookingStore, (state) => state.user);
+  const user = storeUser || null;
+
+  const [dbWatchlist, setDbWatchlist] = useState([]);
+  const [dbWatchlistLoading, setDbWatchlistLoading] = useState(false);
   const [selectedMood, setSelectedMood] = useState("all");
   const [titles, setTitles] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const moods = ["all", "High Adrenaline", "Cozy Weekend", "Mind Bending", "Feel Good Comedy"];
 
-  const toggleWatchlist = (id) => {
-    setWatchlist((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+  // Load watchlist items from backend DB
+  useEffect(() => {
+    async function loadDbWatchlist() {
+      const activeUser = useBookingStore.getState().user;
+      if (!activeUser?.email) {
+        console.log("[OttExplorerPage] No active user email found, skipping watchlist load.");
+        return;
+      }
+      console.log("[OttExplorerPage] Loading watchlist for user:", activeUser.email);
+      setDbWatchlistLoading(true);
+      try {
+        const res = await fetch(`/api/watchlist?email=${encodeURIComponent(activeUser.email)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            console.log("[OttExplorerPage] Loaded watchlist items:", data.watchlist);
+            setDbWatchlist(data.watchlist || []);
+          } else {
+            console.error("[OttExplorerPage] Failed to load watchlist:", data.error);
+          }
+        } else {
+          console.error("[OttExplorerPage] Watchlist GET response status:", res.status);
+        }
+      } catch (err) {
+        console.error("[OttExplorerPage] Error loading watchlist:", err);
+      } finally {
+        setDbWatchlistLoading(false);
+      }
+    }
+
+    const activeUser = useBookingStore.getState().user;
+    if (activeUser?.email) {
+      loadDbWatchlist();
+    } else {
+      setDbWatchlist([]);
+    }
+  }, [user, isWatchlistPage]);
+
+  // Sync bookmark toggle with DB endpoint
+  const toggleWatchlist = async (item) => {
+    const activeUser = useBookingStore.getState().user;
+    console.log("[OttExplorerPage] toggleWatchlist called for:", item.title, "User:", activeUser);
+
+    if (!activeUser) {
+      console.log("[OttExplorerPage] User not logged in, redirecting to login.");
+      const setLoginRedirect = useBookingStore.getState().setLoginRedirect;
+      if (setLoginRedirect) {
+        setLoginRedirect(window.location.pathname);
+      }
+      router.push("/login");
+      return;
+    }
+
+    const isExisting = dbWatchlist.some((w) => String(w.id) === String(item.id));
+    console.log("[OttExplorerPage] Item exists in watchlist state:", isExisting);
+
+    try {
+      if (isExisting) {
+        console.log("[OttExplorerPage] Deleting item from watchlist:", item.id);
+        const res = await fetch(`/api/watchlist?email=${encodeURIComponent(activeUser.email)}&tmdbId=${encodeURIComponent(item.id)}`, {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          console.log("[OttExplorerPage] Deletion successful");
+          setDbWatchlist((prev) => prev.filter((w) => String(w.id) !== String(item.id)));
+        } else {
+          console.error("[OttExplorerPage] Deletion failed with status:", res.status);
+        }
+      } else {
+        console.log("[OttExplorerPage] Adding item to watchlist:", item.id);
+        const res = await fetch("/api/watchlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: activeUser.email,
+            tmdbId: String(item.id),
+            title: item.title,
+            category: item.tag || item.category || "Movie",
+            image: item.image,
+            rating: item.rating,
+            releaseDate: item.releaseDate || "",
+            platforms: item.platforms || [],
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            console.log("[OttExplorerPage] Addition successful:", data.item);
+            setDbWatchlist((prev) => [...prev, {
+              id: String(item.id),
+              title: item.title,
+              category: item.tag || item.category || "Movie",
+              image: item.image,
+              rating: item.rating,
+              releaseDate: item.releaseDate || "",
+              platforms: item.platforms || [],
+            }]);
+          } else {
+            console.error("[OttExplorerPage] Addition failed on backend:", data.error);
+          }
+        } else {
+          console.error("[OttExplorerPage] Addition failed with response status:", res.status);
+        }
+      }
+    } catch (err) {
+      console.error("[OttExplorerPage] Error toggling watchlist:", err);
+    }
   };
 
   useEffect(() => {
@@ -110,6 +234,31 @@ function OttExplorerPageInner({
             let platformsList = [];
             let providerLabels = [];
             let streamUrl = "";
+            let parsedPlatforms = [];
+
+            const getProviderLink = (providerName) => {
+              const name = providerName.toLowerCase();
+              if (name.includes("netflix")) return "https://www.netflix.com";
+              if (name.includes("prime video") || name.includes("amazon")) return "https://www.primevideo.com";
+              if (name.includes("disney") || name.includes("hotstar")) return "https://www.hotstar.com";
+              if (name.includes("sony")) return "https://www.sonyliv.com";
+              if (name.includes("zee")) return "https://www.zee5.com";
+              if (name.includes("apple")) return "https://tv.apple.com";
+              if (name.includes("jio")) return "https://www.jiocinema.com";
+              return "";
+            };
+
+            const getProviderLabel = (providerName) => {
+              const name = providerName.toLowerCase();
+              if (name.includes("netflix")) return "Netflix";
+              if (name.includes("prime video") || name.includes("amazon")) return "Amazon Prime Video";
+              if (name.includes("disney") || name.includes("hotstar")) return "Disney+ Hotstar";
+              if (name.includes("apple")) return "Apple TV+";
+              if (name.includes("jio")) return "JioCinema";
+              if (name.includes("sony")) return "Sony LIV";
+              if (name.includes("zee")) return "ZEE5";
+              return providerName;
+            };
 
             try {
               const provRes = await fetch(
@@ -134,7 +283,18 @@ function OttExplorerPageInner({
                       if (pId !== "other") {
                         platformsList.push(pId);
                       }
-                      providerLabels.push(mapProviderToLabel(p.provider_name));
+                      const label = mapProviderToLabel(p.provider_name);
+                      providerLabels.push(label);
+
+                      const cleanName = getProviderLabel(p.provider_name);
+                      const cleanLink = getProviderLink(p.provider_name) || region.link || "https://google.com";
+                      const logoUrl = p.logo_path ? `https://image.tmdb.org/t/p/w92${p.logo_path}` : null;
+                      
+                      parsedPlatforms.push({
+                        name: cleanName,
+                        logo: logoUrl,
+                        link: cleanLink
+                      });
                     }
                   }
                 }
@@ -156,6 +316,7 @@ function OttExplorerPageInner({
               title: item.title || item.name,
               platform: platformText,
               platformsList: platformsList,
+              platforms: parsedPlatforms,
               rating: item.vote_average ? item.vote_average.toFixed(1) : "7.5",
               genre: genreText,
               match: `${Math.round(80 + (item.vote_average || 7) * 2)}% Match`,
@@ -167,6 +328,7 @@ function OttExplorerPageInner({
               tag: item.media_type === "movie" ? "Movie" : "TV Show",
               streamUrl: streamUrl || "https://www.netflix.com",
               genreIds: item.genre_ids || [],
+              releaseDate: item.release_date || item.first_air_date || "",
             };
           })
         );
@@ -183,11 +345,62 @@ function OttExplorerPageInner({
       }
     }
 
-    loadData();
+    if (!isWatchlistPage) {
+      loadData();
+    }
     return () => {
       active = false;
     };
-  }, [search, selectedMood]);
+  }, [search, selectedMood, isWatchlistPage]);
+
+  // Sync loaded DB Watchlist into view state
+  useEffect(() => {
+    if (isWatchlistPage) {
+      const mappedWatchlist = dbWatchlist.map((w) => {
+        const parsedPlatforms = (w.platforms || []).map(p => {
+          if (typeof p === "string") {
+            const pId = mapProviderToPlatformId(p);
+            return {
+              name: mapProviderToLabel(p),
+              logo: null,
+              link: pId === "netflix" ? "https://www.netflix.com" :
+                    pId === "prime" ? "https://www.primevideo.com" :
+                    pId === "disney" ? "https://www.hotstar.com" :
+                    pId === "apple" ? "https://tv.apple.com" :
+                    pId === "jiocinema" ? "https://www.jiocinema.com" :
+                    pId === "sonyliv" ? "https://www.sonyliv.com" :
+                    pId === "zee5" ? "https://www.zee5.com" : "https://google.com"
+            };
+          }
+          return p;
+        });
+
+        const platformText = parsedPlatforms.length > 0
+          ? parsedPlatforms.map(p => p.name).join(", ")
+          : "Currently not available on any OTT platform";
+
+        const platformsList = parsedPlatforms.map(p => mapProviderToPlatformId(p.name));
+        const streamUrl = parsedPlatforms.length > 0 ? parsedPlatforms[0].link : "https://www.netflix.com";
+
+        return {
+          id: w.id,
+          title: w.title,
+          platform: platformText,
+          platformsList: platformsList,
+          platforms: parsedPlatforms,
+          rating: w.rating || "N/A",
+          genre: w.category || "Movie",
+          match: "Saved",
+          image: w.image,
+          tag: w.category || "Movie",
+          streamUrl: streamUrl,
+          genreIds: [],
+          releaseDate: w.releaseDate || "",
+        };
+      });
+      setTitles(mappedWatchlist);
+    }
+  }, [isWatchlistPage, dbWatchlist]);
 
   const filtered = titles.filter((item) => {
     const pMatch = activePlatform === "all" || item.platformsList.includes(activePlatform);
@@ -198,6 +411,32 @@ function OttExplorerPageInner({
     }
     return pMatch && mMatch;
   });
+
+  const isSavingLoading = loading || dbWatchlistLoading;
+
+  if (isWatchlistPage && !user) {
+    return (
+      <div className="min-h-screen bg-neutral-950 pb-20 flex flex-col items-center justify-center text-center px-4">
+        <div className="w-16 h-16 rounded-3xl bg-neutral-900 border border-neutral-800 flex items-center justify-center mb-6">
+          <Bookmark className="w-8 h-8 text-neutral-500" />
+        </div>
+        <h1 className="text-2xl font-extrabold text-white">Your watchlist is synced securely</h1>
+        <p className="text-sm text-neutral-400 mt-2 max-w-sm">Please log in to your account to view your curated list, delete items, or sync bookmarks.</p>
+        <button
+          onClick={() => {
+            const setLoginRedirect = useBookingStore.getState().setLoginRedirect;
+            if (setLoginRedirect) {
+              setLoginRedirect(window.location.pathname);
+            }
+            router.push("/login");
+          }}
+          className="mt-6 rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 px-6 py-2.5 text-xs font-bold text-white shadow-lg cursor-pointer hover:shadow-orange-500/20 active:scale-95 transition-all"
+        >
+          Sign In Now
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-neutral-950 pb-20">
@@ -228,7 +467,7 @@ function OttExplorerPageInner({
               <button
                 key={p.id}
                 onClick={() => setActivePlatform(p.id)}
-                className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
+                className={`rounded-xl px-4 py-2 text-xs font-bold transition cursor-pointer ${
                   activePlatform === p.id
                     ? "bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-lg"
                     : "border border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:text-white"
@@ -247,7 +486,7 @@ function OttExplorerPageInner({
                 <button
                   key={m}
                   onClick={() => setSelectedMood(m)}
-                  className={`rounded-lg px-3 py-1 text-xs transition ${
+                  className={`rounded-lg px-3 py-1 text-xs transition cursor-pointer ${
                     selectedMood === m
                       ? "bg-white text-neutral-950 font-bold"
                       : "text-neutral-400 hover:text-white"
@@ -268,21 +507,21 @@ function OttExplorerPageInner({
           <span className="text-xs text-neutral-400">{filtered.length} titles available to watch</span>
         </div>
 
-        {loading ? (
+        {isSavingLoading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="w-10 h-10 text-orange-500 animate-spin" />
-            <span className="text-sm text-neutral-400 mt-4">Searching OTT platforms...</span>
+            <span className="text-sm text-neutral-400 mt-4">Syncing watchlist data...</span>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <span className="text-3xl mb-3">🍿</span>
-            <span className="text-sm font-semibold text-neutral-300">No titles found on OTT platforms</span>
-            <span className="text-xs text-neutral-500 mt-1">Try matching another keyword, platform, or vibe mood.</span>
+            <span className="text-sm font-semibold text-neutral-300">No titles found</span>
+            <span className="text-xs text-neutral-500 mt-1">Try matching another keyword or platform filter.</span>
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((item) => {
-              const isBookmarked = watchlist.includes(item.id);
+              const isBookmarked = dbWatchlist.some((w) => String(w.id) === String(item.id));
               return (
                 <div
                   key={item.id}
@@ -298,11 +537,11 @@ function OttExplorerPageInner({
                       }}
                     />
                     <div className="absolute top-3 left-3 rounded-full bg-neutral-950/80 backdrop-blur px-3 py-1 text-xs font-bold text-orange-400 border border-neutral-700">
-                      {item.tag}
+                      {item.tag || item.category || "Movie"}
                     </div>
                     <button
-                      onClick={() => toggleWatchlist(item.id)}
-                      className="absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-neutral-950/80 text-white transition hover:bg-orange-500"
+                      onClick={() => toggleWatchlist(item)}
+                      className="absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-neutral-950/80 text-white transition hover:bg-orange-500 cursor-pointer"
                       title="Toggle Watchlist"
                     >
                       {isBookmarked ? <Check size={16} className="text-emerald-400" /> : <Plus size={16} />}
@@ -320,14 +559,39 @@ function OttExplorerPageInner({
                       <span className="font-semibold text-emerald-400">{item.match}</span>
                     </div>
 
-                    <a
-                      href={item.streamUrl || "https://www.netflix.com"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-neutral-800 py-2.5 text-xs font-bold text-white transition hover:bg-gradient-to-r hover:from-orange-500 hover:to-rose-500"
-                    >
-                      <Play size={14} fill="currentColor" /> Stream Now
-                    </a>
+                    {/* OTT Platform logos and Watch Now buttons */}
+                    <div className="border-t border-neutral-800/80 pt-3.5 space-y-2">
+                      {item.platforms && item.platforms.length > 0 ? (
+                        <div className="flex flex-col gap-2">
+                          {item.platforms.map((p, idx) => (
+                            <div key={idx} className="flex items-center justify-between bg-neutral-900/60 border border-neutral-800/50 rounded-xl p-2 transition hover:border-neutral-700/80">
+                              <div className="flex items-center gap-2">
+                                {p.logo ? (
+                                  <img src={p.logo} alt={p.name} className="w-6 h-6 rounded-md object-contain shrink-0 bg-neutral-950 p-0.5 border border-neutral-800" />
+                                ) : (
+                                  <div className="w-6 h-6 rounded-md bg-neutral-950 border border-neutral-800 flex items-center justify-center shrink-0">
+                                    <Tv size={12} className="text-neutral-500" />
+                                  </div>
+                                )}
+                                <span className="text-xs font-semibold text-neutral-200">{p.name}</span>
+                              </div>
+                              <a
+                                href={p.link || "https://google.com"}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg transition-colors cursor-pointer select-none"
+                              >
+                                <Play size={10} fill="currentColor" /> Watch Now
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="py-2.5 text-center bg-neutral-900/30 border border-neutral-850 rounded-xl">
+                          <span className="text-xs font-medium text-neutral-500">Currently not available on any OTT platform.</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

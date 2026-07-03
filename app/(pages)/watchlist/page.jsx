@@ -9,6 +9,7 @@ export default function WatchlistPage() {
       pageTitle="My Curated Watchlist"
       pageSubtitle="Your saved shows and AI bookmarks ready to stream when you have free time."
       initialFilter="all"
+      isWatchlistPage={true}
     />
   );
 }

@@ -25,7 +25,7 @@ import { useGeolocationContext } from "@/context/GeolocationContext";
 import { useBookingStore } from "@/hooks/useBookingStore";
 import { useStore } from "@/hooks/useStore";
 import { useFavourites } from "@/context/FavouritesContext";
-
+const tmdbCache = {};
 
 const Header = () => {
   const router = useRouter();
@@ -64,7 +64,7 @@ const Header = () => {
   const searchContainerRef = useRef(null);
   const mobileSearchContainerRef = useRef(null);
 
-  // Debounced live suggestions fetching
+  // Sync suggestions loader
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSuggestions([]);
@@ -75,19 +75,138 @@ const Header = () => {
     const timer = setTimeout(async () => {
       setIsSuggestionsLoading(true);
       setShowSuggestions(true);
+      const query = searchQuery.trim();
+
       try {
-        const res = await fetch(`/api/ott/search?q=${encodeURIComponent(searchQuery.trim())}&state=${encodeURIComponent(selectedState || "")}&crossOtt=${crossOttSearch}`);
-        const contentType = res.headers.get("content-type");
-        if (res.ok && contentType && contentType.includes("application/json")) {
-          const data = await res.json();
-          if (data.success) {
-            setSuggestions(data.results || []);
-            setSuggestionsType(data.type || "db");
+        if (crossOttSearch) {
+          // Client-side TMDB search to bypass backend connection blocks
+          if (tmdbCache[query]) {
+            setSuggestions(tmdbCache[query]);
+            setSuggestionsType("ott");
+            setIsSuggestionsLoading(false);
+            return;
+          }
+
+          const apiKey = "fc8544873a24aece75531acb201efa3b";
+          const tmdbUrl = `https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${encodeURIComponent(query)}&language=en-US&page=1`;
+          const res = await fetch(tmdbUrl);
+          if (!res.ok) throw new Error("TMDB failed");
+          const tmdbData = await res.json();
+          const items = (tmdbData.results || [])
+            .filter((item) => item.media_type === "movie" || item.media_type === "tv")
+            .slice(0, 5);
+
+          const getProviderLink = (providerName) => {
+            const name = providerName.toLowerCase();
+            if (name.includes("netflix")) return "https://www.netflix.com";
+            if (name.includes("prime video") || name.includes("amazon")) return "https://www.primevideo.com";
+            if (name.includes("disney") || name.includes("hotstar")) return "https://www.hotstar.com";
+            if (name.includes("sony")) return "https://www.sonyliv.com";
+            if (name.includes("zee")) return "https://www.zee5.com";
+            if (name.includes("apple")) return "https://tv.apple.com";
+            if (name.includes("jio")) return "https://www.jiocinema.com";
+            return "";
+          };
+
+          const getProviderLabel = (providerName) => {
+            const name = providerName.toLowerCase();
+            if (name.includes("netflix")) return "Netflix";
+            if (name.includes("prime video") || name.includes("amazon")) return "Amazon Prime Video";
+            if (name.includes("disney") || name.includes("hotstar")) return "Disney+ Hotstar";
+            if (name.includes("sony")) return "Sony LIV";
+            if (name.includes("zee")) return "ZEE5";
+            if (name.includes("apple")) return "Apple TV+";
+            if (name.includes("jio")) return "JioCinema";
+            return providerName;
+          };
+
+          const resultsWithProviders = await Promise.all(
+            items.map(async (item) => {
+              try {
+                const providerUrl = `https://api.themoviedb.org/3/${item.media_type}/${item.id}/watch/providers?api_key=${apiKey}`;
+                const providerRes = await fetch(providerUrl);
+                let platforms = [];
+                if (providerRes.ok) {
+                  const providerData = await providerRes.json();
+                  const inRegion = providerData.results?.IN;
+                  const usRegion = providerData.results?.US;
+                  const targetRegion = inRegion || usRegion;
+                  
+                  if (targetRegion) {
+                    const flatrate = targetRegion.flatrate || [];
+                    const rent = targetRegion.rent || [];
+                    const buy = targetRegion.buy || [];
+                    const allProviders = [...flatrate, ...rent, ...buy];
+                    
+                    const seen = new Set();
+                    for (const p of allProviders) {
+                      if (p.provider_name && !seen.has(p.provider_name)) {
+                        seen.add(p.provider_name);
+                        const cleanName = getProviderLabel(p.provider_name);
+                        const cleanLink = getProviderLink(p.provider_name) || targetRegion.link || "https://google.com";
+                        const logoUrl = p.logo_path ? `https://image.tmdb.org/t/p/w92${p.logo_path}` : null;
+                        platforms.push({
+                          name: cleanName,
+                          logo: logoUrl,
+                          link: cleanLink
+                        });
+                      }
+                    }
+                  }
+                }
+                
+                return {
+                  id: `tmdb-${item.media_type}-${item.id}`,
+                  title: item.title || item.name,
+                  category: item.media_type === "movie" ? "Movie" : "TV Show",
+                  location: platforms.length > 0 ? platforms.map(p => p.name).join(", ") : "Currently not available on any OTT platform",
+                  image: item.poster_path 
+                    ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
+                    : "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80",
+                  type: "ott",
+                  platforms: platforms,
+                  rating: item.vote_average ? item.vote_average.toFixed(1) : "N/A",
+                  releaseDate: item.release_date || item.first_air_date || "",
+                  description: item.overview || "",
+                };
+              } catch (err) {
+                console.error(`Error fetching providers for tmdb ${item.id}:`, err);
+                return {
+                  id: `tmdb-${item.media_type}-${item.id}`,
+                  title: item.title || item.name,
+                  category: item.media_type === "movie" ? "Movie" : "TV Show",
+                  location: "Currently not available on any OTT platform",
+                  image: item.poster_path 
+                    ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
+                    : "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80",
+                  type: "ott",
+                  platforms: [],
+                  rating: item.vote_average ? item.vote_average.toFixed(1) : "N/A",
+                  releaseDate: item.release_date || item.first_air_date || "",
+                  description: item.overview || "",
+                };
+              }
+            })
+          );
+
+          tmdbCache[query] = resultsWithProviders;
+          setSuggestions(resultsWithProviders);
+          setSuggestionsType("ott");
+        } else {
+          // Local Database search only
+          const res = await fetch(`/api/ott/search?q=${encodeURIComponent(query)}&state=${encodeURIComponent(selectedState || "")}&crossOtt=false`);
+          const contentType = res.headers.get("content-type");
+          if (res.ok && contentType && contentType.includes("application/json")) {
+            const data = await res.json();
+            if (data.success) {
+              setSuggestions(data.results || []);
+              setSuggestionsType(data.type || "db");
+            } else {
+              setSuggestions([]);
+            }
           } else {
             setSuggestions([]);
           }
-        } else {
-          setSuggestions([]);
         }
       } catch (err) {
         console.error("Suggestions fetch error:", err);
@@ -391,8 +510,14 @@ const Header = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && searchQuery.trim()) {
+                    setShowSuggestions(false);
+                    router.push(`/ott/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                  }
+                }}
                 placeholder={placeholders[placeholderIndex]}
-                className="flex-1 text-sm bg-transparent border-none outline-none text-neutral-200 placeholder-neutral-500 h-8"
+                className="flex-1 text-sm bg-transparent border-none outline-none text-neutral-200 placeholder-neutral-500 h-8 cursor-pointer"
               />
 
               {searchQuery && (
@@ -440,46 +565,113 @@ const Header = () => {
                         <span className="text-orange-400 font-semibold">{suggestionsType === "db" ? "Local Event" : "OTT Search"}</span>
                       </div>
 
-                      {suggestions.map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            setShowSuggestions(false);
-                            setSearchQuery("");
-                            if (item.type === "ott") {
-                              router.push(`/ott/search?q=${encodeURIComponent(item.title)}`);
-                            } else {
-                              setSelectedEvent(item);
-                              router.push(`/event-details/${encodeURIComponent(item.title)}`);
-                            }
-                          }}
-                          className="w-full flex items-center gap-3.5 px-4 py-3 text-left hover:bg-neutral-900/60 transition-colors border-b border-neutral-800/30 last:border-b-0 cursor-pointer"
-                        >
-                          <img
-                            src={item.image}
-                            alt={item.title}
-                            className="w-9 h-12 object-cover rounded-lg bg-neutral-800 border border-neutral-800 shrink-0 shadow-md"
-                            onError={(e) => {
-                              e.target.src = "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80";
-                            }}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-white truncate group-hover:text-orange-400 transition-colors">{item.title}</p>
-                            <p className="text-[10px] text-neutral-400 truncate mt-0.5 font-medium">
-                              {item.category} • {item.location}
-                            </p>
-                          </div>
-                          {item.type === "ott" ? (
-                            <span className="px-2.5 py-1 rounded-md bg-orange-500/10 border border-orange-500/20 text-[9px] font-bold text-orange-400 uppercase tracking-wider shrink-0">
-                              Stream
-                            </span>
-                          ) : (
+                      {suggestions.map((item) => {
+                        const isOtt = item.type === "ott";
+                        
+                        // Handler for item main block click
+                        const handleItemClick = () => {
+                          setShowSuggestions(false);
+                          setSearchQuery("");
+                          if (isOtt) {
+                            router.push(`/ott/search?q=${encodeURIComponent(item.title)}`);
+                          } else {
+                            setSelectedEvent(item);
+                            router.push(`/event-details/${encodeURIComponent(item.title)}`);
+                          }
+                        };
+
+                        if (isOtt) {
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={handleItemClick}
+                              className="w-full flex flex-col gap-2 px-4 py-3.5 text-left hover:bg-neutral-900/60 transition-colors border-b border-neutral-800/30 last:border-b-0 cursor-pointer"
+                            >
+                              <div className="flex items-center gap-3.5">
+                                <img
+                                  src={item.image}
+                                  alt={item.title}
+                                  className="w-9 h-12 object-cover rounded-lg bg-neutral-800 border border-neutral-800 shrink-0 shadow-md"
+                                  onError={(e) => {
+                                    e.target.src = "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80";
+                                  }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-bold text-white truncate">{item.title}</p>
+                                  <p className="text-[10px] text-neutral-400 truncate mt-0.5 font-medium">
+                                    {item.category} • ★ {item.rating}
+                                  </p>
+                                </div>
+                                <span className="px-2.5 py-1 rounded-md bg-orange-500/10 border border-orange-500/20 text-[9px] font-bold text-orange-400 uppercase tracking-wider shrink-0">
+                                  Stream
+                                </span>
+                              </div>
+
+                              {/* OTT provider platforms with logos & Watch Now links */}
+                              <div className="pl-[50px] flex flex-col gap-1">
+                                {item.platforms && item.platforms.length > 0 ? (
+                                  <div className="flex flex-wrap gap-1.5 items-center">
+                                    <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider shrink-0">Available on:</span>
+                                    {item.platforms.map((p, idx) => (
+                                      <div
+                                        key={idx}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="flex items-center gap-1.5 bg-neutral-900 border border-neutral-800 rounded-lg pl-1.5 pr-2 py-0.5 text-[9px] text-neutral-300 hover:border-neutral-700 transition-colors"
+                                      >
+                                        {p.logo ? (
+                                          <img src={p.logo} alt={p.name} className="w-3.5 h-3.5 rounded-sm object-contain" />
+                                        ) : (
+                                          <Tv size={10} className="text-neutral-500" />
+                                        )}
+                                        <span className="font-semibold text-neutral-300">{p.name}</span>
+                                        <a
+                                          href={p.link || "https://google.com"}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="ml-1 px-1.5 py-0.5 rounded bg-orange-500 hover:bg-orange-600 text-[8px] font-black text-white uppercase tracking-wider transition-colors cursor-pointer"
+                                        >
+                                          Watch Now
+                                        </a>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-[10px] text-rose-400/90 font-medium">
+                                    Currently not available on any OTT platform.
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // Local events "Book" suggestion row
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={handleItemClick}
+                            className="w-full flex items-center gap-3.5 px-4 py-3 text-left hover:bg-neutral-900/60 transition-colors border-b border-neutral-800/30 last:border-b-0 cursor-pointer"
+                          >
+                            <img
+                              src={item.image}
+                              alt={item.title}
+                              className="w-9 h-12 object-cover rounded-lg bg-neutral-800 border border-neutral-800 shrink-0 shadow-md"
+                              onError={(e) => {
+                                e.target.src = "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80";
+                              }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-white truncate group-hover:text-orange-400 transition-colors">{item.title}</p>
+                              <p className="text-[10px] text-neutral-400 truncate mt-0.5 font-medium">
+                                {item.category} • {item.location}
+                              </p>
+                            </div>
                             <span className="px-2.5 py-1 rounded-md bg-gradient-to-r from-orange-500 to-rose-500 text-[9px] font-black text-white uppercase tracking-wider shrink-0 shadow-lg shadow-orange-500/20">
                               Book
                             </span>
-                          )}
-                        </button>
-                      ))}
+                          </button>
+                        );
+                      })}
                     </>
                   )}
                 </div>
@@ -721,6 +913,22 @@ const Header = () => {
                           View Tickets
                         </span>
                       </button>
+
+                      <button
+                        onClick={() => {
+                          setIsProfileOpen(false);
+                          router.push("/watchlist");
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white border border-neutral-800 hover:border-neutral-700 transition-all duration-200 cursor-pointer group"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Tv size={13} className="text-orange-400 group-hover:text-orange-300 transition-colors" />
+                          <span>My Watchlist</span>
+                        </span>
+                        <span className="text-[10px] text-neutral-500 group-hover:text-neutral-300 transition-colors font-medium">
+                          View Watchlist
+                        </span>
+                      </button>
                     </div>
 
                     <div className="border-t border-neutral-800/60 mb-3" />
@@ -776,8 +984,15 @@ const Header = () => {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && searchQuery.trim()) {
+                      setShowSuggestions(false);
+                      setMobileSearchOpen(false);
+                      router.push(`/ott/search?q=${encodeURIComponent(searchQuery.trim())}`);
+                    }
+                  }}
                   placeholder={placeholders[placeholderIndex]}
-                  className="flex-1 text-xs bg-transparent border-none outline-none text-neutral-200 placeholder-neutral-500"
+                  className="flex-1 text-xs bg-transparent border-none outline-none text-neutral-200 placeholder-neutral-500 cursor-pointer"
                 />
                 {searchQuery && (
                   <button
@@ -806,38 +1021,108 @@ const Header = () => {
                       <div className="px-3 py-1.5 bg-neutral-900/50 flex items-center justify-between text-[9px] font-bold tracking-wider text-neutral-500 uppercase border-b border-neutral-800/50">
                         <span>{suggestionsType === "db" ? "Local Events" : "Cross-OTT Stream"}</span>
                       </div>
-                      {suggestions.map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            setShowSuggestions(false);
-                            setSearchQuery("");
-                            setMobileSearchOpen(false);
-                            if (item.type === "ott") {
-                              router.push(`/ott/search?q=${encodeURIComponent(item.title)}`);
-                            } else {
-                              setSelectedEvent(item);
-                              router.push(`/event-details/${encodeURIComponent(item.title)}`);
-                            }
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-neutral-900 transition-colors border-b border-neutral-800/30 last:border-b-0 cursor-pointer"
-                        >
-                          <img
-                            src={item.image}
-                            alt={item.title}
-                            className="w-8 h-10 object-cover rounded bg-neutral-800 border border-neutral-800 shrink-0 shadow-sm"
-                            onError={(e) => {
-                              e.target.src = "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80";
-                            }}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-white truncate">{item.title}</p>
-                            <p className="text-[9px] text-neutral-400 truncate mt-0.5 font-medium">
-                              {item.category} • {item.location}
-                            </p>
-                          </div>
-                        </button>
-                      ))}
+                       {suggestions.map((item) => {
+                        const isOtt = item.type === "ott";
+                        
+                        const handleItemClick = () => {
+                          setShowSuggestions(false);
+                          setSearchQuery("");
+                          setMobileSearchOpen(false);
+                          if (isOtt) {
+                            router.push(`/ott/search?q=${encodeURIComponent(item.title)}`);
+                          } else {
+                            setSelectedEvent(item);
+                            router.push(`/event-details/${encodeURIComponent(item.title)}`);
+                          }
+                        };
+
+                        if (isOtt) {
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={handleItemClick}
+                              className="w-full flex flex-col gap-2 px-3 py-2.5 text-left hover:bg-neutral-900 transition-colors border-b border-neutral-800/30 last:border-b-0 cursor-pointer"
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <img
+                                  src={item.image}
+                                  alt={item.title}
+                                  className="w-8 h-10 object-cover rounded bg-neutral-800 border border-neutral-800 shrink-0 shadow-sm"
+                                  onError={(e) => {
+                                    e.target.src = "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80";
+                                  }}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-bold text-white truncate">{item.title}</p>
+                                  <p className="text-[9px] text-neutral-400 truncate mt-0.5 font-medium">
+                                    {item.category} • ★ {item.rating}
+                                  </p>
+                                </div>
+                                <span className="px-2.5 py-1 rounded-md bg-orange-500/10 border border-orange-500/20 text-[9px] font-bold text-orange-400 uppercase tracking-wider shrink-0">
+                                  Stream
+                                </span>
+                              </div>
+
+                              {/* Mobile OTT providers */}
+                              <div className="pl-[42px] flex flex-col gap-1">
+                                {item.platforms && item.platforms.length > 0 ? (
+                                  <div className="flex flex-wrap gap-1 items-center">
+                                    {item.platforms.map((p, idx) => (
+                                      <div
+                                        key={idx}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="flex items-center gap-1 bg-neutral-950 border border-neutral-800 rounded px-1.5 py-0.5 text-[8px] text-neutral-300"
+                                      >
+                                        {p.logo ? (
+                                          <img src={p.logo} alt={p.name} className="w-3 h-3 rounded-sm object-contain" />
+                                        ) : (
+                                          <Tv size={8} className="text-neutral-500" />
+                                        )}
+                                        <span className="font-semibold text-neutral-300">{p.name}</span>
+                                        <a
+                                          href={p.link || "https://google.com"}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="ml-1 px-1 py-0.5 rounded bg-orange-500 hover:bg-orange-600 text-[8px] font-black text-white uppercase tracking-wider transition-colors cursor-pointer"
+                                        >
+                                          Watch
+                                        </a>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-[9px] text-rose-400 font-medium">
+                                    Currently not available on any OTT platform.
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={handleItemClick}
+                            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-neutral-900 transition-colors border-b border-neutral-800/30 last:border-b-0 cursor-pointer"
+                          >
+                            <img
+                              src={item.image}
+                              alt={item.title}
+                              className="w-8 h-10 object-cover rounded bg-neutral-800 border border-neutral-800 shrink-0 shadow-sm"
+                              onError={(e) => {
+                                e.target.src = "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80";
+                              }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-white truncate">{item.title}</p>
+                              <p className="text-[9px] text-neutral-400 truncate mt-0.5 font-medium">
+                                {item.category} • {item.location}
+                              </p>
+                            </div>
+                          </button>
+                        );
+                      })}
                     </>
                   )}
                 </div>

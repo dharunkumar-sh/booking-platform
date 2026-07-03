@@ -76,4 +76,18 @@ export const reviews = pgTable("reviews", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const watchlist = pgTable("watchlist", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  tmdbId: varchar("tmdb_id", { length: 255 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  image: text("image"),
+  rating: varchar("rating", { length: 10 }),
+  releaseDate: varchar("release_date", { length: 100 }),
+  platforms: jsonb("platforms").default([]),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+
 
