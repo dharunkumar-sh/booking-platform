@@ -16,6 +16,7 @@ export const useBookingStore = create(
       likedEvents: [],
       loginRedirect: null,
       notifications: [],
+      reviewEvents: [],
       sessionId: null,
       bookingStartedAt: null,
 
@@ -32,6 +33,7 @@ export const useBookingStore = create(
         likedEvents: [],
         loginRedirect: null,
         notifications: [],
+        reviewEvents: [],
         bookingStartedAt: null,
       }),
       setPendingBooking: (pendingBooking) => set({ pendingBooking }),
@@ -59,6 +61,9 @@ export const useBookingStore = create(
           : [...state.likedEvents, { id: event.id, title: event.title }];
         return { likedEvents };
       }),
+      addReviewEvent: (eventTitle) => set((state) => ({
+        reviewEvents: [...state.reviewEvents, { id: `rev-${Date.now()}-${Math.random()}`, title: eventTitle }]
+      })),
       setLoginRedirect: (path) => set({ loginRedirect: path }),
       setNotifications: (notifications) => set({ notifications }),
       setSessionId: (sessionId) => set({ sessionId }),

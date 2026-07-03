@@ -26,12 +26,13 @@ export async function GET(request) {
           e.title AS "eventTitle",
           e.date AS "eventDate",
           e.location AS "eventVenue",
-          u.name AS "userName",
+          COALESCE(uf.name, u.name) AS "userName",
           u.email AS "userEmail",
-          u.phone AS "userPhone"
+          COALESCE(uf.phone, u.phone) AS "userPhone"
         FROM bookings b
         JOIN users u ON b.user_id = u.id
         JOIN events e ON b.event_id = e.id
+        LEFT JOIN userform uf ON LOWER(uf.email) = LOWER(u.email)
         WHERE u.email = ${emailLower}
         ORDER BY b.booking_date DESC
       `;

@@ -5,6 +5,24 @@ import { useRouter } from "next/navigation";
 import { Calendar, MapPin, QrCode, User, Phone, Mail, Ticket, X, Download, Printer } from "lucide-react";
 import { useBookingStore } from "@/hooks/useBookingStore";
 
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  try {
+    return new Date(dateStr).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
+function trimVenue(venue) {
+  if (!venue) return "";
+  return venue.split(",")[0].trim();
+}
+
 export default function TicketsPage() {
   const router = useRouter();
   const [confirmedBookings, setConfirmedBookings] = useState([]);
@@ -141,19 +159,19 @@ export default function TicketsPage() {
                     <div className="space-y-1">
                       <span className="text-xs text-neutral-500 block">DATE & TIME</span>
                       <span className="font-semibold text-white flex items-center gap-1.5">
-                        <Calendar size={14} className="text-orange-500" /> {booking.event.date || "July 15, 2026"}
+                        <Calendar size={14} className="text-orange-500" /> {formatDate(booking.event.date) || "Upcoming"}
                       </span>
                     </div>
                     <div className="space-y-1">
                       <span className="text-xs text-neutral-500 block">LOCATION</span>
                       <span className="font-semibold text-white flex items-center gap-1.5">
-                        <MapPin size={14} className="text-rose-500" /> {booking.event.venue}
+                        <MapPin size={14} className="text-rose-500" /> {trimVenue(booking.event.venue)}
                       </span>
                     </div>
                     <div className="space-y-1">
-                      <span className="text-xs text-neutral-500 block">SEATS & AUDI</span>
+                      <span className="text-xs text-neutral-500 block">SEATS</span>
                       <span className="font-semibold text-white">
-                        {booking.audiNumber || "Audi 1"} • {booking.seats && booking.seats.length > 0 ? booking.seats.map(s => s.label || s.id).join(", ") : "General"}
+                        {booking.seats && booking.seats.length > 0 ? booking.seats.map(s => s.label || s.id).join(", ") : "General"}
                       </span>
                     </div>
                   </div>
@@ -163,7 +181,9 @@ export default function TicketsPage() {
                     <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-neutral-400">
                       <span className="flex items-center gap-1"><User size={12} /> {booking.user?.name}</span>
                       <span className="flex items-center gap-1"><Mail size={12} /> {booking.user?.email}</span>
-                      <span className="flex items-center gap-1"><Phone size={12} /> {booking.user?.phone}</span>
+                      {booking.user?.phone && (
+                        <span className="flex items-center gap-1"><Phone size={12} /> {booking.user.phone}</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -244,15 +264,15 @@ export default function TicketsPage() {
                 <div className="grid grid-cols-2 gap-3 text-[11px]">
                   <div>
                     <span className="text-neutral-500 block mb-0.5">DATE & TIME</span>
-                    <span className="font-semibold text-white">{selectedTicketModal.event.date || "July 15, 2026"}</span>
+                    <span className="font-semibold text-white">{formatDate(selectedTicketModal.event.date) || "Upcoming"}</span>
                   </div>
                   <div>
                     <span className="text-neutral-500 block mb-0.5">VENUE</span>
-                    <span className="font-semibold text-white">{selectedTicketModal.event.venue}</span>
+                    <span className="font-semibold text-white">{trimVenue(selectedTicketModal.event.venue)}</span>
                   </div>
                   <div>
-                    <span className="text-neutral-500 block mb-0.5">SCREEN & AUDI</span>
-                    <span className="font-semibold text-white">{selectedTicketModal.audiNumber || "Audi 1"}</span>
+                    <span className="text-neutral-500 block mb-0.5">BOOKING ID</span>
+                    <span className="font-semibold text-white font-mono">{selectedTicketModal.bookingId}</span>
                   </div>
                   <div>
                     <span className="text-neutral-500 block mb-0.5">SEATS</span>
@@ -291,7 +311,9 @@ export default function TicketsPage() {
                   <span className="font-bold text-neutral-400 block tracking-wider uppercase text-[9px] mb-1">Holder Information</span>
                   <div className="flex justify-between gap-2"><span className="text-neutral-500">Name</span> <span className="font-semibold text-white truncate max-w-[100px]">{selectedTicketModal.user?.name}</span></div>
                   <div className="flex justify-between gap-2"><span className="text-neutral-500">Email</span> <span className="font-semibold text-white truncate max-w-[100px]" title={selectedTicketModal.user?.email}>{selectedTicketModal.user?.email}</span></div>
-                  <div className="flex justify-between gap-2"><span className="text-neutral-500">Phone</span> <span className="font-semibold text-white">{selectedTicketModal.user?.phone}</span></div>
+                  {selectedTicketModal.user?.phone && (
+                    <div className="flex justify-between gap-2"><span className="text-neutral-500">Phone</span> <span className="font-semibold text-white">{selectedTicketModal.user.phone}</span></div>
+                  )}
                 </div>
 
                 {/* Price details */}

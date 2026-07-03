@@ -26,6 +26,11 @@ function formatTime(timeStr, category) {
   return timeStr;
 }
 
+function trimVenue(venue) {
+  if (!venue) return "";
+  return venue.split(",")[0].trim();
+}
+
 export default function BookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -274,11 +279,11 @@ export default function BookingsPage() {
                   </div>
                   <div>
                     <span className="text-neutral-500 block mb-0.5">VENUE</span>
-                    <span className="font-semibold text-white">{selectedTicketModal.venue}</span>
+                    <span className="font-semibold text-white">{trimVenue(selectedTicketModal.venue)}</span>
                   </div>
                   <div>
-                    <span className="text-neutral-500 block mb-0.5">SCREEN & AUDI</span>
-                    <span className="font-semibold text-white">{selectedTicketModal.audiNumber || "Audi 1"}</span>
+                    <span className="text-neutral-500 block mb-0.5">BOOKING ID</span>
+                    <span className="font-semibold text-white font-mono">{selectedTicketModal.bookingId || selectedTicketModal.id}</span>
                   </div>
                   <div>
                     <span className="text-neutral-500 block mb-0.5">SEATS</span>

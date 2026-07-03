@@ -109,6 +109,7 @@ const Header = () => {
   const confirmedBookings = useStore(useBookingStore, (state) => state.confirmedBookings) || [];
   const storeFavourites = useStore(useBookingStore, (state) => state.favourites) || [];
   const likedEvents = useStore(useBookingStore, (state) => state.likedEvents) || [];
+  const reviewEvents = useStore(useBookingStore, (state) => state.reviewEvents) || [];
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   // Build real notifications from app state
@@ -162,6 +163,18 @@ const Header = () => {
         type: "offer",
         title: "Added to Favourites 💜",
         message: `"${item.title}" is saved in your favourites. Book your seats now!`,
+        date: "",
+        read: false,
+      });
+    });
+
+    // Reviews
+    reviewEvents.forEach((item) => {
+      items.push({
+        id: item.id,
+        type: "info",
+        title: "Review Added! 📝",
+        message: `Thank you for sharing your feedback on "${item.title}". Your review has been posted successfully!`,
         date: "",
         read: false,
       });
@@ -681,33 +694,40 @@ const Header = () => {
                           {user.name || "VibePass User"}
                         </span>
                         <span className="text-[10px] text-neutral-500 truncate">
-                          {user.email || user.phone || "No contact info"}
+                          {user.email || "No contact info"}
                         </span>
+                        {user.phone && (
+                          <span className="text-[10px] text-neutral-600 truncate">
+                            {user.phone}
+                          </span>
+                        )}
                       </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col gap-1.5 mb-2.5">
+                    <div className="flex flex-col gap-1.5 mb-3">
                       <button
                         onClick={() => {
                           setIsProfileOpen(false);
                           router.push("/tickets");
                         }}
-                        className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white border border-neutral-800 hover:border-neutral-700 transition-all duration-200 cursor-pointer group"
+                        className="w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white border border-neutral-800 hover:border-neutral-700 transition-all duration-200 cursor-pointer group"
                       >
                         <span className="flex items-center gap-2">
                           <Ticket size={13} className="text-orange-400 group-hover:text-orange-300 transition-colors" />
                           <span>My Tickets</span>
                         </span>
                         <span className="text-[10px] text-neutral-500 group-hover:text-neutral-300 transition-colors font-medium">
-                          View Passes
+                          View Tickets
                         </span>
                       </button>
                     </div>
 
+                    <div className="border-t border-neutral-800/60 mb-3" />
+
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 hover:border-rose-600 transition-all cursor-pointer group"
+                      className="w-full flex items-center justify-between px-3 py-2.5 text-xs font-semibold rounded-xl bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 hover:border-rose-600 transition-all cursor-pointer group"
                     >
                       <span>Sign Out</span>
                       <LogOut size={13} className="text-rose-500 group-hover:text-white transition-colors" />

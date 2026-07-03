@@ -144,6 +144,11 @@ export default function EventDetails({ event, description, organizer, price, fea
           setFormComment("");
           setFormRating(5);
           setSubmitSuccess("Thank you! Your review has been added.");
+          try {
+            useBookingStore.getState().addReviewEvent(event.title);
+          } catch (e) {
+            console.error("Failed to add review notification to store:", e);
+          }
         } else {
           setSubmitError(data.error || "Failed to submit review.");
         }

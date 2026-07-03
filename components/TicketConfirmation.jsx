@@ -236,8 +236,8 @@ export default function TicketConfirmation() {
 
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <span className="text-xs text-neutral-500 block mb-1">SCREEN / AUDI</span>
-                  <span className="font-semibold text-white text-base">{audiNumber}</span>
+                  <span className="text-xs text-neutral-500 block mb-1">BOOKING ID</span>
+                  <span className="font-semibold text-white text-base font-mono">{bookingId}</span>
                 </div>
                 <div>
                   <span className="text-xs text-neutral-500 block mb-1">SEATS BOOKED</span>
@@ -344,8 +344,8 @@ export default function TicketConfirmation() {
             {/* Show details */}
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="bg-neutral-950/40 p-4 border border-neutral-800/60 rounded-2xl">
-                <span className="text-xs text-neutral-500 block mb-1">AUDI / SCREEN</span>
-                <span className="font-semibold text-white">{audiNumber}</span>
+                <span className="text-xs text-neutral-500 block mb-1">BOOKING ID</span>
+                <span className="font-semibold text-white font-mono">{bookingId}</span>
               </div>
               <div className="bg-neutral-950/40 p-4 border border-neutral-800/60 rounded-2xl">
                 <span className="text-xs text-neutral-500 block mb-1">SELECTED SEATS</span>
