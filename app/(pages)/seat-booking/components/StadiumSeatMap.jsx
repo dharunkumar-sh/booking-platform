@@ -29,18 +29,26 @@ export default function StadiumSeatMap({ eventId, selectedSeats, onSeatToggle })
       setHasCheckedDb(true);
       return;
     }
-    fetch(`/api/bookings?eventId=${eventId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.seats) {
-          setDbBookedSeats(new Set(data.seats));
-        }
-        setHasCheckedDb(true);
-      })
-      .catch((err) => {
-        console.error("Error checking seat bookings:", err);
-        setHasCheckedDb(true);
-      });
+
+    const fetchBookedSeats = () => {
+      fetch(`/api/bookings?eventId=${eventId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.seats) {
+            setDbBookedSeats(new Set(data.seats));
+          }
+          setHasCheckedDb(true);
+        })
+        .catch((err) => {
+          console.error("Error checking seat bookings:", err);
+          setHasCheckedDb(true);
+        });
+    };
+
+    fetchBookedSeats();
+    const intervalId = setInterval(fetchBookedSeats, 3000);
+
+    return () => clearInterval(intervalId);
   }, [eventId]);
 
   const renderBlock = (blockId, config) => {

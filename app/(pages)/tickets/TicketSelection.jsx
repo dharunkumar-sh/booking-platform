@@ -19,7 +19,9 @@ const TicketSelection = ({
   const [passesData, setPassesData] = useState(null);
 
   useEffect(() => {
-    if (event?.id) {
+    if (!event?.id) return;
+
+    const fetchPassStatus = () => {
       fetch(`/api/bookings/pass-status?eventId=${event.id}`)
         .then((res) => res.json())
         .then((data) => {
@@ -28,7 +30,12 @@ const TicketSelection = ({
           }
         })
         .catch((err) => console.error("Error fetching pass status in TicketSelection:", err));
-    }
+    };
+
+    fetchPassStatus();
+    const intervalId = setInterval(fetchPassStatus, 3000);
+
+    return () => clearInterval(intervalId);
   }, [event?.id]);
 
   const getPassAvailableCount = (passId, fallback) => {
