@@ -43,7 +43,7 @@ export default function TicketsPage() {
 
       let dbBookings = [];
       try {
-        const res = await fetch(`/api/bookings?email=${encodeURIComponent(user.email)}`);
+        const res = await fetch(`/api/bookings?email=${encodeURIComponent(user.email)}&t=${Date.now()}`, { cache: "no-store" });
         const data = await res.json();
         if (data.success && data.bookings) {
           dbBookings = data.bookings;

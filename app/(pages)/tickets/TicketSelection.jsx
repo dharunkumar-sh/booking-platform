@@ -22,7 +22,7 @@ const TicketSelection = ({
     if (!event?.id) return;
 
     const fetchPassStatus = () => {
-      fetch(`/api/bookings/pass-status?eventId=${event.id}`)
+      fetch(`/api/bookings/pass-status?eventId=${event.id}&t=${Date.now()}`, { cache: "no-store" })
         .then((res) => res.json())
         .then((data) => {
           if (data.success && data.passes) {

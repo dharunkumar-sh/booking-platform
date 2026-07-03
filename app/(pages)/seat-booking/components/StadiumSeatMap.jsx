@@ -31,7 +31,7 @@ export default function StadiumSeatMap({ eventId, selectedSeats, onSeatToggle })
     }
 
     const fetchBookedSeats = () => {
-      fetch(`/api/bookings?eventId=${eventId}`)
+      fetch(`/api/bookings?eventId=${eventId}&t=${Date.now()}`, { cache: "no-store" })
         .then((res) => res.json())
         .then((data) => {
           if (data.success && data.seats) {
