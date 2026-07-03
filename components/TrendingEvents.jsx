@@ -174,6 +174,17 @@ export default function TrendingEvents({
     return () => clearTimeout(timer);
   }, [fetchEvents]);
 
+  useEffect(() => {
+    const handleDbUpdate = () => {
+      console.log("[TrendingEvents] Auto-refreshing due to database change");
+      fetchEvents();
+    };
+    window.addEventListener("db-update", handleDbUpdate);
+    return () => {
+      window.removeEventListener("db-update", handleDbUpdate);
+    };
+  }, [fetchEvents]);
+
   return (
     <section
       className="bg-neutral-950"

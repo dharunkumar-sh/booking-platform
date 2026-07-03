@@ -130,6 +130,7 @@ export default function EventMap({ onBookEvent = () => {}, searchQuery = "", sel
   const [loading, setLoading] = useState(true);
   const [mapTheme, setMapTheme] = useState("dark"); // "dark" | "light"
   const [mapCenter, setMapCenter] = useState([13.0827, 80.2707]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     async function loadEvents() {
@@ -164,6 +165,17 @@ export default function EventMap({ onBookEvent = () => {}, searchQuery = "", sel
       }
     }
     loadEvents();
+  }, [refreshTrigger]);
+
+  useEffect(() => {
+    const handleDbUpdate = () => {
+      console.log("[EventMap] Auto-refreshing map events due to database change");
+      setRefreshTrigger((prev) => prev + 1);
+    };
+    window.addEventListener("db-update", handleDbUpdate);
+    return () => {
+      window.removeEventListener("db-update", handleDbUpdate);
+    };
   }, []);
 
   useEffect(() => {

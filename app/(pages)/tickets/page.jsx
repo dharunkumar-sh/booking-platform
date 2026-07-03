@@ -28,6 +28,7 @@ export default function TicketsPage() {
   const [confirmedBookings, setConfirmedBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTicketModal, setSelectedTicketModal] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     async function loadTickets() {
@@ -64,7 +65,18 @@ export default function TicketsPage() {
     }
 
     loadTickets();
-  }, [router]);
+  }, [router, refreshTrigger]);
+
+  useEffect(() => {
+    const handleDbUpdate = () => {
+      console.log("[TicketsPage] Auto-refreshing tickets due to database change");
+      setRefreshTrigger((prev) => prev + 1);
+    };
+    window.addEventListener("db-update", handleDbUpdate);
+    return () => {
+      window.removeEventListener("db-update", handleDbUpdate);
+    };
+  }, []);
 
   const handleBookNew = async (ticketDetails) => {
     useBookingStore.getState().setPendingBooking(ticketDetails);

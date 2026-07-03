@@ -150,6 +150,17 @@ export default function FeaturedEvents({
     return () => clearTimeout(timer);
   }, [fetchEvents]);
 
+  useEffect(() => {
+    const handleDbUpdate = () => {
+      console.log("[FeaturedEvents] Auto-refreshing due to database change");
+      fetchEvents();
+    };
+    window.addEventListener("db-update", handleDbUpdate);
+    return () => {
+      window.removeEventListener("db-update", handleDbUpdate);
+    };
+  }, [fetchEvents]);
+
   return (
     <div
       className="px-6 py-10 bg-neutral-950 text-white"

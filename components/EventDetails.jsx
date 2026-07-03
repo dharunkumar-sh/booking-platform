@@ -22,6 +22,7 @@ export default function EventDetails({ event, description, organizer, price, fea
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState("");
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const storeUser = useStore(useBookingStore, (state) => state.user);
   const user = storeUser || null;
@@ -40,7 +41,7 @@ export default function EventDetails({ event, description, organizer, price, fea
         }
       })
       .catch((err) => console.error(err));
-  }, [event?.id]);
+  }, [event?.id, refreshTrigger]);
 
   useEffect(() => {
     if (!event?.id) return;
@@ -73,12 +74,23 @@ export default function EventDetails({ event, description, organizer, price, fea
         }
       })
       .catch((err) => console.error("Error fetching reviews:", err));
-  }, [event?.id]);
+  }, [event?.id, refreshTrigger]);
 
   // Sync logged in user profile details
   useEffect(() => {
     setCurrentUser(user);
   }, [user]);
+
+  useEffect(() => {
+    const handleDbUpdate = () => {
+      console.log("[EventDetails] Auto-refreshing event details due to database change");
+      setRefreshTrigger((prev) => prev + 1);
+    };
+    window.addEventListener("db-update", handleDbUpdate);
+    return () => {
+      window.removeEventListener("db-update", handleDbUpdate);
+    };
+  }, []);
 
 
   const handleLike = () => {
