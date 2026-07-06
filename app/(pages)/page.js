@@ -42,12 +42,7 @@ export default function Home() {
   const router = useRouter();
 
   // ── Lifted search / filter state ─────────────────────────────────────────
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
-
-  const handleSearchChange = (query) => {
-    setSearchQuery(query);
-  };
 
   // Mood key → DB categories mapping; toggling same mood clears the filter
   const handleMoodChange = (moodKey) => {
@@ -82,24 +77,20 @@ export default function Home() {
   return (
     <div>
       <Hero
-        onSearchChange={handleSearchChange}
         onMoodChange={handleMoodChange}
       />
 
       <FeaturedEvents
         onBookEvent={handleBookEvent}
-        searchQuery={searchQuery}
         selectedCategories={selectedCategories}
       />
 
       <TrendingEvents
         onBookEvent={handleBookEvent}
-        searchQuery={searchQuery}
         selectedCategories={selectedCategories}
       />
 
       <EventMapWrapper
-        searchQuery={searchQuery}
         selectedCategories={selectedCategories}
         onBookEvent={handleBookEvent}
       />

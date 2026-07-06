@@ -20,13 +20,8 @@ import { useGeolocationContext } from "@/context/GeolocationContext";
 
 export default function Home() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const { selectedState, setSelectedState } = useGeolocationContext();
-
-  const handleSearchChange = (query) => {
-    setSearchQuery(query);
-  };
 
   const handleMoodChange = (moodKey) => {
     if (!moodKey) {
@@ -59,24 +54,20 @@ export default function Home() {
   return (
     <div>
       <Hero
-        onSearchChange={handleSearchChange}
         onMoodChange={handleMoodChange}
       />
 
       <FeaturedEvents
-        searchQuery={searchQuery}
         selectedCategories={selectedCategories}
         selectedState={selectedState}
         onBookEvent={handleBookEvent}
       />
       <TrendingEvents
-        searchQuery={searchQuery}
         selectedCategories={selectedCategories}
         selectedState={selectedState}
         onBookEvent={handleBookEvent}
       />
       <EventMapWrapper
-        searchQuery={searchQuery}
         selectedCategories={selectedCategories}
         onBookEvent={handleBookEvent}
       />
