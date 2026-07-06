@@ -83,7 +83,6 @@ export function useGeolocation() {
       return;
     }
 
-    // Prevent duplicate simultaneous requests
     if (requestedRef.current) return;
 
     setStatus("requesting");

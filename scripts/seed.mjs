@@ -1,7 +1,3 @@
-// scripts/seed.mjs
-// Run with: npm run db:seed
-// Deletes ALL existing events and re-inserts the 20 structured events from seed-data.js
-
 import { config } from "dotenv";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -24,12 +20,10 @@ const db = drizzle(databaseUrl);
 async function seed() {
   console.log("🌱 Starting seed...");
 
-  // ── 1. Delete all existing events ──────────────────────────────────────────
   console.log("🗑️  Deleting all existing events...");
   await db.delete(events);
   console.log("✅  All events deleted.");
 
-  // ── 2. Insert the 20 structured events ─────────────────────────────────────
   console.log(`📥  Inserting ${seedEvents.length} events...`);
 
   const rows = seedEvents.map((e) => ({
@@ -51,7 +45,7 @@ async function seed() {
   }));
 
   await db.insert(events).values(rows);
-  console.log(`✅  ${rows.length} events inserted successfully.`);
+  console.log(`${rows.length} events inserted successfully.`);
   console.log("");
   console.log("📋  Summary:");
   const cats = {};
@@ -63,6 +57,6 @@ async function seed() {
 }
 
 seed().catch((err) => {
-  console.error("❌ Seed failed:", err);
+  console.error("Seed failed:", err);
   process.exit(1);
 });

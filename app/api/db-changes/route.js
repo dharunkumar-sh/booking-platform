@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +39,6 @@ export async function GET(request) {
 
       let lastState = await getDbState();
 
-      // Send initial success connection message
       sendEvent({ type: "connected", timestamp: Date.now() });
 
       const interval = setInterval(async () => {
@@ -59,14 +57,13 @@ export async function GET(request) {
           lastState = currentState;
           sendEvent({ type: "refresh", timestamp: Date.now() });
         }
-      }, 3000); // Poll DB every 3 seconds
+      }, 3000);
 
       request.signal.addEventListener("abort", () => {
         clearInterval(interval);
         try {
           controller.close();
         } catch (e) {
-          // Stream might be closed already
         }
       });
     },
