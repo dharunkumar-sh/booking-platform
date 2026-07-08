@@ -1,0 +1,1634 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "VibePass API",
+    "description": "API endpoints for the VibePass Event Booking & OTT Streaming Explorer Platform.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Current Server"
+    }
+  ],
+  "paths": {
+    "/api/auth/send-otp": {
+      "post": {
+        "summary": "Send OTP Code",
+        "description": "Generates a cryptographically secure 6-digit numeric OTP code and emails it to the user via Nodemailer.",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Verification code sent to your email." }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required email parameter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to send OTP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/verify-otp": {
+      "post": {
+        "summary": "Verify OTP Code",
+        "description": "Matches verification code and email. Automatically registers new users in the database.",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "otp"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "user@example.com" },
+                  "otp": { "type": "string", "example": "123456" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP verified successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "isNewUser": { "type": "boolean", "example": false },
+                    "user": { "$ref": "#/components/schemas/User" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid OTP code, missing parameters, or code expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database or unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/google": {
+      "post": {
+        "summary": "Sign in with Google OAuth",
+        "description": "Accepts user Google access token, queries profile data, and upserts user details in the database.",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["accessToken"],
+                "properties": {
+                  "accessToken": { "type": "string", "example": "ya29.a0AfH6SM..." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully authenticated user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "isNewUser": { "type": "boolean", "example": false },
+                    "user": { "$ref": "#/components/schemas/User" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid token or Google API query failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bookings": {
+      "get": {
+        "summary": "Retrieve Bookings or Booked Seats",
+        "description": "If `email` is passed, fetches the user's booking history records. If `eventId` is passed, returns a list of occupied seat identifiers.",
+        "tags": ["Bookings"],
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "description": "User email address to load bookings history.",
+            "required": false,
+            "schema": { "type": "string", "format": "email" }
+          },
+          {
+            "name": "eventId",
+            "in": "query",
+            "description": "Event ID to retrieve booked seats layout.",
+            "required": false,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "bookings": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/BookingRecord" }
+                    },
+                    "seats": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "example": ["A1", "A2", "VIP-03"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required query parameters",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Hold or Confirm Seats",
+        "description": "Reserves seats (pending hold) or transitions a pending booking to confirmed.",
+        "tags": ["Bookings"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "eventId", "seats"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "user@example.com" },
+                  "name": { "type": "string", "example": "Jane Doe" },
+                  "phone": { "type": "string", "example": "+919876543210" },
+                  "eventId": { "type": "integer", "example": 1 },
+                  "seats": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "example": ["A1", "A2"]
+                  },
+                  "totalPrice": { "type": "integer", "example": 1200 },
+                  "bookingStartedAt": { "type": "string", "description": "Epoch timestamp when booking hold started.", "example": "1719999999000" },
+                  "paymentMethod": { "type": "string", "default": "card", "example": "card" },
+                  "status": { "type": "string", "enum": ["pending", "confirmed", "cancelled"], "default": "confirmed", "example": "pending" },
+                  "seatsBooked": { "type": "integer", "example": 2 },
+                  "cancelBookingId": { "type": "integer", "description": "Optional booking ID to release/cancel first.", "example": 12 },
+                  "bookingId": { "type": "integer", "description": "Optional existing pending booking ID to update to confirmed status.", "example": 14 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Booking hold placed or confirmed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "bookingId": { "type": "integer", "example": 45 },
+                    "message": { "type": "string", "example": "Booking stored successfully in database." }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing inputs or session timestamp check failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict: seats already occupied/held",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal database insertion/update error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Release Pending Reservation",
+        "description": "Releases a pending reservation from the database.",
+        "tags": ["Bookings"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["bookingId"],
+                "properties": {
+                  "bookingId": { "type": "integer", "example": 45 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reservation released",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Pending booking released." }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing booking ID parameter",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Deletion failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bookings/verify": {
+      "get": {
+        "summary": "Verify Seat Occupancy Status",
+        "description": "Verifies whether specified seat keys are already occupied or held for an event.",
+        "tags": ["Bookings"],
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 1
+          },
+          {
+            "name": "seats",
+            "in": "query",
+            "description": "Comma-separated list of seat tags to verify",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "A1,A2,B5"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Verification data returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "verifiedSeats": {
+                      "type": "object",
+                      "description": "Key-value map where true = occupied/held, false = open/available.",
+                      "additionalProperties": { "type": "boolean" },
+                      "example": { "A1": true, "A2": false, "B5": false }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing parameters",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Verification failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bookings/pass-status": {
+      "get": {
+        "summary": "Check Category Pass Availabilities",
+        "description": "Retrieves real-time ticket quantity details and availability statuses (Available, Filling Fast, Sold Out) per pass tier (VIP, Gold, Silver, General).",
+        "tags": ["Bookings"],
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pass status map retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "passes": {
+                      "type": "object",
+                      "properties": {
+                        "general": { "$ref": "#/components/schemas/PassTier" },
+                        "silver": { "$ref": "#/components/schemas/PassTier" },
+                        "gold": { "$ref": "#/components/schemas/PassTier" },
+                        "vip": { "$ref": "#/components/schemas/PassTier" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing parameters",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Database computation failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events": {
+      "get": {
+        "summary": "List Events",
+        "description": "Fetches database event listings, filtering by type, category, or location state.",
+        "tags": ["Events"],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Event filter tag (e.g. 'featured' or 'trending')",
+            "required": false,
+            "schema": { "type": "string" },
+            "example": "featured"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Event category (e.g. 'comedy', 'concerts', 'sports', 'movies')",
+            "required": false,
+            "schema": { "type": "string" },
+            "example": "comedy"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "description": "Sub-string location state filter (e.g. 'Karnataka', 'Delhi')",
+            "required": false,
+            "schema": { "type": "string" },
+            "example": "Karnataka"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of events matching filters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "events": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Event" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Listing query execution failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/search": {
+      "get": {
+        "summary": "Autosuggest / Search Events",
+        "description": "Performs quick full-text wildcard search queries across event titles, category, description, and organizers.",
+        "tags": ["Events"],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Search query input text",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "standup"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "description": "Optional location state filter override",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Max limit of items to return",
+            "required": false,
+            "schema": { "type": "integer", "default": 6 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching results returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "results": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Event" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Search failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/review": {
+      "get": {
+        "summary": "List Event Reviews",
+        "description": "Retrieves the list of reviews submitted for a specific event.",
+        "tags": ["Reviews & Feedback"],
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Review list retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "reviews": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Review" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing parameters",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Add Review to Event",
+        "description": "Saves a user rating and review text to the database and returns the updated listing.",
+        "tags": ["Reviews & Feedback"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["eventId", "userId", "rating", "comment"],
+                "properties": {
+                  "eventId": { "type": "integer", "example": 1 },
+                  "userId": { "type": "integer", "example": 1 },
+                  "rating": { "type": "integer", "minimum": 1, "maximum": 5, "example": 5 },
+                  "comment": { "type": "string", "example": "Amazing performance! Loved the energy." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Review submitted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Review added successfully" },
+                    "reviews": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Review" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing params or rating value bounds violated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized: user does not exist",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Event not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Database write failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/like": {
+      "get": {
+        "summary": "Fetch Event Likes Stats",
+        "description": "Loads cumulative likes count and checks if the given user has liked the target event.",
+        "tags": ["Likes & Favourites"],
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 1
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Likes status data returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "likes": { "type": "integer", "example": 12 },
+                    "hasLiked": { "type": "boolean", "example": true }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing parameters",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Toggle Event Like",
+        "description": "Appends a like record, incrementing event likes metrics, or removes it if already liked (toggle).",
+        "tags": ["Likes & Favourites"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["eventId", "userId"],
+                "properties": {
+                  "eventId": { "type": "integer", "example": 1 },
+                  "userId": { "type": "integer", "example": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Like status toggled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Liked successfully" },
+                    "likes": { "type": "integer", "example": 13 },
+                    "hasLiked": { "type": "boolean", "example": true }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Session invalid or items not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Valid User ID is required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Database sync failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/favourite": {
+      "get": {
+        "summary": "List User Favourite Events",
+        "description": "Fetches a full detailed list of events bookmark-favourited by a user.",
+        "tags": ["Likes & Favourites"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer" },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Favourite events list returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "events": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Event" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid/Missing User ID parameter",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Toggle Favourite Status",
+        "description": "Toggles event bookmark presence in the event_favourites catalog for a user.",
+        "tags": ["Likes & Favourites"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["eventId", "userId"],
+                "properties": {
+                  "eventId": { "type": "integer", "example": 1 },
+                  "userId": { "type": "integer", "example": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Favourite state toggled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "isFavourite": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Added to favourites" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Foreign key target or items missing",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized: invalid User ID",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Operation failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/location": {
+      "get": {
+        "summary": "Load Session Geolocation Coords",
+        "description": "Returns cached session coordinates from internal memory mapped by sessionId.",
+        "tags": ["Geolocation"],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "session-xyz"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "latitude": { "type": "number", "example": 12.9716 },
+                        "longitude": { "type": "number", "example": 77.5946 },
+                        "accuracy": { "type": "number", "example": 15 },
+                        "timestamp": { "type": "integer", "example": 1719999999000 },
+                        "city": { "type": "string", "nullable": true, "example": "Bengaluru" },
+                        "region": { "type": "string", "nullable": true, "example": "Karnataka" },
+                        "country": { "type": "string", "nullable": true, "example": "India" },
+                        "savedAt": { "type": "integer", "example": 1719999999120 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing sessionId",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Save Geolocation Coords",
+        "description": "Caches coordinate and state locality values mapping to the unique browser sessionId.",
+        "tags": ["Geolocation"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["latitude", "longitude", "sessionId"],
+                "properties": {
+                  "latitude": { "type": "number", "minimum": -90, "maximum": 90, "example": 12.9716 },
+                  "longitude": { "type": "number", "minimum": -180, "maximum": 180, "example": 77.5946 },
+                  "accuracy": { "type": "number", "example": 12.5 },
+                  "timestamp": { "type": "integer", "example": 1719999999000 },
+                  "sessionId": { "type": "string", "example": "session-xyz" },
+                  "city": { "type": "string", "example": "Bengaluru" },
+                  "region": { "type": "string", "example": "Karnataka" },
+                  "country": { "type": "string", "example": "India" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Location cached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Location saved successfully" },
+                    "city": { "type": "string", "nullable": true, "example": "Bengaluru" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing coordinates or bounds exceeded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ott/search": {
+      "get": {
+        "summary": "Cross-Platform OTT & TMDb Explorer",
+        "description": "Performs cross-platform streaming catalog searches proxy-hitting TMDb when `crossOtt` is enabled. Fallbacks to searching database local events when disabled.",
+        "tags": ["OTT Catalog Explorer"],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Search input term",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "Breaking Bad"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "description": "Optional location state filter context",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "crossOtt",
+            "in": "query",
+            "description": "Toggles between external TMDb search and local database search",
+            "required": false,
+            "schema": { "type": "boolean", "default": true }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Structured lists containing stream titles, poster art, rating, overview, and links to streaming platforms.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "type": { "type": "string", "enum": ["ott", "db"], "example": "ott" },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string", "example": "tmdb-tv-1396" },
+                          "title": { "type": "string", "example": "Breaking Bad" },
+                          "category": { "type": "string", "example": "TV Show" },
+                          "location": { "type": "string", "example": "Netflix" },
+                          "image": { "type": "string", "format": "uri" },
+                          "type": { "type": "string", "example": "ott" },
+                          "platforms": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "name": { "type": "string", "example": "Netflix" },
+                                "logo": { "type": "string", "format": "uri", "nullable": true },
+                                "link": { "type": "string", "format": "uri" }
+                              }
+                            }
+                          },
+                          "rating": { "type": "string", "example": "8.9" },
+                          "releaseDate": { "type": "string", "example": "2008-01-20" },
+                          "description": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "External API connection failure",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payment/create-intent": {
+      "post": {
+        "summary": "Create Stripe Payment Intent",
+        "description": "Generates a payment intent ID and client authorization secret from the Stripe gateway.",
+        "tags": ["Checkout & Payments"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["amount"],
+                "properties": {
+                  "amount": { "type": "number", "description": "Decimal order amount in rupees (e.g. 500.5)", "example": 500.5 },
+                  "currency": { "type": "string", "default": "inr", "example": "inr" },
+                  "bookingId": { "type": "string", "example": "45" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Client secret returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "clientSecret": { "type": "string", "example": "pi_123456_secret_654321" },
+                    "paymentIntentId": { "type": "string", "example": "pi_123456" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid amount",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Gateway connection error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user-form": {
+      "post": {
+        "summary": "Create Contact / Support Entry",
+        "description": "Saves customer email feedback queries in the db userform table.",
+        "tags": ["Reviews & Feedback"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email"],
+                "properties": {
+                  "name": { "type": "string", "example": "Jane Doe" },
+                  "email": { "type": "string", "format": "email", "example": "jane@example.com" },
+                  "phone": { "type": "string", "example": "+919876543210" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Inquiry recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "userId": { "type": "integer", "example": 4 },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "integer", "example": 4 },
+                        "name": { "type": "string", "example": "Jane Doe" },
+                        "email": { "type": "string", "example": "jane@example.com" },
+                        "phone": { "type": "string", "nullable": true, "example": "+919876543210" }
+                      }
+                    },
+                    "message": { "type": "string", "example": "User details saved in userform table in Neon DB." }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing inputs",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Write failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/watchlist": {
+      "get": {
+        "summary": "Fetch User Watchlist",
+        "description": "Loads all saved movies/shows in a user's TMDb media watchlist.",
+        "tags": ["Watchlist & Favorites"],
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "email" },
+            "example": "user@example.com"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Watchlist returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "watchlist": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/WatchlistItem" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing parameter email",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Query execution failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Add Movie/Show to Watchlist",
+        "description": "Saves an OTT title reference to the user's watchlist.",
+        "tags": ["Watchlist & Favorites"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "tmdbId", "title", "category"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "user@example.com" },
+                  "tmdbId": { "type": "string", "example": "12345" },
+                  "title": { "type": "string", "example": "Inception" },
+                  "category": { "type": "string", "example": "Movie" },
+                  "image": { "type": "string", "format": "uri" },
+                  "rating": { "type": "string", "example": "8.8" },
+                  "releaseDate": { "type": "string", "example": "2010-07-16" },
+                  "platforms": {
+                    "type": "array",
+                    "items": { "type": "object" },
+                    "example": [{ "name": "Netflix", "link": "https://netflix.com" }]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Item saved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Added to watchlist." },
+                    "item": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "integer", "example": 1 },
+                        "userId": { "type": "integer", "example": 2 },
+                        "tmdbId": { "type": "string", "example": "12345" },
+                        "title": { "type": "string", "example": "Inception" },
+                        "category": { "type": "string", "example": "Movie" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing inputs",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Write failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove from Watchlist",
+        "description": "Removes a bookmarked title from the watchlist catalog.",
+        "tags": ["Watchlist & Favorites"],
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "email" },
+            "example": "user@example.com"
+          },
+          {
+            "name": "tmdbId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "12345"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Removed from watchlist." }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing params",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "500": {
+            "description": "Deletion failed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/db-changes": {
+      "get": {
+        "summary": "Database Live-Sync Stream",
+        "description": "Establishes a Server-Sent Events (SSE) connection to stream database state updates.",
+        "tags": ["SSE Stream Updates"],
+        "responses": {
+          "200": {
+            "description": "Event Stream initialized successfully",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "example": "data: {\"type\":\"connected\",\"timestamp\":1719999999000}"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string", "example": "Error message explanation details." }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "name": { "type": "string", "example": "John Doe" },
+          "email": { "type": "string", "format": "email", "example": "john@example.com" },
+          "picture": { "type": "string", "format": "uri", "nullable": true, "example": "https://lh3.googleusercontent.com/..." },
+          "authMethod": { "type": "string", "example": "otp" }
+        }
+      },
+      "BookingRecord": {
+        "type": "object",
+        "properties": {
+          "bookingId": { "type": "string", "example": "DB-45" },
+          "audiNumber": { "type": "string", "example": "Audi 1" },
+          "event": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string", "example": "Comic Night Live" },
+              "date": { "type": "string", "format": "date-time" },
+              "venue": { "type": "string", "example": "Central Arena, Delhi" }
+            }
+          },
+          "seats": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "example": "A1" },
+                "label": { "type": "string", "example": "A1" }
+              }
+            }
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "example": "John Doe" },
+              "email": { "type": "string", "format": "email", "example": "john@example.com" },
+              "phone": { "type": "string", "nullable": true, "example": "+919876543210" }
+            }
+          },
+          "pricing": {
+            "type": "object",
+            "properties": {
+              "ticketCost": { "type": "integer", "example": 1000 },
+              "gstAmount": { "type": "integer", "example": 180 },
+              "convenienceFee": { "type": "integer", "example": 120 },
+              "finalTotal": { "type": "integer", "example": 1300 }
+            }
+          },
+          "confirmedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PassTier": {
+        "type": "object",
+        "properties": {
+          "availableCount": { "type": "integer", "example": 145 },
+          "status": { "type": "string", "enum": ["Available", "Filling Fast", "Sold Out"], "example": "Available" }
+        }
+      },
+      "Event": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "title": { "type": "string", "example": "A.R. Rahman Live" },
+          "type": { "type": "string", "example": "featured" },
+          "category": { "type": "string", "example": "music" },
+          "description": { "type": "string", "example": "Join the musical storm live in Bangalore." },
+          "image": { "type": "string", "format": "uri" },
+          "location": { "type": "string", "example": "Chinnaswamy Stadium, Karnataka" },
+          "latitude": { "type": "number", "example": 12.9786 },
+          "longitude": { "type": "number", "example": 77.5991 },
+          "price": { "type": "integer", "example": 1999 },
+          "date": { "type": "string", "format": "date-time" },
+          "time": { "type": "string", "example": "18:00 - 22:00" },
+          "rating": { "type": "string", "example": "4.9" },
+          "organizer": { "type": "string", "example": "VibePass Music" },
+          "features": { "type": "array", "items": { "type": "string" }, "example": ["Live Food Stalls", "Valet Parking"] },
+          "crew": { "type": "array", "items": { "type": "object" } },
+          "reviews": { "type": "array", "items": { "type": "object" } },
+          "likes": { "type": "integer", "example": 1400 },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Review": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "name": { "type": "string", "example": "Jane" },
+          "rating": { "type": "integer", "example": 5 },
+          "comment": { "type": "string", "example": "Amazing performance!" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "WatchlistItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "TMDb API ID key mapping.", "example": "12345" },
+          "dbId": { "type": "integer", "description": "Database auto-incremented primary key ID.", "example": 1 },
+          "title": { "type": "string", "example": "Inception" },
+          "category": { "type": "string", "example": "Movie" },
+          "image": { "type": "string", "format": "uri" },
+          "rating": { "type": "string", "example": "8.8" },
+          "releaseDate": { "type": "string", "example": "2010-07-16" },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string", "example": "Netflix" },
+                "logo": { "type": "string", "format": "uri", "nullable": true },
+                "link": { "type": "string", "format": "uri" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
