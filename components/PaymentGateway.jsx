@@ -1,12 +1,5 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
-import { loadStripe } from "@stripe/stripe-js";
-import {
-  Elements,
-  CardElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
 import {
   ArrowLeft,
   CreditCard,
@@ -16,15 +9,9 @@ import {
   Loader2,
   AlertCircle,
   QrCode,
-  Wallet,
   Clock,
   CheckCircle2,
 } from "lucide-react";
-
-// ─── Stripe singleton ────────────────────────────────────────────────────────
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-);
 
 // ─── UPI app icons (from public/) ────────────────────────────────────────────
 const GPayIcon = () => (
@@ -36,25 +23,6 @@ const PhonePeIcon = () => (
 const PaytmIcon = () => (
   <img src="/paytm.svg" alt="Paytm" className="w-8 h-8 object-contain" />
 );
-
-// ─── Stripe CardElement styles ────────────────────────────────────────────────
-const CARD_ELEMENT_OPTIONS = {
-  style: {
-    base: {
-      color: "#ffffff",
-      fontFamily: "'Inter', sans-serif",
-      fontSize: "15px",
-      fontSmoothing: "antialiased",
-      "::placeholder": { color: "#525252" },
-      iconColor: "#a3a3a3",
-    },
-    invalid: {
-      color: "#f87171",
-      iconColor: "#f87171",
-    },
-  },
-  hidePostalCode: true,
-};
 
 // ─── Progress bar for timer ───────────────────────────────────────────────────
 const SESSION_DURATION = 300; // 5 minutes
@@ -103,16 +71,28 @@ function TimerBadge({ timeLeft }) {
   );
 }
 
-// ─── The inner checkout form (must be inside <Elements>) ─────────────────────
-function CheckoutForm({ amount, booking, onBack, onSuccess }) {
-  const stripe = useStripe();
-  const elements = useElements();
+// ─── Load Razorpay checkout.js script ────────────────────────────────────────
+function loadRazorpayScript() {
+  return new Promise((resolve) => {
+    if (document.getElementById("razorpay-checkout-js")) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.id = "razorpay-checkout-js";
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
 
+// ─── The checkout form ────────────────────────────────────────────────────────
+function CheckoutForm({ amount, booking, onBack, onSuccess }) {
   const [activeTab, setActiveTab] = useState("card"); // "card" | "upi" | "netbanking"
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingText, setProcessingText] = useState("Contacting bank…");
   const [error, setError] = useState("");
-  const [cardComplete, setCardComplete] = useState(false);
 
   // ── 5-minute countdown ──────────────────────────────────────────────────────
   const [timeLeft, setTimeLeft] = useState(SESSION_DURATION);
@@ -156,22 +136,60 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
     "Punjab National Bank",
   ];
 
+  // ── Open Razorpay Checkout popup ─────────────────────────────────────────────
+  const openRazorpayCheckout = useCallback(
+    async (orderId, rzpAmount, currency, keyId) => {
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        throw new Error("Failed to load Razorpay SDK. Please check your connection.");
+      }
+
+      return new Promise((resolve, reject) => {
+        const options = {
+          key: keyId,
+          amount: rzpAmount,
+          currency: currency,
+          name: "VibePass",
+          description: `Booking #${booking?.id ?? ""}`,
+          order_id: orderId,
+          prefill: {
+            name: booking?.customerName ?? "",
+            email: booking?.email ?? "",
+            contact: booking?.phone ?? "",
+          },
+          theme: { color: "#f97316" },
+          modal: {
+            ondismiss: () => reject(new Error("Payment cancelled by user.")),
+          },
+          handler: async (response) => {
+            resolve(response);
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on("payment.failed", (response) => {
+          reject(new Error(response.error?.description ?? "Payment failed."));
+        });
+        rzp.open();
+      });
+    },
+    [booking]
+  );
+
   const handlePay = useCallback(
     async (e) => {
       e.preventDefault();
       setError("");
 
+      // ── UPI flow ──────────────────────────────────────────────────────────────
       if (activeTab === "upi") {
-        // Step 1 — show the QR directly (no UPI ID required)
         if (upiStep === "input") {
           setError("");
           setUpiStep("qr");
           return;
         }
-
-        // Step 2 — user clicked "I've Paid" on the QR screen
         try {
-          const appName = upiApps.find(a => a.id === selectedUpiApp)?.name ?? "UPI";
+          const appName = upiApps.find((a) => a.id === selectedUpiApp)?.name ?? "UPI";
           setIsProcessing(true);
           setProcessingText(`Verifying payment with ${appName}…`);
           await new Promise((r) => setTimeout(r, 1500));
@@ -186,7 +204,7 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
         return;
       }
 
-
+      // ── Netbanking flow ───────────────────────────────────────────────────────
       if (activeTab === "netbanking") {
         setIsProcessing(true);
         setProcessingText("Redirecting to your bank…");
@@ -200,27 +218,18 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
         return;
       }
 
-      // ── Stripe card flow ────────────────────────────────────────────────────
-      if (!stripe || !elements) {
-        setError("Stripe is not loaded. Please refresh and try again.");
-        return;
-      }
-      if (!cardComplete) {
-        setError("Please complete your card details.");
-        return;
-      }
-
+      // ── Razorpay card flow ────────────────────────────────────────────────────
       setIsProcessing(true);
       setProcessingText("Creating secure payment session…");
 
       try {
-        // 1. Create a PaymentIntent on the server
+        // 1. Create a Razorpay order on the server
         const res = await fetch("/api/payment/create-intent", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             amount,
-            currency: "inr",
+            currency: "INR",
             bookingId: booking?.id ?? "",
           }),
         });
@@ -230,29 +239,41 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
           throw new Error(data.error ?? "Could not create payment session.");
         }
 
-        setProcessingText("Securing 128-bit SSL transaction…");
+        setProcessingText("Opening Razorpay secure checkout…");
+        setIsProcessing(false);
 
-        // 2. Confirm card payment
-        const { error: stripeError, paymentIntent } =
-          await stripe.confirmCardPayment(data.clientSecret, {
-            payment_method: {
-              card: elements.getElement(CardElement),
-              billing_details: { name: booking?.customerName ?? "Customer" },
-            },
-          });
+        // 2. Open Razorpay popup
+        const paymentResponse = await openRazorpayCheckout(
+          data.orderId,
+          data.amount,
+          data.currency,
+          data.keyId
+        );
 
-        if (stripeError) {
-          throw new Error(stripeError.message);
+        // 3. Verify signature on server
+        setIsProcessing(true);
+        setProcessingText("Verifying payment…");
+
+        const verifyRes = await fetch("/api/payment/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            razorpay_order_id: paymentResponse.razorpay_order_id,
+            razorpay_payment_id: paymentResponse.razorpay_payment_id,
+            razorpay_signature: paymentResponse.razorpay_signature,
+            bookingId: booking?.id ?? "",
+          }),
+        });
+
+        const verifyData = await verifyRes.json();
+        if (!verifyData.success) {
+          throw new Error(verifyData.error ?? "Payment verification failed.");
         }
 
-        if (paymentIntent.status === "succeeded") {
-          setProcessingText("Payment Successful!");
-          await new Promise((r) => setTimeout(r, 700));
-          setIsProcessing(false);
-          onSuccess("card");
-        } else {
-          throw new Error("Payment was not completed. Please try again.");
-        }
+        setProcessingText("Payment Successful!");
+        await new Promise((r) => setTimeout(r, 700));
+        setIsProcessing(false);
+        onSuccess("card");
       } catch (err) {
         setIsProcessing(false);
         setError(err.message ?? "An unexpected error occurred.");
@@ -263,12 +284,10 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
       upiStep,
       selectedUpiApp,
       selectedBank,
-      stripe,
-      elements,
-      cardComplete,
       amount,
       booking,
       onSuccess,
+      openRazorpayCheckout,
     ]
   );
 
@@ -340,7 +359,7 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
               </h2>
               <p className="text-xs text-neutral-400 flex items-center gap-1.5 mt-0.5">
                 <ShieldCheck size={13} className="text-green-500" />
-                Powered by Stripe · 256-bit SSL
+                Powered by Razorpay · 256-bit SSL
               </p>
             </div>
           </div>
@@ -367,7 +386,7 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
             </span>
 
             {[
-              { id: "card", label: "Card (Stripe)", Icon: CreditCard },
+              { id: "card", label: "Card / Razorpay", Icon: CreditCard },
               { id: "upi", label: "UPI / QR", Icon: QrCode },
               { id: "netbanking", label: "Netbanking", Icon: Building2 },
             ].map(({ id, label, Icon }) => (
@@ -386,11 +405,11 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
               </button>
             ))}
 
-            {/* Stripe badge */}
+            {/* Razorpay trust badge */}
             <div className="pt-4 px-3">
               <div className="flex items-center gap-2 text-neutral-600 text-[10px] font-semibold uppercase tracking-wider">
                 <Lock size={11} />
-                Secured by Stripe
+                Secured by Razorpay
               </div>
               <div className="flex gap-1.5 mt-2 flex-wrap">
                 {["VISA", "MC", "AMEX", "RUPAY"].map((b) => (
@@ -417,42 +436,51 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
                 </div>
               )}
 
-              {/* ── Card Tab (Stripe) ─────────────────────────────────────── */}
+              {/* ── Card Tab (Razorpay popup) ────────────────────────────── */}
               {activeTab === "card" && (
                 <div className="space-y-5 flex-1">
                   <div>
                     <p className="text-sm font-semibold text-neutral-300 mb-1">
-                      Enter Card Details
+                      Pay with Card
                     </p>
                     <p className="text-xs text-neutral-500 mb-4">
-                      Test card: <span className="font-mono text-neutral-400">4242 4242 4242 4242</span> · Any future date · Any 3-digit CVV
+                      Click the button below to open the secure Razorpay checkout popup. Your card details are handled entirely by Razorpay.
                     </p>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-neutral-400 block">
-                      Card Information
-                    </label>
-                    <div className="bg-neutral-950/60 border border-neutral-800 focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500/20 rounded-xl px-4 py-4 transition-all">
-                      <CardElement
-                        options={CARD_ELEMENT_OPTIONS}
-                        onChange={(e) => {
-                          setCardComplete(e.complete);
-                          setError(e.error ? e.error.message : "");
-                        }}
-                      />
+                  {/* Razorpay info card */}
+                  <div className="bg-neutral-950/60 border border-neutral-800 rounded-2xl p-5 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#072654]/40 border border-[#3395FF]/20 flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
+                          <path d="M5.5 21L9.5 3L15.5 14L18.5 9L22 21H5.5Z" fill="#3395FF" />
+                          <path d="M2 21H5.5L9.5 3L7 12L2 21Z" fill="#072654" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-white">Razorpay Secure Checkout</p>
+                        <p className="text-[11px] text-neutral-500">India's most trusted payment gateway</p>
+                      </div>
                     </div>
-                    <p className="text-[11px] text-neutral-600 flex items-center gap-1 mt-1">
-                      <Lock size={10} />
-                      Your card data is encrypted end-to-end by Stripe and never touches our servers.
-                    </p>
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      {[
+                        { icon: "🔒", text: "256-bit SSL Encryption" },
+                        { icon: "✅", text: "PCI-DSS Level 1" },
+                        { icon: "🛡️", text: "3D Secure 2.0" },
+                        { icon: "🇮🇳", text: "RBI Compliant" },
+                      ].map(({ icon, text }) => (
+                        <div key={text} className="flex items-center gap-2 text-[11px] text-neutral-400">
+                          <span>{icon}</span>
+                          <span>{text}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
-                  {/* Stripe trust badges */}
                   <div className="flex items-center gap-2 pt-1">
                     <CheckCircle2 size={13} className="text-green-500 shrink-0" />
                     <span className="text-[11px] text-neutral-500">
-                      PCI-DSS Level 1 Compliant · 3D Secure 2.0
+                      Your card data is handled entirely by Razorpay and never touches our servers.
                     </span>
                   </div>
                 </div>
@@ -496,7 +524,7 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
 
               {/* ── UPI QR Screen ─────────────────────────────────────────── */}
               {activeTab === "upi" && upiStep === "qr" && (() => {
-                const app = upiApps.find(a => a.id === selectedUpiApp);
+                const app = upiApps.find((a) => a.id === selectedUpiApp);
                 const upiString = `upi://pay?pa=vibepass@okicici&pn=VibePass+Tickets&am=${amount}.00&cu=INR&tn=Ticket+Booking&tr=${transactionRef}`;
                 const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&color=000000&bgcolor=ffffff&data=${encodeURIComponent(upiString)}&format=png&qzone=1&margin=0`;
                 return (
@@ -539,7 +567,6 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
                   </div>
                 );
               })()}
-
 
               {/* ── Netbanking Tab ────────────────────────────────────────── */}
               {activeTab === "netbanking" && (
@@ -600,7 +627,6 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
                 <button
                   type="submit"
                   disabled={
-                    (activeTab === "card" && (!stripe || !cardComplete)) ||
                     (activeTab === "upi" && upiStep === "qr" && upiSecondsLeft > 0)
                   }
                   className={`w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
@@ -630,7 +656,7 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
                     ? upiSecondsLeft > 0
                       ? "Awaiting authorization confirmation from your UPI app"
                       : `Scan completed? Click above to confirm your ₹${amount} booking`
-                    : "100% Safe & Secure · Powered by Stripe"}
+                    : "100% Safe & Secure · Powered by Razorpay"}
                 </p>
               </div>
             </form>
@@ -641,16 +667,14 @@ function CheckoutForm({ amount, booking, onBack, onSuccess }) {
   );
 }
 
-// ─── Public export wraps everything in the <Elements> provider ────────────────
+// ─── Public export ────────────────────────────────────────────────────────────
 export default function PaymentGateway({ amount = 499, booking, onBack, onSuccess }) {
   return (
-    <Elements stripe={stripePromise}>
-      <CheckoutForm
-        amount={amount}
-        booking={booking}
-        onBack={onBack}
-        onSuccess={onSuccess}
-      />
-    </Elements>
+    <CheckoutForm
+      amount={amount}
+      booking={booking}
+      onBack={onBack}
+      onSuccess={onSuccess}
+    />
   );
 }

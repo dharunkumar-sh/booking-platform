@@ -1680,8 +1680,8 @@
     },
     "/api/payment/create-intent": {
       "post": {
-        "summary": "Create Stripe Payment Intent",
-        "description": "Generates a payment intent ID and client authorization secret from the Stripe gateway.",
+        "summary": "Create Razorpay Order",
+        "description": "Creates a Razorpay order on the server and returns the `orderId`, `amount`, `currency`, and `keyId` needed to initialise the Razorpay Checkout popup on the frontend.",
         "tags": [
           "Checkout & Payments"
         ],
@@ -1702,8 +1702,8 @@
                   },
                   "currency": {
                     "type": "string",
-                    "default": "inr",
-                    "example": "inr"
+                    "default": "INR",
+                    "example": "INR"
                   },
                   "bookingId": {
                     "type": "string",
@@ -1716,19 +1716,29 @@
         },
         "responses": {
           "200": {
-            "description": "Client secret returned successfully",
+            "description": "Razorpay order created successfully",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "clientSecret": {
+                    "orderId": {
                       "type": "string",
-                      "example": "pi_123456_secret_654321"
+                      "example": "order_OFj1234abcd"
                     },
-                    "paymentIntentId": {
+                    "amount": {
+                      "type": "integer",
+                      "description": "Amount in paise",
+                      "example": 50000
+                    },
+                    "currency": {
                       "type": "string",
-                      "example": "pi_123456"
+                      "example": "INR"
+                    },
+                    "keyId": {
+                      "type": "string",
+                      "description": "Razorpay publishable key for the checkout popup",
+                      "example": "rzp_test_xxxxxx"
                     }
                   }
                 }
@@ -1746,7 +1756,99 @@
             }
           },
           "500": {
-            "description": "Gateway connection error",
+            "description": "Razorpay gateway error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payment/verify": {
+      "post": {
+        "summary": "Verify Razorpay Payment",
+        "description": "Verifies the HMAC-SHA256 signature of a completed Razorpay payment to confirm authenticity before booking confirmation. Called after the Razorpay checkout popup returns a successful `handler` callback.",
+        "tags": [
+          "Checkout & Payments"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "razorpay_order_id",
+                  "razorpay_payment_id",
+                  "razorpay_signature"
+                ],
+                "properties": {
+                  "razorpay_order_id": {
+                    "type": "string",
+                    "example": "order_OFj1234abcd"
+                  },
+                  "razorpay_payment_id": {
+                    "type": "string",
+                    "example": "pay_OFj5678efgh"
+                  },
+                  "razorpay_signature": {
+                    "type": "string",
+                    "example": "9ef4dabb0070117e..."
+                  },
+                  "bookingId": {
+                    "type": "string",
+                    "example": "45"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment verified successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "paymentId": {
+                      "type": "string",
+                      "example": "pay_OFj5678efgh"
+                    },
+                    "orderId": {
+                      "type": "string",
+                      "example": "order_OFj1234abcd"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Signature mismatch or missing fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "error": { "type": "string", "example": "Payment verification failed. Invalid signature." }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error during verification",
             "content": {
               "application/json": {
                 "schema": {

@@ -165,7 +165,7 @@ const Footer = () => {
             />
             <button
               type="submit"
-              className="min-h-11 rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 px-5 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition hover:opacity-90 active:scale-95"
+              className="min-h-11 rounded-xl bg-linear-to-r from-orange-500 to-rose-500 px-5 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition hover:opacity-90 active:scale-95"
             >
               Subscribe
             </button>

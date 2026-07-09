@@ -1,13 +1,14 @@
-import Stripe from "stripe";
+import Razorpay from "razorpay";
 import { NextResponse } from "next/server";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-06-20",
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
 export async function POST(request) {
   try {
-    const { amount, currency = "inr", bookingId } = await request.json();
+    const { amount, currency = "INR", bookingId } = await request.json();
 
     if (!amount || amount <= 0) {
       return NextResponse.json(
@@ -16,26 +17,28 @@ export async function POST(request) {
       );
     }
 
-    // Stripe requires amount in smallest currency unit (paise for INR)
+    // Razorpay requires amount in smallest currency unit (paise for INR)
     const amountInPaise = Math.round(amount * 100);
 
-    const paymentIntent = await stripe.paymentIntents.create({
+    const order = await razorpay.orders.create({
       amount: amountInPaise,
-      currency: "inr",
-      payment_method_types: ["card"],
-      metadata: {
+      currency: currency.toUpperCase(),
+      receipt: `receipt_${bookingId ?? Date.now()}`,
+      notes: {
         bookingId: bookingId ?? "",
       },
     });
 
     return NextResponse.json({
-      clientSecret: paymentIntent.client_secret,
-      paymentIntentId: paymentIntent.id,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      keyId: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) {
-    console.error("Stripe PaymentIntent error:", error);
+    console.error("Razorpay order creation error:", error);
     return NextResponse.json(
-      { error: error.message ?? "Failed to create payment intent." },
+      { error: error.message ?? "Failed to create payment order." },
       { status: 500 }
     );
   }
