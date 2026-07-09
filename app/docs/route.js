@@ -25,6 +25,7 @@ export async function GET() {
         "deepLinking": true,
         "showExtensions": true,
         "showCommonExtensions": true,
+        "defaultModelsExpandDepth": -1,
         presets: [
             SwaggerUIBundle.presets.apis,
             SwaggerUIBundle.SwaggerUIStandalonePreset
