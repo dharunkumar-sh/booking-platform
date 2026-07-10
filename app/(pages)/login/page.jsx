@@ -39,6 +39,17 @@ export default function LoginPage() {
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [googleClient, setGoogleClient] = useState(null);
+  const [activeRole, setActiveRole] = useState("participant");
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const roleParam = params.get("role");
+      if (roleParam === "organizer") {
+        setActiveRole("organizer");
+      }
+    } catch {}
+  }, []);
 
   const inputRefs = useRef([]);
 
@@ -75,7 +86,7 @@ export default function LoginPage() {
     try {
       const response = await axios.post("/api/auth/google", { accessToken });
       if (response.data.success) {
-        const user = response.data.user;
+        const user = { ...response.data.user, role: activeRole };
         setUser(user);
         
         setLoginSuccess(true);
@@ -180,7 +191,7 @@ export default function LoginPage() {
       const response = await axios.post("/api/auth/verify-otp", payload);
       
       if (response.data.success) {
-        const user = response.data.user;
+        const user = { ...response.data.user, role: activeRole };
         setUser(user);
         
         setLoginSuccess(true);
@@ -284,13 +295,48 @@ export default function LoginPage() {
           
           <div className="space-y-6">
             {!otpSent && (
-              <div className="space-y-2 text-left mb-6">
-                <h2 className="text-3xl font-black tracking-tight text-white">
-                  Sign In / Register
-                </h2>
-                <p className="text-sm text-neutral-400">
-                  Enter your email address to continue to your tickets and events.
-                </p>
+              <div className="space-y-4 mb-6">
+                <div className="space-y-2 text-left">
+                  <h2 className="text-3xl font-black tracking-tight text-white">
+                    Sign In / Register
+                  </h2>
+                  <p className="text-sm text-neutral-400">
+                    {activeRole === "organizer"
+                      ? "Enter your email address to manage your events, ticket sales, and track attendee check-ins."
+                      : "Enter your email address to continue to your tickets and events."}
+                  </p>
+                </div>
+
+                {/* Tab Switcher */}
+                <div className="relative flex bg-neutral-950 p-1 rounded-2xl border border-neutral-800/80 overflow-hidden">
+                  {/* Sliding highlight background */}
+                  <div
+                    className="absolute top-1 bottom-1 rounded-xl bg-linear-to-r from-orange-500 to-rose-500 transition-all duration-300 ease-out shadow-lg shadow-orange-500/20"
+                    style={{
+                      left: activeRole === "participant" ? "4px" : "calc(50% + 2px)",
+                      width: "calc(50% - 6px)",
+                    }}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveRole("participant")}
+                    className={`relative z-10 flex-1 py-3 text-sm font-bold rounded-xl transition-colors duration-300 cursor-pointer ${
+                      activeRole === "participant" ? "text-white" : "text-neutral-400 hover:text-white"
+                    }`}
+                  >
+                    Participant Login
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveRole("organizer")}
+                    className={`relative z-10 flex-1 py-3 text-sm font-bold rounded-xl transition-colors duration-300 cursor-pointer ${
+                      activeRole === "organizer" ? "text-white" : "text-neutral-400 hover:text-white"
+                    }`}
+                  >
+                    Organizer Login
+                  </button>
+                </div>
               </div>
             )}
 
