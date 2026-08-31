@@ -43,6 +43,28 @@ export async function POST(request) {
 
     const user = result[0];
 
+    // Emit Kafka Outbox Event
+    try {
+      const { emitReliableEvent } = await import("@/lib/kafka/outbox");
+      const { EVENT_TYPES } = await import("@/lib/kafka/events");
+
+      await emitReliableEvent({
+        eventType: EVENT_TYPES.USER_FORM_SUBMITTED,
+        entityId: user.id,
+        payload: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          submittedAt: new Date().toISOString(),
+        },
+        idempotencyKey: `user-form-${user.id}-${Date.now()}`,
+        immediateDispatch: true,
+      });
+    } catch (kErr) {
+      console.error("Kafka emission error for user form:", kErr);
+    }
+
     return NextResponse.json(
       {
         success: true,

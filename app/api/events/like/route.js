@@ -2,6 +2,8 @@ import { db } from "@/db/index";
 import { events, eventLikes, users } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { emitReliableEvent } from "@/lib/kafka/outbox";
+import { EVENT_TYPES } from "@/lib/kafka/events";
 
 export async function POST(request) {
   try {
@@ -59,6 +61,24 @@ export async function POST(request) {
         .set({ likes: likesCount })
         .where(eq(events.id, Number(eventId)));
 
+      // Emit Kafka event
+      try {
+        await emitReliableEvent({
+          eventType: EVENT_TYPES.EVENT_UNLIKED,
+          entityId: eventId,
+          payload: {
+            eventId: Number(eventId),
+            userId: Number(userId),
+            likesCount,
+            unlikedAt: new Date().toISOString(),
+          },
+          idempotencyKey: `event-unliked-${eventId}-${userId}-${Date.now()}`,
+          immediateDispatch: true,
+        });
+      } catch (kErr) {
+        console.error("Kafka emission error for unlike:", kErr);
+      }
+
       return NextResponse.json({
         success: true,
         message: "Unliked successfully",
@@ -85,6 +105,24 @@ export async function POST(request) {
     await db.update(events)
       .set({ likes: likesCount })
       .where(eq(events.id, Number(eventId)));
+
+    // Emit Kafka event
+    try {
+      await emitReliableEvent({
+        eventType: EVENT_TYPES.EVENT_LIKED,
+        entityId: eventId,
+        payload: {
+          eventId: Number(eventId),
+          userId: Number(userId),
+          likesCount,
+          likedAt: new Date().toISOString(),
+        },
+        idempotencyKey: `event-liked-${eventId}-${userId}-${Date.now()}`,
+        immediateDispatch: true,
+      });
+    } catch (kErr) {
+      console.error("Kafka emission error for like:", kErr);
+    }
 
     return NextResponse.json({ 
       success: true, 

@@ -1,13 +1,14 @@
 import Razorpay from "razorpay";
 import { NextResponse } from "next/server";
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+export const dynamic = "force-dynamic";
 
 export async function POST(request) {
   try {
+    const razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_dummy",
+      key_secret: process.env.RAZORPAY_KEY_SECRET || "dummy_secret",
+    });
     const { amount, currency = "INR", bookingId } = await request.json();
 
     if (!amount || amount <= 0) {

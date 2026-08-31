@@ -253,4 +253,24 @@ DATABASE_URL="postgresql://user:pass@ep-xxx.us-east-1.aws.neon.tech/db?sslmode=r
 NEXTAUTH_SECRET="generate-with-openssl-rand-base64-32"
 NEXTAUTH_URL="http://localhost:3000"
 
-# Google OAuth (Cloud Console → Credentials
+# Google OAuth (Cloud Console → Credentials)
+GOOGLE_CLIENT_ID="xxx.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="GOCSPX-xxx"
+
+# ──────────────────────────────────────────────
+# UPSTASH KAFKA (Event Streaming & Reliable Outbox)
+# ──────────────────────────────────────────────
+UPSTASH_KAFKA_REST_URL="https://your-kafka-instance.upstash.io"
+UPSTASH_KAFKA_REST_USERNAME="your_username"
+UPSTASH_KAFKA_REST_PASSWORD="your_password"
+```
+
+### 📡 Kafka & Event Management Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/kafka/health` | Healthcheck & queue metrics (Outbox & DLQ stats) |
+| `POST` | `/api/kafka/publish` | Publish event messages (Outbox transactional or direct mode) |
+| `GET/POST` | `/api/kafka/outbox/process` | Batch outbox processor/dispatcher (cron-friendly) |
+| `GET` | `/api/kafka/dlq` | List dead-lettered / failed messages |
+| `POST` | `/api/kafka/dlq` | Replay and re-process failed DLQ messages |

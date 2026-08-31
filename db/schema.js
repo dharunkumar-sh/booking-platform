@@ -89,5 +89,28 @@ export const watchlist = pgTable("watchlist", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const outboxEvents = pgTable("outbox_events", {
+  id: serial("id").primaryKey(),
+  topic: varchar("topic", { length: 255 }).notNull(),
+  eventType: varchar("event_type", { length: 100 }).notNull(),
+  idempotencyKey: varchar("idempotency_key", { length: 255 }).unique(),
+  payload: jsonb("payload").notNull(),
+  status: varchar("status", { length: 50 }).default("pending").notNull(),
+  retries: integer("retries").default(0).notNull(),
+  lastError: text("last_error"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  publishedAt: timestamp("published_at"),
+});
 
-
+export const deadLetterQueue = pgTable("dead_letter_queue", {
+  id: serial("id").primaryKey(),
+  topic: varchar("topic", { length: 255 }).notNull(),
+  eventType: varchar("event_type", { length: 100 }).notNull(),
+  idempotencyKey: varchar("idempotency_key", { length: 255 }),
+  payload: jsonb("payload").notNull(),
+  errorMessage: text("error_message"),
+  stackTrace: text("stack_trace"),
+  attempts: integer("attempts").default(1).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  resolvedAt: timestamp("resolved_at"),
+});

@@ -70,3 +70,94 @@ export async function GET(request) {
     );
   }
 }
+
+/**
+ * POST /api/events
+ * Creates a new event and publishes an EVENT_CREATED message to Kafka via Outbox.
+ */
+export async function POST(request) {
+  try {
+    const body = await request.json();
+    const {
+      title,
+      type = "featured",
+      category,
+      description,
+      image,
+      location,
+      latitude,
+      longitude,
+      price,
+      date,
+      time,
+      rating,
+      organizer,
+      features = [],
+      crew = [],
+      reviews = [],
+    } = body;
+
+    if (!title || !location || price === undefined || !date) {
+      return NextResponse.json(
+        { success: false, error: "Title, location, price, and date are required." },
+        { status: 400 }
+      );
+    }
+
+    const inserted = await db
+      .insert(events)
+      .values({
+        title,
+        type,
+        category,
+        description,
+        image,
+        location,
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null,
+        price: parseInt(price, 10),
+        date: new Date(date),
+        time,
+        rating: rating || "4.5",
+        organizer,
+        features,
+        crew,
+        reviews,
+        likes: 0,
+      })
+      .returning();
+
+    const createdEvent = inserted[0];
+
+    // Emit Kafka Outbox Event
+    const { emitReliableEvent } = await import("@/lib/kafka/outbox");
+    const { EVENT_TYPES } = await import("@/lib/kafka/events");
+
+    try {
+      await emitReliableEvent({
+        eventType: EVENT_TYPES.EVENT_CREATED,
+        entityId: createdEvent.id,
+        payload: createdEvent,
+        idempotencyKey: `event-created-${createdEvent.id}`,
+        immediateDispatch: true,
+      });
+    } catch (kErr) {
+      console.error("Kafka emission error for event create:", kErr);
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Event created successfully.",
+        event: createdEvent,
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("[POST /api/events] Error:", error);
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
+  }
+}

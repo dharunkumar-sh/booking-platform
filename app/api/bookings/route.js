@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
+import { emitReliableEvent } from "@/lib/kafka/outbox";
+import { EVENT_TYPES } from "@/lib/kafka/events";
 
 export const dynamic = "force-dynamic";
 
@@ -193,10 +195,32 @@ export async function POST(request) {
           RETURNING id
         `;
         if (updated.length > 0) {
+          const confirmedId = updated[0].id;
+          // Emit Kafka event reliably via Outbox
+          try {
+            await emitReliableEvent({
+              eventType: EVENT_TYPES.BOOKING_CONFIRMED,
+              entityId: confirmedId,
+              payload: {
+                bookingId: confirmedId,
+                email,
+                eventId,
+                totalPrice: parseInt(totalPrice, 10) || 0,
+                paymentMethod: paymentMethod || "card",
+                status: "confirmed",
+                updatedAt: new Date().toISOString(),
+              },
+              idempotencyKey: `booking-confirmed-${confirmedId}`,
+              immediateDispatch: true,
+            });
+          } catch (kErr) {
+            console.error("Kafka emission error for booking update:", kErr);
+          }
+
           return NextResponse.json(
             {
               success: true,
-              bookingId: updated[0].id,
+              bookingId: confirmedId,
               message: "Booking updated to confirmed in database.",
             },
             { status: 200 }
@@ -301,10 +325,36 @@ export async function POST(request) {
       RETURNING id
     `;
 
+    const newBookingId = result[0].id;
+    const eventTypeToEmit = targetStatus === "confirmed" ? EVENT_TYPES.BOOKING_CONFIRMED : EVENT_TYPES.BOOKING_CREATED;
+
+    try {
+      await emitReliableEvent({
+        eventType: eventTypeToEmit,
+        entityId: newBookingId,
+        payload: {
+          bookingId: newBookingId,
+          userId,
+          eventId: parseInt(eventId, 10),
+          email: emailLower,
+          seats,
+          seatsBooked: numSeats,
+          totalPrice: parseInt(totalPrice, 10) || 0,
+          status: targetStatus,
+          paymentMethod: paymentMethod || "card",
+          createdAt: new Date().toISOString(),
+        },
+        idempotencyKey: `booking-create-${newBookingId}`,
+        immediateDispatch: true,
+      });
+    } catch (kErr) {
+      console.error("Kafka emission error for booking insert:", kErr);
+    }
+
     return NextResponse.json(
       {
         success: true,
-        bookingId: result[0].id,
+        bookingId: newBookingId,
         message: "Booking stored successfully in database.",
       },
       { status: 200 }
@@ -328,6 +378,23 @@ export async function DELETE(request) {
     await sql`
       DELETE FROM bookings WHERE id = ${parseInt(bookingId, 10)} AND status = 'pending'
     `;
+
+    try {
+      await emitReliableEvent({
+        eventType: EVENT_TYPES.BOOKING_CANCELLED,
+        entityId: bookingId,
+        payload: {
+          bookingId: parseInt(bookingId, 10),
+          status: "cancelled",
+          cancelledAt: new Date().toISOString(),
+        },
+        idempotencyKey: `booking-cancelled-${bookingId}-${Date.now()}`,
+        immediateDispatch: true,
+      });
+    } catch (kErr) {
+      console.error("Kafka emission error for booking cancel:", kErr);
+    }
+
     return NextResponse.json({ success: true, message: "Pending booking released." });
   } catch (error) {
     console.error("[DELETE /api/bookings] Error:", error);
